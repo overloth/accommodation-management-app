@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bed Assignment Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .quick-stats {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 0 20px;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-number {
+            background: #3498db;
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #27ae60;
+            color: white;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: #3498db;
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .card p {
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .card-stats {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .bed-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            margin: 10px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .bed-card.available {
+            border-color: #27ae60;
+            background: rgba(39, 174, 96, 0.1);
+        }
+
+        .bed-card.occupied {
+            border-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .bed-info h4 {
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .bed-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .bed-status.available {
+            background: #27ae60;
+            color: white;
+        }
+
+        .bed-status.occupied {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            margin: 0 5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        .close:hover {
+            color: #2c3e50;
+        }
+
+        .breadcrumb {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb span {
+            color: #3498db;
+            cursor: pointer;
+        }
+
+        .breadcrumb span:hover {
+            text-decoration: underline;
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .config-section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .room-designation {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .room-designation.boys {
+            background: #0066cc;
+            color: white;
+        }
+
+        .room-designation.girls {
+            background: #9933cc;
+            color: white;
+        }
+
+        .room-designation.empty {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .room-designation.occupied {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .occupancy-overview {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .occupancy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .month-navigation {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .month-navigation select {
+            border: none;
+            background: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #2c3e50;
+            min-width: 140px;
+            padding: 4px 8px;
+        }
+
+        .month-navigation select:focus {
+            outline: none;
+        }
+
+        .occupancy-grid {
+            display: grid;
+            gap: 2px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .day-header {
+            background: #3498db;
+            color: white;
+            padding: 4px 2px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.55rem;
+            border-radius: 3px;
+            line-height: 1.1;
+        }
+
+        .day-header.weekend {
+            background: #e67e22;
+            color: white;
+        }
+
+        .room-cell {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 8px 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+            font-size: 0.7rem;
+            text-align: center;
+        }
+
+        .occupancy-cell {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 1px;
+            border-radius: 3px;
+            min-height: 25px;
+            min-width: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: bold;
+        }
+
+        .occupancy-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .occupancy-cell.available {
+            background: #d5f4e6;
+            border-color: #27ae60;
+        }
+
+        .occupancy-cell.occupied {
+            background: #fadbd8;
+            border-color: #e74c3c;
+            color: #c0392b;
+        }
+
+        .occupancy-cell.boys {
+            background: #cce7ff;
+            border-color: #0066cc;
+            color: #003d7a;
+        }
+
+        .occupancy-cell.girls {
+            background: #f0d4f0;
+            border-color: #9933cc;
+            color: #5c1a5c;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid;
+        }
+
+        .weeks-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .weeks-input {
+            width: 80px !important;
+            text-align: center;
+        }
+
+        .room-designation-info {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #27ae60;
+        }
+
+        .notification.error {
+            background: #e74c3c;
+        }
+
+        .notification.info {
+            background: #3498db;
+        }
+
+        @media (max-width: 768px) {
+            .quick-stats {
+                position: static;
+                justify-content: center;
+                margin-top: 20px;
+            }
+
+            .occupancy-grid {
+                font-size: 0.7rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="quick-stats">
+                <div class="stat-card">
+                    <span class="stat-number" id="totalProperties">0</span>
+                    <span class="stat-label">Properties</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="totalRooms">0</span>
+                    <span class="stat-label">Rooms</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="totalBeds">0</span>
+                    <span class="stat-label">Beds</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="occupancyRate">0%</span>
+                    <span class="stat-label">Occupied</span>
+                </div>
+            </div>
+            <h1>🏨 Bed Assignment Manager</h1>
+            <p>Manage your property beds efficiently with advanced features</p>
+        </div>
+
+        <div class="content">
+            <!-- Configuration Section -->
+            <div class="config-section">
+                <h3>🔧 System Configuration</h3>
+                <div class="alert alert-warning">
+                    <strong>Setup Required:</strong> Configure your Airtable connection or use sample data for testing.
+                </div>
+                <div class="form-group">
+                    <label for="airtableToken">Airtable Personal Access Token:</label>
+                    <input type="password" id="airtableToken" placeholder="Enter your Airtable PAT">
+                </div>
+                <div class="form-group">
+                    <label for="baseId">Base ID:</label>
+                    <input type="text" id="baseId" placeholder="Enter your Airtable Base ID">
+                </div>
+                <button class="btn" onclick="saveConfig()">💾 Save Configuration</button>
+                <button class="btn btn-secondary" onclick="loadSampleData()">📊 Load Sample Data</button>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step active" id="step1">
+                    <div class="step-number">1</div>
+                    <span>Select Property</span>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-number">2</div>
+                    <span>Choose Room</span>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-number">3</div>
+                    <span>Occupancy Overview</span>
+                </div>
+                <div class="step" id="step4">
+                    <div class="step-number">4</div>
+                    <span>Manage Beds</span>
+                </div>
+            </div>
+
+            <!-- Breadcrumb -->
+            <div class="breadcrumb" id="breadcrumb" style="display: none;"></div>
+
+            <!-- Step 1: Select Property -->
+            <div class="section active" id="section1">
+                <h2>🏢 Select Property</h2>
+                <div class="grid" id="propertiesGrid"></div>
+            </div>
+
+            <!-- Step 2: Select Room -->
+            <div class="section" id="section2">
+                <h2>🚪 Select Room</h2>
+                <div class="grid" id="roomsGrid"></div>
+                <button class="btn btn-secondary" onclick="goToStep(1)">← Back to Properties</button>
+                <button class="btn" onclick="goToStep(3)">View Occupancy Overview →</button>
+            </div>
+
+            <!-- Step 3: Occupancy Overview -->
+            <div class="section" id="section3">
+                <h2>📅 Occupancy Overview</h2>
+                <div class="occupancy-overview">
+                    <div class="occupancy-header">
+                        <h3 id="propertyTitle">Monthly Room Occupancy</h3>
+                        <div class="month-navigation">
+                            <button class="btn btn-small btn-secondary" onclick="changeMonth(-1)">‹</button>
+                            <select id="monthSelect" onchange="updateOccupancyView()"></select>
+                            <button class="btn btn-small btn-secondary" onclick="changeMonth(1)">›</button>
+                        </div>
+                    </div>
+                    <div class="alert alert-info" style="margin-bottom: 20px;">
+                        <strong>💡 Tip:</strong> Click on any room-date cell to manage beds for that specific week (Sunday-Saturday).
+                    </div>
+                    <div id="occupancyGrid"></div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #d5f4e6; border-color: #27ae60;"></div>
+                            <span>Available</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #cce7ff; border-color: #0066cc;"></div>
+                            <span>Boys Room</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #f0d4f0; border-color: #9933cc;"></div>
+                            <span>Girls Room</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #fadbd8; border-color: #e74c3c;"></div>
+                            <span>Fully Occupied</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #e67e22; border-color: #d35400;"></div>
+                            <span>Weekend</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="goToStep(1)">← Back to Properties</button>
+            </div>
+
+            <!-- Step 4: Manage Beds -->
+            <div class="section" id="section4">
+                <h2 id="bedManagementTitle">🛏️ Manage Beds</h2>
+                <div class="alert alert-info" id="weekInfo" style="margin-bottom: 20px;"></div>
+                <div id="bedsContainer"></div>
+                <button class="btn btn-secondary" onclick="goToStep(3)">← Back to Overview</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Modal -->
+    <div class="modal" id="assignmentModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Assign Client to Bed</h2>
+            <form id="assignmentForm">
+                <div class="form-group">
+                    <label for="clientSelect">Select Client:</label>
+                    <select id="clientSelect">
+                        <option value="">Choose a client...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="newClientName">Or Add New Client:</label>
+                    <input type="text" id="newClientName" placeholder="Client Name">
+                </div>
+                <div class="form-group">
+                    <label for="clientGender">Gender:</label>
+                    <select id="clientGender" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male">👨 Male</option>
+                        <option value="Female">👩 Female</option>
+                    </select>
+                </div>
+                <div class="weeks-selector">
+                    <label for="numberOfWeeks">Duration:</label>
+                    <input type="number" id="numberOfWeeks" class="weeks-input" min="1" max="52" value="1" onchange="calculateEndDate()">
+                    <span>week(s)</span>
+                </div>
+                <div class="form-group">
+                    <label for="clientPhone">Phone:</label>
+                    <input type="tel" id="clientPhone" placeholder="Phone Number">
+                </div>
+                <div class="form-group">
+                    <label for="checkinDate">Check-in (Sunday):</label>
+                    <input type="date" id="checkinDate" required onchange="calculateEndDate()">
+                </div>
+                <div class="form-group">
+                    <label for="checkoutDate">Check-out (Saturday):</label>
+                    <input type="date" id="checkoutDate" readonly style="background: #f8f9fa;">
+                </div>
+                <div style="text-align: center; margin-top: 15px;">
+                    <button type="button" class="btn btn-success" onclick="assignBed()">Assign Bed</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuration and State
+        let config = {
+            token: '',
+            baseId: '',
+            tables: {
+                properties: 'Properties',
+                rooms: 'Rooms', 
+                beds: 'Beds',
+                clients: 'Clients'
+            }
+        };
+
+        let currentStep = 1;
+        let selectedProperty = null;
+        let selectedRoom = null;
+        let selectedBed = null;
+        let selectedDate = null;
+        let selectedWeekStart = null;
+        let sampleDataLoaded = false;
+
+        // Enhanced sample data
+        const sampleData = {
+            properties: [
+                { id: 'prop1', name: 'Downtown Hotel', address: '123 Main St', contact: 'manager@downtown.com' },
+                { id: 'prop2', name: 'Airport Inn', address: '456 Airport Rd', contact: 'info@airportinn.com' },
+                { id: 'prop3', name: 'Seaside Resort', address: '789 Ocean Ave', contact: 'front@seaside.com' }
+            ],
+            rooms: [
+                { id: 'room1', number: '101', propertyId: 'prop1', type: 'Standard', capacity: '4' },
+                { id: 'room2', number: '102', propertyId: 'prop1', type: 'Deluxe', capacity: '6' },
+                { id: 'room3', number: '103', propertyId: 'prop1', type: 'Standard', capacity: '4' },
+                { id: 'room4', number: '104', propertyId: 'prop1', type: 'Deluxe', capacity: '6' },
+                { id: 'room5', number: '201', propertyId: 'prop2', type: 'Standard', capacity: '4' },
+                { id: 'room6', number: '301', propertyId: 'prop3', type: 'Ocean View', capacity: '8' }
+            ],
+            beds: [],
+            clients: [
+                { id: 'client1', name: 'John Doe', phone: '555-0101', gender: 'Male', numberOfWeeks: 1 },
+                { id: 'client2', name: 'Jane Smith', phone: '555-0102', gender: 'Female', numberOfWeeks: 1 },
+                { id: 'client3', name: 'Mike Johnson', phone: '555-0103', gender: 'Male', numberOfWeeks: 2 },
+                { id: 'client4', name: 'Sarah Wilson', phone: '555-0104', gender: 'Female', numberOfWeeks: 1 },
+                { id: 'client5', name: 'Emma Davis', phone: '555-0105', gender: 'Female', numberOfWeeks: 1 },
+                { id: 'client6', name: 'Tom Brown', phone: '555-0106', gender: 'Male', numberOfWeeks: 1 }
+            ]
+        };
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize beds
+        function initializeBeds() {
+            sampleData.beds = [];
+            sampleData.rooms.forEach(room => {
+                const capacity = parseInt(room.capacity);
+                for (let i = 0; i < capacity; i++) {
+                    const bedLetter = String.fromCharCode(65 + i);
+                    sampleData.beds.push({
+                        id: `bed_${room.id}_${bedLetter}`,
+                        number: bedLetter,
+                        roomId: room.id,
+                        status: 'Available',
+                        bookings: []
+                    });
+                }
+            });
+            addSampleBookings();
+        }
+
+        function addSampleBookings() {
+            const today = new Date();
+            const currentSunday = new Date(today);
+            currentSunday.setDate(today.getDate() - today.getDay());
+            
+            const bookings = [
+                { bedId: 'bed_room1_A', clientId: 'client1', weeks: 2, startWeek: 0 },
+                { bedId: 'bed_room1_B', clientId: 'client2', weeks: 1, startWeek: 0 },
+                { bedId: 'bed_room2_A', clientId: 'client3', weeks: 3, startWeek: 1 },
+                { bedId: 'bed_room2_B', clientId: 'client4', weeks: 1, startWeek: 1 },
+                { bedId: 'bed_room3_A', clientId: 'client5', weeks: 2, startWeek: 2 },
+                { bedId: 'bed_room5_A', clientId: 'client6', weeks: 1, startWeek: 0 }
+            ];
+            
+            bookings.forEach(booking => {
+                const bed = sampleData.beds.find(b => b.id === booking.bedId);
+                if (bed) {
+                    const checkinDate = new Date(currentSunday);
+                    checkinDate.setDate(currentSunday.getDate() + (booking.startWeek * 7));
+                    
+                    const checkoutDate = new Date(checkinDate);
+                    checkoutDate.setDate(checkinDate.getDate() + (booking.weeks * 7) - 1);
+                    
+                    bed.bookings.push({
+                        clientId: booking.clientId,
+                        checkin: checkinDate.toISOString().split('T')[0],
+                        checkout: checkoutDate.toISOString().split('T')[0]
+                    });
+                }
+            });
+        }
+
+        // Update statistics
+        function updateQuickStats() {
+            if (!sampleDataLoaded) return;
+            
+            const totalProperties = sampleData.properties.length;
+            const totalRooms = sampleData.rooms.length;
+            const totalBeds = sampleData.beds.length;
+            
+            let occupiedBeds = 0;
+            const today = new Date();
+            
+            sampleData.beds.forEach(bed => {
+                const hasActiveBooking = bed.bookings.some(booking => {
+                    const checkin = new Date(booking.checkin);
+                    const checkout = new Date(booking.checkout);
+                    return today >= checkin && today <= checkout;
+                });
+                if (hasActiveBooking) occupiedBeds++;
+            });
+            
+            const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+            
+            document.getElementById('totalProperties').textContent = totalProperties;
+            document.getElementById('totalRooms').textContent = totalRooms;
+            document.getElementById('totalBeds').textContent = totalBeds;
+            document.getElementById('occupancyRate').textContent = occupancyRate + '%';
+        }
+
+        function saveConfig() {
+            const token = document.getElementById('airtableToken').value;
+            const baseId = document.getElementById('baseId').value;
+            
+            if (!token || !baseId) {
+                showNotification('Please enter both Airtable Token and Base ID', 'error');
+                return;
+            }
+            
+            config.token = token;
+            config.baseId = baseId;
+            
+            showNotification('Configuration saved successfully!', 'success');
+            loadProperties();
+        }
+
+        function loadSampleData() {
+            sampleDataLoaded = true;
+            initializeBeds();
+            showNotification('Sample data loaded! Exploring demo mode.', 'success');
+            loadProperties();
+            updateQuickStats();
+        }
+
+        function calculateEndDate() {
+            const checkinDate = document.getElementById('checkinDate').value;
+            const numberOfWeeks = parseInt(document.getElementById('numberOfWeeks').value) || 1;
+            
+            if (checkinDate) {
+                const startDate = new Date(checkinDate + 'T00:00:00');
+                
+                // VERIFY: Ensure check-in is on Sunday (day 0)
+                if (startDate.getDay() !== 0) {
+                    console.warn('Check-in date is not a Sunday! Day of week:', startDate.getDay());
+                    console.warn('Camp weeks should start on Sunday');
+                }
+                
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + (numberOfWeeks * 7) - 1); // End on Saturday
+                
+                const endDateString = endDate.toISOString().split('T')[0];
+                document.getElementById('checkoutDate').value = endDateString;
+                
+                console.log('Check-in (Sunday):', checkinDate, '(day', startDate.getDay(), ')');
+                console.log('Check-out (Saturday):', endDateString, '(day', endDate.getDay(), ')');
+                console.log('Number of weeks:', numberOfWeeks);
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function calculateRoomDesignationForWeek(roomId, weekStart) {
+            if (!sampleDataLoaded || !weekStart) {
+                return 'Empty';
+            }
+
+            const beds = sampleData.beds.filter(bed => bed.roomId === roomId);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+
+            const clientsStayingThisWeek = [];
+            beds.forEach(bed => {
+                bed.bookings.forEach(booking => {
+                    const checkIn = new Date(booking.checkin);
+                    const checkOut = new Date(booking.checkout);
+                    
+                    if (checkIn <= weekEnd && checkOut > weekStart) {
+                        const client = sampleData.clients.find(c => c.id === booking.clientId);
+                        if (client) {
+                            clientsStayingThisWeek.push({
+                                ...client,
+                                originalCheckin: checkIn
+                            });
+                        }
+                    }
+                });
+            });
+            
+            if (clientsStayingThisWeek.length === 0) {
+                return 'Empty';
+            }
+            
+            clientsStayingThisWeek.sort((a, b) => a.originalCheckin - b.originalCheckin);
+            const firstClient = clientsStayingThisWeek[0];
+            
+            if (firstClient.gender === 'Male') {
+                return 'Boys Room';
+            } else if (firstClient.gender === 'Female') {
+                return 'Girls Room';
+            }
+            
+            return 'Empty';
+        }
+
+        function getRoomDesignationClass(designation) {
+            switch(designation.toLowerCase()) {
+                case 'boys room': return 'boys';
+                case 'girls room': return 'girls';
+                case 'occupied': return 'occupied';
+                default: return 'empty';
+            }
+        }
+
+        async function loadProperties() {
+            const container = document.getElementById('propertiesGrid');
+            container.innerHTML = '<div class="card"><h3>Loading properties...</h3></div>';
+
+            try {
+                let properties;
+                if (sampleDataLoaded) {
+                    properties = sampleData.properties;
+                } else {
+                    if (!config.token || !config.baseId) {
+                        container.innerHTML = '<div class="alert alert-info">Please configure Airtable connection or load sample data to get started.</div>';
+                        return;
+                    }
+                    properties = [];
+                }
+
+                if (properties.length === 0) {
+                    container.innerHTML = '<div class="alert alert-info">No properties found.</div>';
+                    return;
+                }
+
+                container.innerHTML = properties.map(property => {
+                    const name = property.name || 'Unnamed Property';
+                    const address = property.address || 'Not specified';
+                    const contact = property.contact || 'Not specified';
+                    
+                    return `<div class="card" onclick="selectProperty('${property.id}', '${name.replace(/'/g, "\\'")}')">
+                        <h3>🏢 ${name}</h3>
+                        <p><strong>Address:</strong> ${address}</p>
+                        <p><strong>Contact:</strong> ${contact}</p>
+                    </div>`;
+                }).join('');
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-warning">Error loading properties: ${error.message}</div>`;
+            }
+        }
+
+        async function loadRooms(propertyId) {
+            const container = document.getElementById('roomsGrid');
+            container.innerHTML = '<div class="card"><h3>Loading rooms...</h3></div>';
+
+            try {
+                let rooms;
+                if (sampleDataLoaded) {
+                    rooms = sampleData.rooms.filter(room => room.propertyId === propertyId);
+                } else {
+                    rooms = [];
+                }
+
+                if (rooms.length === 0) {
+                    container.innerHTML = '<div class="alert alert-info">No rooms found for this property.</div>';
+                    return;
+                }
+
+                container.innerHTML = rooms.map(room => {
+                    const designation = calculateRoomDesignation(room.id);
+                    const designationClass = getRoomDesignationClass(designation);
+                    const number = room.number || 'Unknown';
+                    const type = room.type || 'Standard';
+                    const capacity = room.capacity || 'Not specified';
+                    
+                    return `<div class="card" onclick="selectRoom('${room.id}', '${number}')">
+                        <h3>🚪 Room ${number}
+                            <span class="room-designation ${designationClass}">${designation}</span>
+                        </h3>
+                        <p><strong>Type:</strong> ${type}</p>
+                        <p><strong>Capacity:</strong> ${capacity} beds</p>
+                    </div>`;
+                }).join('');
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-warning">Error loading rooms: ${error.message}</div>`;
+            }
+        }
+
+        function calculateRoomDesignation(roomId) {
+            if (!sampleDataLoaded) {
+                return 'Empty';
+            }
+
+            const beds = sampleData.beds.filter(bed => bed.roomId === roomId);
+            let hasActiveBookings = false;
+            let firstGender = null;
+
+            beds.forEach(bed => {
+                bed.bookings.forEach(booking => {
+                    hasActiveBookings = true;
+                    if (!firstGender) {
+                        const client = sampleData.clients.find(c => c.id === booking.clientId);
+                        if (client) {
+                            firstGender = client.gender;
+                        }
+                    }
+                });
+            });
+
+            if (!hasActiveBookings) {
+                return 'Empty';
+            }
+
+            return firstGender === 'Male' ? 'Boys Room' : 'Girls Room';
+        }
+
+        async function loadBeds(roomId) {
+            const container = document.getElementById('bedsContainer');
+            container.innerHTML = '<div class="bed-card"><h3>Loading beds...</h3></div>';
+
+            try {
+                let beds;
+                if (sampleDataLoaded) {
+                    beds = sampleData.beds.filter(bed => bed.roomId === roomId);
+                } else {
+                    beds = [];
+                }
+
+                if (beds.length === 0) {
+                    container.innerHTML = '<div class="alert alert-info">No beds found for this room.</div>';
+                    return;
+                }
+
+                container.innerHTML = beds.map(bed => {
+                    let clientName = null;
+                    let isCurrentlyOccupied = false;
+                    
+                    if (sampleDataLoaded && selectedWeekStart) {
+                        const weekEnd = new Date(selectedWeekStart);
+                        weekEnd.setDate(selectedWeekStart.getDate() + 6);
+                        
+                        const activeBooking = bed.bookings.find(booking => {
+                            const checkIn = new Date(booking.checkin);
+                            const checkOut = new Date(booking.checkout);
+                            return checkIn <= weekEnd && checkOut > selectedWeekStart;
+                        });
+                        
+                        if (activeBooking) {
+                            const client = sampleData.clients.find(c => c.id === activeBooking.clientId);
+                            if (client) {
+                                clientName = client.name;
+                                isCurrentlyOccupied = true;
+                            }
+                        }
+                    }
+                    
+                    const bedNumber = bed.number || 'Unknown';
+                    const displayStatus = isCurrentlyOccupied ? 'Occupied' : 'Available';
+                    const assignText = isCurrentlyOccupied ? 'Release' : 'Assign';
+                    const buttonClass = isCurrentlyOccupied ? 'btn btn-secondary' : 'btn';
+                    const buttonAction = isCurrentlyOccupied ? 
+                        `releaseBed('${bed.id}')` : 
+                        `openAssignmentModal('${bed.id}', '${bedNumber}')`;
+                    
+                    return `<div class="bed-card ${displayStatus.toLowerCase()}">
+                        <div class="bed-info">
+                            <h4>🛏️ Bed ${bedNumber}</h4>
+                            <p>${clientName ? `Occupied by: ${clientName}` : 'Available for assignment'}</p>
+                            ${selectedWeekStart ? `<p><small>Week: ${selectedWeekStart.toLocaleDateString()} - ${new Date(selectedWeekStart.getTime() + 6*24*60*60*1000).toLocaleDateString()}</small></p>` : ''}
+                        </div>
+                        <div>
+                            <span class="bed-status ${displayStatus.toLowerCase()}">${displayStatus}</span>
+                            <button class="${buttonClass}" onclick="${buttonAction}">${assignText}</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-warning">Error loading beds: ${error.message}</div>`;
+            }
+        }
+
+        function selectProperty(id, name) {
+            selectedProperty = { id, name };
+            updateBreadcrumb();
+            goToStep(2);
+            loadRooms(id);
+        }
+
+        function selectRoom(id, number) {
+            selectedRoom = { id, number };
+            updateBreadcrumb();
+            goToStep(3);
+            populateMonthSelector();
+            updateOccupancyView();
+        }
+
+        function selectRoomDate(roomId, roomNumber, date) {
+            selectedRoom = { id: roomId, number: roomNumber };
+            selectedDate = new Date(date + 'T12:00:00');
+            
+            const dayOfWeek = selectedDate.getDay();
+            selectedWeekStart = new Date(selectedDate);
+            selectedWeekStart.setDate(selectedDate.getDate() - dayOfWeek);
+            
+            updateBedManagementTitle();
+            goToStep(4);
+            loadBeds(roomId);
+        }
+
+        function populateMonthSelector() {
+            const monthSelect = document.getElementById('monthSelect');
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            
+            const months = [];
+            for (let year = currentYear; year <= currentYear + 1; year++) {
+                for (let month = 0; month < 12; month++) {
+                    const date = new Date(year, month, 1);
+                    const value = `${year}-${String(month + 1).padStart(2, '0')}`;
+                    const text = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    months.push({ value, text });
+                }
+            }
+            
+            monthSelect.innerHTML = months.map(m => 
+                `<option value="${m.value}">${m.text}</option>`
+            ).join('');
+            
+            const currentMonth = `${currentYear}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+            monthSelect.value = currentMonth;
+        }
+
+        function changeMonth(direction) {
+            const monthSelect = document.getElementById('monthSelect');
+            const currentIndex = monthSelect.selectedIndex;
+            const newIndex = currentIndex + direction;
+            
+            if (newIndex >= 0 && newIndex < monthSelect.options.length) {
+                monthSelect.selectedIndex = newIndex;
+                updateOccupancyView();
+            }
+        }
+
+        function goToStep(step) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            document.getElementById(`section${step}`).classList.add('active');
+            
+            document.querySelectorAll('.step').forEach((stepEl, index) => {
+                stepEl.classList.remove('active', 'completed');
+                if (index + 1 < step) {
+                    stepEl.classList.add('completed');
+                } else if (index + 1 === step) {
+                    stepEl.classList.add('active');
+                }
+            });
+            
+            currentStep = step;
+            
+            if (step === 1) {
+                selectedProperty = null;
+                selectedRoom = null;
+                selectedDate = null;
+                selectedWeekStart = null;
+                updateBreadcrumb();
+            } else if (step === 3) {
+                if (!selectedProperty) {
+                    showNotification('Please select a property first.', 'error');
+                    goToStep(1);
+                    return;
+                }
+                
+                document.getElementById('propertyTitle').textContent = `Monthly Occupancy - ${selectedProperty.name}`;
+                populateMonthSelector();
+                updateOccupancyView();
+            }
+        }
+
+        function updateBedManagementTitle() {
+            if (selectedRoom && selectedDate && selectedWeekStart) {
+                const weekEndDate = new Date(selectedWeekStart);
+                weekEndDate.setDate(selectedWeekStart.getDate() + 6);
+                
+                const formatDateShort = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                const weekSpecificDesignation = calculateRoomDesignationForWeek(selectedRoom.id, selectedWeekStart);
+                const designationClass = getRoomDesignationClass(weekSpecificDesignation);
+                
+                document.getElementById('bedManagementTitle').innerHTML = 
+                    `🛏️ Manage Beds - Room ${selectedRoom.number} <span class="room-designation ${designationClass}">${weekSpecificDesignation}</span>`;
+                
+                document.getElementById('weekInfo').innerHTML = 
+                    `<strong>📅 Week:</strong> ${formatDateShort(selectedWeekStart)} - ${formatDateShort(weekEndDate)} (Sunday-Saturday) | 
+                     <strong>🏠 Property:</strong> ${selectedProperty.name}`;
+            }
+        }
+
+        function updateBreadcrumb() {
+            const breadcrumb = document.getElementById('breadcrumb');
+            
+            if (selectedProperty) {
+                breadcrumb.style.display = 'block';
+                let breadcrumbText = `<span onclick="goToStep(1)">Properties</span> > ${selectedProperty.name}`;
+                
+                if (selectedRoom && currentStep === 4) {
+                    breadcrumbText += ` > <span onclick="goToStep(3)">Overview</span> > Room ${selectedRoom.number}`;
+                }
+                
+                breadcrumb.innerHTML = breadcrumbText;
+            } else {
+                breadcrumb.style.display = 'none';
+            }
+        }
+
+        function openAssignmentModal(bedId, bedNumber) {
+            selectedBed = { id: bedId, number: bedNumber };
+            document.getElementById('assignmentModal').style.display = 'block';
+            
+            setTimeout(() => {
+                setupModalForRoomDesignation();
+            }, 100);
+        }
+
+        function setupModalForRoomDesignation() {
+            let weekDesignation = 'Empty';
+            if (selectedWeekStart) {
+                weekDesignation = calculateRoomDesignationForWeek(selectedRoom.id, selectedWeekStart);
+            }
+            
+            const genderField = document.getElementById('clientGender');
+            const select = document.getElementById('clientSelect');
+            
+            const existingInfo = document.querySelector('.room-designation-info');
+            if (existingInfo) existingInfo.remove();
+            
+            const modalTitle = document.querySelector('#assignmentModal h2');
+            modalTitle.textContent = `Assign Client to Bed ${selectedBed.number}`;
+            
+            const roomInfo = document.createElement('div');
+            roomInfo.className = 'room-designation-info';
+            
+            // Get all clients and filter out those already assigned for this week
+            const allClients = sampleDataLoaded ? sampleData.clients : [];
+            let availableClients = getAvailableClientsForWeek(allClients, selectedWeekStart);
+            
+            if (weekDesignation === 'Boys Room') {
+                roomInfo.innerHTML = '🔵 <strong>Boys Room</strong> - Only showing available male clients for this week';
+                roomInfo.style.borderLeft = '4px solid #0066cc';
+                availableClients = availableClients.filter(client => client.gender === 'Male');
+                genderField.value = 'Male';
+                genderField.disabled = true;
+            } else if (weekDesignation === 'Girls Room') {
+                roomInfo.innerHTML = '🟣 <strong>Girls Room</strong> - Only showing available female clients for this week';
+                roomInfo.style.borderLeft = '4px solid #9933cc';
+                availableClients = availableClients.filter(client => client.gender === 'Female');
+                genderField.value = 'Female';
+                genderField.disabled = true;
+            } else {
+                roomInfo.innerHTML = `⚪ <strong>Empty Room</strong> - Week of ${selectedWeekStart ? selectedWeekStart.toLocaleDateString() : 'current week'} (Sunday-Saturday). First client assigned determines room designation.`;
+                roomInfo.style.borderLeft = '4px solid #95a5a6';
+                genderField.value = '';
+                genderField.disabled = false;
+            }
+            
+            modalTitle.parentNode.insertBefore(roomInfo, modalTitle.nextSibling);
+            
+            // Show count of available vs total clients
+            const totalClients = allClients.filter(client => 
+                weekDesignation === 'Boys Room' ? client.gender === 'Male' :
+                weekDesignation === 'Girls Room' ? client.gender === 'Female' :
+                true
+            ).length;
+            
+            const options = ['<option value="">Choose a client...</option>'];
+            
+            if (availableClients.length === 0) {
+                options.push('<option value="" disabled>No available clients for this week</option>');
+            } else {
+                availableClients.forEach(client => {
+                    const genderIcon = client.gender === 'Male' ? '👨' : '👩';
+                    options.push(`<option value="${client.id}" data-gender="${client.gender}">${genderIcon} ${client.name}</option>`);
+                });
+            }
+            
+            // Add info about filtered clients
+            if (availableClients.length < totalClients) {
+                const filteredCount = totalClients - availableClients.length;
+                options.push(`<option value="" disabled>--- ${filteredCount} client(s) already assigned this week ---</option>`);
+            }
+            
+            select.innerHTML = options.join('');
+            
+            if (selectedWeekStart) {
+                const sundayDate = selectedWeekStart.toISOString().split('T')[0];
+                document.getElementById('checkinDate').value = sundayDate;
+                calculateEndDate();
+            }
+        }
+
+        function getAvailableClientsForWeek(allClients, weekStart) {
+            if (!weekStart || !sampleDataLoaded) {
+                return allClients;
+            }
+            
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            
+            // Find clients already assigned for this week
+            const assignedClientIds = new Set();
+            
+            sampleData.beds.forEach(bed => {
+                bed.bookings.forEach(booking => {
+                    const checkIn = new Date(booking.checkin);
+                    const checkOut = new Date(booking.checkout);
+                    
+                    // Check if booking overlaps with the selected week
+                    if (checkIn <= weekEnd && checkOut > weekStart) {
+                        assignedClientIds.add(booking.clientId);
+                    }
+                });
+            });
+            
+            // Return only clients not already assigned
+            const availableClients = allClients.filter(client => !assignedClientIds.has(client.id));
+            
+            console.log(`Week ${weekStart.toLocaleDateString()}: ${allClients.length} total clients, ${assignedClientIds.size} assigned, ${availableClients.length} available`);
+            
+            return availableClients;
+        }
+
+        function closeModal() {
+            document.getElementById('assignmentModal').style.display = 'none';
+            document.getElementById('assignmentForm').reset();
+            document.getElementById('clientGender').disabled = false;
+            const roomInfo = document.querySelector('.room-designation-info');
+            if (roomInfo) roomInfo.remove();
+        }
+
+        function assignBed() {
+            const clientId = document.getElementById('clientSelect').value;
+            const newClientName = document.getElementById('newClientName').value;
+            const clientGender = document.getElementById('clientGender').value;
+            const phone = document.getElementById('clientPhone').value;
+            const checkin = document.getElementById('checkinDate').value;
+            const checkout = document.getElementById('checkoutDate').value;
+
+            if (!clientId && (!newClientName || !clientGender)) {
+                showNotification('Please select an existing client or enter a new client name and gender.', 'error');
+                return;
+            }
+
+            if (!checkin) {
+                showNotification('Please select a check-in date.', 'error');
+                return;
+            }
+            
+            try {
+                if (sampleDataLoaded) {
+                    const bed = sampleData.beds.find(b => b.id === selectedBed.id);
+                    if (bed) {
+                        let finalClientId = clientId;
+                        
+                        if (newClientName) {
+                            finalClientId = 'client' + Date.now();
+                            sampleData.clients.push({
+                                id: finalClientId,
+                                name: newClientName,
+                                phone: phone,
+                                gender: clientGender,
+                                numberOfWeeks: parseInt(document.getElementById('numberOfWeeks').value) || 1
+                            });
+                        }
+                        
+                        bed.bookings.push({
+                            clientId: finalClientId,
+                            checkin: checkin,
+                            checkout: checkout
+                        });
+                    }
+                }
+                
+                closeModal();
+                loadBeds(selectedRoom.id);
+                loadRooms(selectedProperty.id);
+                updateOccupancyView();
+                updateQuickStats();
+                
+                showNotification('Bed assigned successfully!', 'success');
+            } catch (error) {
+                showNotification('Error assigning bed: ' + error.message, 'error');
+            }
+        }
+
+        async function releaseBed(bedId) {
+            if (!confirm('Are you sure you want to release this bed for the selected week?')) return;
+            
+            try {
+                if (sampleDataLoaded && selectedWeekStart) {
+                    const bed = sampleData.beds.find(b => b.id === bedId);
+                    if (bed) {
+                        const weekEnd = new Date(selectedWeekStart);
+                        weekEnd.setDate(selectedWeekStart.getDate() + 6);
+                        
+                        bed.bookings = bed.bookings.filter(booking => {
+                            const checkIn = new Date(booking.checkin);
+                            const checkOut = new Date(booking.checkout);
+                            return !(checkIn <= weekEnd && checkOut > selectedWeekStart);
+                        });
+                    }
+                }
+                
+                loadBeds(selectedRoom.id);
+                loadRooms(selectedProperty.id);
+                updateOccupancyView();
+                updateQuickStats();
+                showNotification('Bed released successfully!', 'success');
+            } catch (error) {
+                showNotification('Error releasing bed: ' + error.message, 'error');
+            }
+        }
+
+        function updateOccupancyView() {
+            if (!selectedProperty) {
+                document.getElementById('occupancyGrid').innerHTML = '<div class="alert alert-info">Please select a property first to view occupancy overview.</div>';
+                return;
+            }
+            
+            const monthSelect = document.getElementById('monthSelect');
+            const selectedMonth = monthSelect.value;
+            if (!selectedMonth) {
+                document.getElementById('occupancyGrid').innerHTML = '<div class="alert alert-info">Please select a month to view.</div>';
+                return;
+            }
+            
+            const year = parseInt(selectedMonth.split('-')[0]);
+            const month = parseInt(selectedMonth.split('-')[1]) - 1;
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            generateMonthlyOccupancyGrid(year, month, daysInMonth);
+        }
+
+        function generateMonthlyOccupancyGrid(year, month, daysInMonth) {
+            const container = document.getElementById('occupancyGrid');
+            
+            // Get the first day of the month and calculate the calendar grid
+            const firstDayOfMonth = new Date(year, month, 1);
+            const firstDayWeekday = firstDayOfMonth.getDay(); // 0 = Sunday, 1 = Monday, etc.
+            
+            // Get the last day of the month
+            const lastDayOfMonth = new Date(year, month, daysInMonth);
+            const lastDayWeekday = lastDayOfMonth.getDay();
+            
+            // Calculate how many days from previous month to show
+            const daysFromPrevMonth = firstDayWeekday;
+            
+            // Calculate how many days from next month to show (to complete the last week)
+            const daysFromNextMonth = 6 - lastDayWeekday;
+            
+            // Build the complete calendar grid
+            const calendarDays = [];
+            
+            // Add days from previous month
+            if (daysFromPrevMonth > 0) {
+                const prevMonth = month === 0 ? 11 : month - 1;
+                const prevYear = month === 0 ? year - 1 : year;
+                const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
+                
+                for (let i = daysFromPrevMonth - 1; i >= 0; i--) {
+                    const day = daysInPrevMonth - i;
+                    calendarDays.push({
+                        day: day,
+                        month: prevMonth,
+                        year: prevYear,
+                        isCurrentMonth: false,
+                        isPrevMonth: true
+                    });
+                }
+            }
+            
+            // Add days from current month
+            for (let day = 1; day <= daysInMonth; day++) {
+                calendarDays.push({
+                    day: day,
+                    month: month,
+                    year: year,
+                    isCurrentMonth: true,
+                    isPrevMonth: false
+                });
+            }
+            
+            // Add days from next month
+            if (daysFromNextMonth > 0) {
+                const nextMonth = month === 11 ? 0 : month + 1;
+                const nextYear = month === 11 ? year + 1 : year;
+                
+                for (let day = 1; day <= daysFromNextMonth; day++) {
+                    calendarDays.push({
+                        day: day,
+                        month: nextMonth,
+                        year: nextYear,
+                        isCurrentMonth: false,
+                        isPrevMonth: false
+                    });
+                }
+            }
+            
+            const totalDays = calendarDays.length;
+            let html = `<div class="occupancy-grid" style="grid-template-columns: 120px repeat(${totalDays}, 1fr);">`;
+            
+            html += '<div class="room-cell" style="background: #34495e; color: white; font-size: 0.6rem;">Room<br>(Beds)</div>';
+            
+            calendarDays.forEach(dayInfo => {
+                const date = new Date(dayInfo.year, dayInfo.month, dayInfo.day);
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                const weekendClass = isWeekend ? ' weekend' : '';
+                const dimmedStyle = !dayInfo.isCurrentMonth ? ' style="opacity: 0.4; background: #95a5a6;"' : '';
+                
+                html += `<div class="day-header${weekendClass}"${dimmedStyle}>${dayName}<br>${dayInfo.day}</div>`;
+            });
+            
+            let propertyRooms = [];
+            if (sampleDataLoaded) {
+                propertyRooms = sampleData.rooms.filter(room => room.propertyId === selectedProperty.id);
+            }
+            
+            propertyRooms.forEach(room => {
+                const designation = calculateRoomDesignation(room.id);
+                const designationClass = getRoomDesignationClass(designation);
+                
+                const bedCount = sampleDataLoaded ? 
+                    sampleData.beds.filter(bed => bed.roomId === room.id).length : 
+                    (room.capacity || '?');
+                
+                html += `<div class="room-cell">
+                    <div style="font-size: 0.6rem; font-weight: bold;">Room ${room.number}</div>
+                    <div style="font-size: 0.5rem; color: #666; margin: 1px 0;">(${bedCount} beds)</div>
+                    <div class="room-designation ${designationClass}" style="font-size: 0.45rem; margin-top: 2px; padding: 1px 3px;">${designation}</div>
+                </div>`;
+                
+                calendarDays.forEach(dayInfo => {
+                    const date = new Date(dayInfo.year, dayInfo.month, dayInfo.day);
+                    const cellData = getRoomOccupancyForDate(room.id, date);
+                    const dateString = `${dayInfo.year}-${String(dayInfo.month + 1).padStart(2, '0')}-${String(dayInfo.day).padStart(2, '0')}`;
+                    
+                    // Make non-current month days less interactive and visible
+                    const dimmedStyle = !dayInfo.isCurrentMonth ? ' style="opacity: 0.3; pointer-events: none;"' : '';
+                    const cellContent = !dayInfo.isCurrentMonth ? '' : cellData.content;
+                    const cellTooltip = !dayInfo.isCurrentMonth ? `${date.toLocaleDateString()} (different month)` : (cellData.tooltip || '');
+                    
+                    html += `<div class="occupancy-cell ${cellClass}" 
+                             title="${cellTooltip}"
+                             onclick="${dayInfo.isCurrentMonth ? `selectRoomDate('${room.id}', '${room.number}', '${dateString}')` : ''}"${dimmedStyle}>
+                        ${cellContent}
+                    </div>`;
+                });
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function getRoomOccupancyForDate(roomId, date) {
+            if (!sampleDataLoaded) {
+                return { class: 'available', content: '', tooltip: 'Available' };
+            }
+            
+            const beds = sampleData.beds.filter(bed => bed.roomId === roomId);
+            const clientsStaying = [];
+            
+            beds.forEach(bed => {
+                bed.bookings.forEach(booking => {
+                    const checkIn = new Date(booking.checkin);
+                    const checkOut = new Date(booking.checkout);
+                    
+                    if (date >= checkIn && date < checkOut) {
+                        const client = sampleData.clients.find(c => c.id === booking.clientId);
+                        if (client) {
+                            clientsStaying.push(client);
+                        }
+                    }
+                });
+            });
+            
+            if (clientsStaying.length === 0) {
+                return { class: 'available', content: '', tooltip: 'Available' };
+            }
+            
+            const dayOfWeek = date.getDay();
+            const weekStart = new Date(date);
+            weekStart.setDate(date.getDate() - dayOfWeek);
+            
+            const weekDesignation = calculateRoomDesignationForWeek(roomId, weekStart);
+            
+            let cssClass = 'occupied';
+            if (weekDesignation === 'Boys Room') cssClass = 'boys';
+            else if (weekDesignation === 'Girls Room') cssClass = 'girls';
+            
+            if (clientsStaying.length === beds.length) cssClass = 'occupied';
+            
+            const clientNames = clientsStaying.map(c => c.name).join(', ');
+            const tooltip = `${weekDesignation}: ${clientNames}`;
+            
+            return { 
+                class: cssClass, 
+                content: clientsStaying.length.toString(),
+                tooltip: tooltip
+            };
+        }
+
+        // Event listeners
+        window.addEventListener('load', function() {
+            console.log('Enhanced Bed Assignment Manager loaded successfully!');
+            updateQuickStats();
+        });
+
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('assignmentModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
