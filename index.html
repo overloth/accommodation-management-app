@@ -804,7 +804,8 @@
                 properties: 'Properties',
                 rooms: 'Rooms', 
                 beds: 'Beds',
-                clients: 'Clients'
+                clients: 'Clients',
+                bookings: 'Bookings'
             }
         };
 
@@ -906,6 +907,33 @@
                 }
             });
         }
+
+
+        async function makeAirtableRequest(table, method = 'GET', data = null) {
+                    if (!config.token || !config.baseId) {
+                        throw new Error('Airtable configuration missing');
+                    }
+                    
+                    const url = `https://api.airtable.com/v0/${config.baseId}/${table}`;
+                    const options = {
+                        method: method,
+                        headers: {
+                            'Authorization': `Bearer ${config.token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    };
+                    
+                    if (data && (method === 'POST' || method === 'PATCH')) {
+                        options.body = JSON.stringify(data);
+                    }
+                    
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        throw new Error(`Airtable API error: ${response.status} ${response.statusText}`);
+                    }
+                    
+                    return await response.json();
+                }
 
         // Update statistics
         function updateQuickStats() {
@@ -1055,7 +1083,14 @@
                         container.innerHTML = '<div class="alert alert-info">Please configure Airtable connection or load sample data to get started.</div>';
                         return;
                     }
-                    properties = [];
+                    
+                    const response = await makeAirtableRequest(config.tables.properties);
+                    properties = response.records.map(record => ({
+                        id: record.id,
+                        name: record.fields.Name,
+                        address: record.fields.Address,
+                        contact: record.fields.Contact
+                    }));
                 }
 
                 if (properties.length === 0) {
@@ -1088,7 +1123,16 @@
                 if (sampleDataLoaded) {
                     rooms = sampleData.rooms.filter(room => room.propertyId === propertyId);
                 } else {
-                    rooms = [];
+                    const response = await makeAirtableRequest(config.tables.rooms);
+                    rooms = response.records
+                        .filter(record => record.fields.Property && record.fields.Property[0] === propertyId)
+                        .map(record => ({
+                            id: record.id,
+                            number: record.fields.Number,
+                            propertyId: propertyId,
+                            type: record.fields.Type,
+                            capacity: record.fields.Capacity
+                        }));
                 }
 
                 if (rooms.length === 0) {
