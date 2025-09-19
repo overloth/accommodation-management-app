@@ -1130,10 +1130,10 @@ console.log('evo ga load properties');
                         .filter(record => record.fields.Property && record.fields.Property[0] === propertyId)
                         .map(record => ({
                             id: record.id,
-                            number: record.fields.Number,
+                            number: record.fields['Room Name'],
                             propertyId: propertyId,
-                            type: record.fields.Type,
-                            capacity: record.fields.Capacity
+                            type: record.fields['Room Facilities'],
+                            capacity: record.fields['Number of Beds']
                         }));
                 }
 
