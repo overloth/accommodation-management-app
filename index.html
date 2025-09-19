@@ -1085,11 +1085,11 @@ console.log('evo ga load properties');
                     }
                     
                     const response = await makeAirtableRequest(config.tables.properties);
-                    properties = response.records.map(record => ({
+                   properties = response.records.map(record => ({
                         id: record.id,
-                        name: record.fields.Name,
-                        address: record.fields.Address,
-                        contact: record.fields.Contact
+                        name: record.fields['Property Name'],
+                        address: record.fields['Property Street Address'],
+                        contact: 'Not specified'
                     }));
                 }
 
