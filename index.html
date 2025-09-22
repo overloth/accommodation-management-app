@@ -1085,14 +1085,19 @@ console.log('evo ga load properties');
                     }
                     
                     const response = await makeAirtableRequest(config.tables.properties);
-                   properties = response.records.map(record => ({
-                        id: record.id,
-                        name: record.fields['Property Name'],
-                        address: record.fields['Property Street Address'],
-                        contact: 'Not specified'
-                    }));
-                   console.log('evo ih properties');
-                   console.log(properties);
+                   properties = response.records
+                        .filter(record => {
+                            const countryName = record.fields['Property Country'] && record.fields['Property Country'].length > 0
+                                ? record.fields['Property Country'][0] 
+                                : null;
+                            return countryName === 'Switzerland';
+                        })
+                        .map(record => ({
+                            id: record.id,
+                            name: record.fields['Property Name'],
+                            address: record.fields['Property Street Address'],
+                            contact: 'Not specified'
+                        }));
                 }
 
                 if (properties.length === 0) {
