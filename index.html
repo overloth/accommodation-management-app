@@ -1086,7 +1086,13 @@ console.log('evo ga load properties');
                     
                     const response = await makeAirtableRequest(config.tables.properties);
                         properties = response.records
-                            .filter(record => record.fields['Country Name (from Property Country)'] === 'Switzerland')
+                            .filter(record => {
+                                const countryName = record.fields['Country Name (from Property Country)'];
+                                Console.log('da li ovo loguje u maminu');
+                                console.log(countryName);
+                                return countryName === 'Switzerland' || 
+                                       (Array.isArray(countryName) && countryName.includes('Switzerland'));
+                            })
                             .map(record => ({
                                 id: record.id,
                                 name: record.fields['Property Name'],
