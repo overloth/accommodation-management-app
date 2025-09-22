@@ -1088,7 +1088,7 @@ console.log('evo ga load properties');
                    properties = response.records
                         .filter(record => {
                             const countryName = record.fields['Property Country'] && record.fields['Property Country'].length > 0
-                                ? record.fields['Property Country'][0] 
+                                ? record.fields['Country Name (from Property Country)'][0] 
                                 : null;
                             return countryName === 'Switzerland';
                         })
