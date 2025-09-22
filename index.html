@@ -1208,7 +1208,16 @@ console.log('evo ga load properties');
                 if (sampleDataLoaded) {
                     beds = sampleData.beds.filter(bed => bed.roomId === roomId);
                 } else {
-                    beds = [];
+                   const response = await makeAirtableRequest(config.tables.beds);
+                    beds = response.records
+                        .filter(record => record.fields.Room && record.fields.Room[0] === roomId)
+                        .map(record => ({
+                            id: record.id,
+                            number: record.fields['Name'],
+                            roomId: roomId,
+                            status: record.fields['Status'] || 'Available',
+                            bookings: []
+                        }));
                 }
 
                 if (beds.length === 0) {
