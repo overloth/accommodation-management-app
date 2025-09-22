@@ -1085,10 +1085,11 @@ console.log('evo ga load properties');
                     }
                     
                     const response = await makeAirtableRequest(config.tables.properties);
+                    console.log('Raw API response:', response.records[0]?.fields);
                         properties = response.records
                             .filter(record => {
                                 const countryName = record.fields['Country Name (from Property Country)'];
-                                Console.log('da li ovo loguje u maminu');
+                                console.log('da li ovo loguje u maminu');
                                 console.log(countryName);
                                 return countryName === 'Switzerland' || 
                                        (Array.isArray(countryName) && countryName.includes('Switzerland'));
