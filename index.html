@@ -1213,7 +1213,13 @@ console.log('evo ga load properties');
                    console.log('ovo je response za beds');
                         console.log(response);
                     beds = response.records
-                        .filter(record => record.fields.Rooms && record.fields.Rooms[0] === roomId)
+                        .filter(record => {
+                            const roomsField = record.fields.Rooms;
+                            return roomsField && (
+                                roomsField === roomId || 
+                                (Array.isArray(roomsField) && roomsField.includes(roomId))
+                            );
+                        })
                         .map(record => ({
                             id: record.id,
                             number: record.fields['Name'],
