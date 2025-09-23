@@ -1281,7 +1281,7 @@
         }
 
         function selectProperty(id, name) {
-            console.log('usao u select room', id, name);
+            console.log('usao u select property', id, name);
             selectedProperty = { id, name };
             updateBreadcrumb();
             goToStep(2);
@@ -1293,7 +1293,7 @@
             selectedRoom = { id, number };
             updateBreadcrumb();
             goToStep(3);
-            loadBeds(roomId);
+            loadBeds(id);
             populateMonthSelector();
             updateOccupancyView();
         }
