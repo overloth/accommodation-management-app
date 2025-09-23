@@ -1293,7 +1293,6 @@
             selectedRoom = { id, number };
             updateBreadcrumb();
             goToStep(3);
-            loadBeds(id);
             populateMonthSelector();
             updateOccupancyView();
         }
@@ -1744,8 +1743,8 @@
                     (room.capacity || '?');
                 
                 html += `<div class="room-cell">
-                    <div style="font-size: 0.6rem; font-weight: bold;">Room ${room.number}</div>
-                    <div style="font-size: 0.5rem; color: #666; margin: 1px 0;">(${bedCount} beds)</div>
+                    <div style="font-size: 0.6rem; font-weight: bold;">Room testing ${room.number}</div>
+                    <div style="font-size: 0.5rem; color: #666; margin: 1px 0;">(${bedCount} beds testing)</div>
                     <div class="room-designation ${designationClass}" style="font-size: 0.45rem; margin-top: 2px; padding: 1px 3px;">${designation}</div>
                 </div>`;
                 
