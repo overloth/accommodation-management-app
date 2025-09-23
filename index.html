@@ -1299,6 +1299,7 @@
         }
 
         function selectRoomDate(roomId, roomNumber, date) {
+            console.log('usao u selectRoomDate', roomId, roomNumber, date);
             selectedRoom = { id: roomId, number: roomNumber };
             selectedDate = new Date(date + 'T12:00:00');
             
@@ -1309,6 +1310,8 @@
             updateBedManagementTitle();
             goToStep(4);
             loadBeds(roomId);
+            // loadBeds(roomId); // stay in Step 3 and just refresh beds
+            // updateBedManagementTitle();
         }
 
         function populateMonthSelector() {
@@ -1626,6 +1629,7 @@
         }
 
         function updateOccupancyView() {
+            console.log('da li je usao u update occupancy view', year, month, daysInMonth);
             if (!selectedProperty) {
                 document.getElementById('occupancyGrid').innerHTML = '<div class="alert alert-info">Please select a property first to view occupancy overview.</div>';
                 return;
@@ -1646,6 +1650,7 @@
         }
 
         function generateMonthlyOccupancyGrid(year, month, daysInMonth) {
+            console.log('da li je usaou generate monthly occupancy grip', year, month, daysInMonth);
             const container = document.getElementById('occupancyGrid');
             
             // Get the first day of the month and calculate the calendar grid
