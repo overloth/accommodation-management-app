@@ -1198,15 +1198,20 @@ console.log('evo ga load properties');
         }
 
         async function loadBeds(roomId) {
+            console.log('ovo je room id');
+                        console.log(roomId);
             const container = document.getElementById('bedsContainer');
             container.innerHTML = '<div class="bed-card"><h3>Loading beds...</h3></div>';
 
             try {
                 let beds;
                 if (sampleDataLoaded) {
+                    console.log('sample data loaded for beds');
                     beds = sampleData.beds.filter(bed => bed.roomId === roomId);
                 } else {
                    const response = await makeAirtableRequest(config.tables.beds);
+                   console.log('ovo je response za beds');
+                        console.log(response);
                     beds = response.records
                         .filter(record => record.fields.Room && record.fields.Room[0] === roomId)
                         .map(record => ({
