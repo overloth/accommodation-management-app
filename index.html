@@ -1755,6 +1755,8 @@ console.log('evo ga load properties');
                     const cellContent = !dayInfo.isCurrentMonth ? '' : cellData.content;
                     const cellTooltip = !dayInfo.isCurrentMonth ? `${date.toLocaleDateString()} (different month)` : (cellData.tooltip || '');
                     
+
+                    const cellClass = cellData.class || 'available';
                     html += `<div class="occupancy-cell ${cellClass}" 
                              title="${cellTooltip}"
                              onclick="${dayInfo.isCurrentMonth ? `selectRoomDate('${room.id}', '${room.number}', '${dateString}')` : ''}"${dimmedStyle}>
