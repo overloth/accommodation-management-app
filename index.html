@@ -1089,8 +1089,6 @@ console.log('evo ga load properties');
                         properties = response.records
                             .filter(record => {
                                 const countryName = record.fields['Country Name (from Property Country)'];
-                                console.log('da li ovo loguje u maminu');
-                                console.log(countryName);
                                 return countryName === 'Switzerland' || 
                                        (Array.isArray(countryName) && countryName.includes('Switzerland'));
                             })
@@ -1218,6 +1216,8 @@ console.log('evo ga load properties');
                             status: record.fields['Status'] || 'Available',
                             bookings: []
                         }));
+                        console.log('ovo su beds');
+                        console.log(beds);
                 }
 
                 if (beds.length === 0) {
