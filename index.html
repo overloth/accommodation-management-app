@@ -1073,7 +1073,6 @@
         async function loadProperties() {
             const container = document.getElementById('propertiesGrid');
             container.innerHTML = '<div class="card"><h3>Loading properties...</h3></div>';
-console.log('evo ga load properties');
             try {
                 let properties;
                 if (sampleDataLoaded) {
@@ -1085,7 +1084,6 @@ console.log('evo ga load properties');
                     }
                     
                     const response = await makeAirtableRequest(config.tables.properties);
-                    console.log('Raw API response:', response.records[0]?.fields);
                         properties = response.records
                             .filter(record => {
                                 const countryName = record.fields['Country Name (from Property Country)'];
@@ -1098,8 +1096,6 @@ console.log('evo ga load properties');
                                 address: record.fields['Property Street Address'],
                                 contact: 'Not specified'
                             }));
-
-                            console.log('ov osu properties: ', properties);
                 }
 
                 if (properties.length === 0) {
@@ -1285,6 +1281,7 @@ console.log('evo ga load properties');
         }
 
         function selectProperty(id, name) {
+            console.log('usao u select room', id, name);
             selectedProperty = { id, name };
             updateBreadcrumb();
             goToStep(2);
@@ -1292,6 +1289,7 @@ console.log('evo ga load properties');
         }
 
         function selectRoom(id, number) {
+            console.log('usao u select room', id, number);
             selectedRoom = { id, number };
             updateBreadcrumb();
             goToStep(3);
