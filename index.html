@@ -733,6 +733,11 @@
                         </div>
                     </div>
                 </div>
+
+                <div style="margin-top: 30px;">
+                    <h3 id="roomBedsTitle">Room Beds</h3>
+                    <div id="bedsContainer"></div>
+                </div>
                 <button class="btn btn-secondary" onclick="goToStep(1)">← Back to Properties</button>
             </div>
 
@@ -1358,6 +1363,7 @@
             goToStep(3);
             populateMonthSelector();
             updateOccupancyView();
+            loadBeds(id);
         }
 
         function selectRoomDate(roomId, roomNumber, date) {
