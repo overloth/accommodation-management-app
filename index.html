@@ -1844,15 +1844,74 @@
             container.innerHTML = html;
         }
 
+        // function getRoomOccupancyForDate(roomId, date) {
+        //     // if (!sampleDataLoaded) {
+        //     //     return { class: 'available', content: '', tooltip: 'Available' };
+        //     // }
+        //     if (!sampleDataLoaded) {
+        //         // For now, return available since we don't have booking data yet
+        //         return { class: 'available', content: '', tooltip: 'Available - No booking data loaded' };
+        //     }
+            
+        //     const beds = sampleData.beds.filter(bed => bed.roomId === roomId);
+        //     const clientsStaying = [];
+            
+        //     beds.forEach(bed => {
+        //         bed.bookings.forEach(booking => {
+        //             const checkIn = new Date(booking.checkin);
+        //             const checkOut = new Date(booking.checkout);
+                    
+        //             if (date >= checkIn && date < checkOut) {
+        //                 const client = sampleData.clients.find(c => c.id === booking.clientId);
+        //                 if (client) {
+        //                     clientsStaying.push(client);
+        //                 }
+        //             }
+        //         });
+        //     });
+            
+        //     if (clientsStaying.length === 0) {
+        //         return { class: 'available', content: '', tooltip: 'Available' };
+        //     }
+            
+        //     const dayOfWeek = date.getDay();
+        //     const weekStart = new Date(date);
+        //     weekStart.setDate(date.getDate() - dayOfWeek);
+            
+        //     const weekDesignation = calculateRoomDesignationForWeek(roomId, weekStart);
+            
+        //     let cssClass = 'occupied';
+        //     if (weekDesignation === 'Boys Room') cssClass = 'boys';
+        //     else if (weekDesignation === 'Girls Room') cssClass = 'girls';
+            
+        //     if (clientsStaying.length === beds.length) cssClass = 'occupied';
+            
+        //     const clientNames = clientsStaying.map(c => c.name).join(', ');
+        //     const tooltip = `${weekDesignation}: ${clientNames}`;
+            
+        //     return { 
+        //         class: cssClass, 
+        //         content: clientsStaying.length.toString(),
+        //         tooltip: tooltip
+        //     };
+        // }
+
         function getRoomOccupancyForDate(roomId, date) {
-            // if (!sampleDataLoaded) {
-            //     return { class: 'available', content: '', tooltip: 'Available' };
-            // }
+            // For Airtable mode, we need to check actual bed data
             if (!sampleDataLoaded) {
-                // For now, return available since we don't have booking data yet
-                return { class: 'available', content: '', tooltip: 'Available - No booking data loaded' };
+                // Since we don't have booking data from Airtable loaded yet,
+                // we can show the number of beds available but can't show occupancy
+                const roomObj = currentPropertyRooms.find(r => r.id === roomId);
+                const bedCount = roomObj ? (roomObj.capacity || 0) : 0;
+                
+                return { 
+                    class: 'available', 
+                    content: bedCount > 0 ? bedCount.toString() : '', 
+                    tooltip: `${bedCount} bed(s) available - Booking data not loaded` 
+                };
             }
             
+            // Sample data mode (existing logic)
             const beds = sampleData.beds.filter(bed => bed.roomId === roomId);
             const clientsStaying = [];
             
@@ -1871,7 +1930,7 @@
             });
             
             if (clientsStaying.length === 0) {
-                return { class: 'available', content: '', tooltip: 'Available' };
+                return { class: 'available', content: beds.length.toString(), tooltip: `${beds.length} bed(s) available` };
             }
             
             const dayOfWeek = date.getDay();
