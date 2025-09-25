@@ -1218,6 +1218,10 @@
                             const roomsField = record.fields.Rooms;
                             const lookupRoomName = record.fields['Room Name (from Rooms)'];
                             
+                            console.log(`🛏️ Checking bed: ${record.fields.Name}`);
+                            console.log(`  - Rooms field:`, roomsField);
+                            console.log(`  - Lookup room name:`, lookupRoomName);
+                            console.log(`  - Target room ID:`, roomId);
                             console.log(`Checking bed ${record.fields.Name}: Rooms=${JSON.stringify(roomsField)}, Lookup=${JSON.stringify(lookupRoomName)}`);
                             
                             // Check if linked to this room ID
