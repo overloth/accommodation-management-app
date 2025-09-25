@@ -1351,13 +1351,30 @@
             loadRooms(id);
         }
 
+        // function selectRoom(id, number) {
+        //     console.log('usao u select room', id, number);
+        //     selectedRoom = { id, number };
+        //     updateBreadcrumb();
+        //     goToStep(3);
+        //     populateMonthSelector();
+        //     updateOccupancyView();
+        //     loadBeds(id);
+        // }
+
         function selectRoom(id, number) {
             console.log('usao u select room', id, number);
             selectedRoom = { id, number };
             updateBreadcrumb();
-            goToStep(3);
-            populateMonthSelector();
-            updateOccupancyView();
+            goToStep(4);  // Go directly to Step 4 (Manage Beds)
+            
+            // Set up bed management for current week
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            selectedWeekStart = new Date(today);
+            selectedWeekStart.setDate(today.getDate() - dayOfWeek); // Go to Sunday of current week
+            selectedDate = new Date(selectedWeekStart);
+            
+            updateBedManagementTitle();
             loadBeds(id);
         }
 
