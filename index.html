@@ -1199,58 +1199,91 @@
         }
 
         async function loadBeds(roomId) {
-            console.log('ovo je room id');
-                        console.log(roomId);
+            console.log('loadBeds roomId:', roomId);
             const container = document.getElementById('bedsContainer');
             container.innerHTML = '<div class="bed-card"><h3>Loading beds...</h3></div>';
 
             try {
-                let beds;
+                let beds = [];
+
                 if (sampleDataLoaded) {
                     console.log('sample data loaded for beds');
                     beds = sampleData.beds.filter(bed => bed.roomId === roomId);
                 } else {
-                   const response = await makeAirtableRequest(config.tables.beds);
-                   console.log('ovo je response za beds');
-                        console.log(response);
-                    beds = response.records
+                    // make sure Airtable configured
+                    if (!config.token || !config.baseId) {
+                        container.innerHTML = '<div class="alert alert-info">Please configure Airtable connection or load sample data to get started.</div>';
+                        return;
+                    }
+
+                    const response = await makeAirtableRequest(config.tables.beds);
+                    console.log('beds response', response);
+
+                    // Try to get the room number/name from rooms already loaded for this property
+                    const roomObj = (currentPropertyRooms || []).find(r => r.id === roomId);
+                    const roomNumber = roomObj ? roomObj.number : null;
+
+                    beds = (response.records || [])
                         .filter(record => {
-                            const roomsField = record.fields.Rooms;
-                            return roomsField && (
-                                roomsField === roomId || 
-                                (Array.isArray(roomsField) && roomsField.includes(roomId))
-                            );
+                            // Several possible shapes: Rooms may be linked record ids, or lookup names.
+                            const roomsField = record.fields['Rooms'] || record.fields['Room'] || record.fields['rooms'];
+                            const lookupRoomName = record.fields['Room Name (from Rooms)'] || record.fields['Room Name'] || record.fields['room name'];
+
+                            // 1) If Rooms contains linked record IDs, match by roomId
+                            if (roomsField) {
+                                if (Array.isArray(roomsField)) {
+                                    if (roomsField.includes(roomId)) return true;
+                                    // sometimes Rooms can contain the room name (lookup stored here) — match that too
+                                    if (roomNumber && roomsField.includes(roomNumber)) return true;
+                                } else {
+                                    if (roomsField === roomId) return true;
+                                    if (roomNumber && roomsField === roomNumber) return true;
+                                }
+                            }
+
+                            // 2) If there's a lookup field 'Room Name (from Rooms)', match by name
+                            if (lookupRoomName && roomNumber) {
+                                if (Array.isArray(lookupRoomName)) {
+                                    if (lookupRoomName.includes(roomNumber)) return true;
+                                } else {
+                                    if (lookupRoomName === roomNumber) return true;
+                                }
+                            }
+
+                            return false;
                         })
                         .map(record => ({
                             id: record.id,
-                            number: record.fields['Name'],
+                            // support multiple possible bed name fields
+                            number: record.fields['Name'] || record.fields['Bed Number'] || record.fields['Bed'] || 'Unknown',
                             roomId: roomId,
                             status: record.fields['Status'] || 'Available',
-                            bookings: []
+                            bookings: [] // bookings will be attached later when you load bookings
                         }));
-                        console.log('ovo su beds');
-                        console.log(beds);
+
+                    console.log('mapped beds (from Airtable)', beds);
                 }
 
-                if (beds.length === 0) {
+                if (!beds || beds.length === 0) {
                     container.innerHTML = '<div class="alert alert-info">No beds found for this room.</div>';
                     return;
                 }
 
+                // reuse existing rendering logic (keeps UI identical)
                 container.innerHTML = beds.map(bed => {
                     let clientName = null;
                     let isCurrentlyOccupied = false;
-                    
+
                     if (sampleDataLoaded && selectedWeekStart) {
                         const weekEnd = new Date(selectedWeekStart);
                         weekEnd.setDate(selectedWeekStart.getDate() + 6);
-                        
+
                         const activeBooking = bed.bookings.find(booking => {
                             const checkIn = new Date(booking.checkin);
                             const checkOut = new Date(booking.checkout);
                             return checkIn <= weekEnd && checkOut > selectedWeekStart;
                         });
-                        
+
                         if (activeBooking) {
                             const client = sampleData.clients.find(c => c.id === activeBooking.clientId);
                             if (client) {
@@ -1259,7 +1292,7 @@
                             }
                         }
                     }
-                    
+
                     const bedNumber = bed.number || 'Unknown';
                     const displayStatus = isCurrentlyOccupied ? 'Occupied' : 'Available';
                     const assignText = isCurrentlyOccupied ? 'Release' : 'Assign';
@@ -1267,7 +1300,7 @@
                     const buttonAction = isCurrentlyOccupied ? 
                         `releaseBed('${bed.id}')` : 
                         `openAssignmentModal('${bed.id}', '${bedNumber}')`;
-                    
+
                     return `<div class="bed-card ${displayStatus.toLowerCase()}">
                         <div class="bed-info">
                             <h4>🛏️ Bed ${bedNumber}</h4>
@@ -1281,9 +1314,11 @@
                     </div>`;
                 }).join('');
             } catch (error) {
+                console.error('Error in loadBeds:', error);
                 container.innerHTML = `<div class="alert alert-warning">Error loading beds: ${error.message}</div>`;
             }
         }
+
 
         async function loadBookingsFromAirtable() {
             if (sampleDataLoaded) return;
