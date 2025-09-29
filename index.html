@@ -817,6 +817,7 @@
         let selectedWeekStart = null;
         let sampleDataLoaded = false;
         let currentPropertyRooms = [];
+        let airtableBookings = [];
 
         // Enhanced sample data
         const sampleData = {
@@ -1258,25 +1259,50 @@
                 }
 
                 container.innerHTML = beds.map(bed => {
+                    // let clientName = null;
+                    // let isCurrentlyOccupied = false;
+                    
+                    // if (sampleDataLoaded && selectedWeekStart) {
+                    //     const weekEnd = new Date(selectedWeekStart);
+                    //     weekEnd.setDate(selectedWeekStart.getDate() + 6);
+                        
+                    //     const activeBooking = bed.bookings.find(booking => {
+                    //         const checkIn = new Date(booking.checkin);
+                    //         const checkOut = new Date(booking.checkout);
+                    //         return checkIn <= weekEnd && checkOut > selectedWeekStart;
+                    //     });
+                        
+                    //     if (activeBooking) {
+                    //         const client = sampleData.clients.find(c => c.id === activeBooking.clientId);
+                    //         if (client) {
+                    //             clientName = client.name;
+                    //             isCurrentlyOccupied = true;
+                    //         }
+                    //     }
+                    // }
+
                     let clientName = null;
                     let isCurrentlyOccupied = false;
-                    
-                    if (sampleDataLoaded && selectedWeekStart) {
+
+                    if (selectedWeekStart) {
                         const weekEnd = new Date(selectedWeekStart);
                         weekEnd.setDate(selectedWeekStart.getDate() + 6);
                         
-                        const activeBooking = bed.bookings.find(booking => {
-                            const checkIn = new Date(booking.checkin);
-                            const checkOut = new Date(booking.checkout);
-                            return checkIn <= weekEnd && checkOut > selectedWeekStart;
-                        });
+                        // Use the helper function that works for both sample and Airtable data
+                        const bookings = getBookingsForBed(bed.id, selectedWeekStart, weekEnd);
                         
-                        if (activeBooking) {
-                            const client = sampleData.clients.find(c => c.id === activeBooking.clientId);
-                            if (client) {
-                                clientName = client.name;
-                                isCurrentlyOccupied = true;
+                        if (bookings.length > 0) {
+                            const activeBooking = bookings[0];
+                            
+                            // Get client name - different structure for sample vs Airtable
+                            if (sampleDataLoaded) {
+                                const client = sampleData.clients.find(c => c.id === activeBooking.clientId);
+                                clientName = client ? client.name : null;
+                            } else {
+                                clientName = activeBooking.clientName; // Airtable booking already has the name
                             }
+                            
+                            isCurrentlyOccupied = true;
                         }
                     }
                     
@@ -1305,50 +1331,135 @@
             }
         }
 
-        async function loadBookingsFromAirtable() {
+        // async function loadBookingsFromAirtable() {
+        //     if (sampleDataLoaded) return;
+            
+        //     try {
+        //         const bookingsResponse = await makeAirtableRequest(config.tables.bookings);
+                
+        //         // Process bookings and assign them to beds
+        //         bookingsResponse.records.forEach(bookingRecord => {
+        //             const fields = bookingRecord.fields;
+        //             const accommodationField = fields.accommodation;
+        //             const givenName = fields['Given Name (from Kids on Trip)'] || '';
+        //             const familyName = fields['Family Name (from Kids on Trip)'] || '';
+        //             const fullName = `${givenName} ${familyName}`.trim();
+                    
+        //             if (accommodationField && fields['Arrival Date'] && fields['Departure Date']) {
+        //                 // Find the bed that matches this accommodation
+        //                 // You might need to adjust this logic based on how accommodation links to beds
+        //                 const bedId = Array.isArray(accommodationField) ? accommodationField[0] : accommodationField;
+                        
+        //                 // Create booking data in the format the app expects
+        //                 const booking = {
+        //                     clientName: fullName,
+        //                     gender: fields.Gender,
+        //                     phone: fields.Phone,
+        //                     checkin: fields['Arrival Date'],
+        //                     checkout: fields['Departure Date'],
+        //                     bedId: bedId
+        //                 };
+                        
+        //                 console.log('Processed booking:', booking);
+        //             }
+        //         });
+                
+        //     } catch (error) {
+        //         console.error('Error loading bookings:', error);
+        //     }
+        // }
+
+        async function loadBookingsFromAirtable(propertyId) {
             if (sampleDataLoaded) return;
             
             try {
+                // Get the property's camp
+                const propertyResponse = await makeAirtableRequest(`${config.tables.properties}/${propertyId}`);
+                const propertyCampIds = propertyResponse.fields['Camp'];
+                
+                if (!propertyCampIds || propertyCampIds.length === 0) {
+                    console.warn('No camp associated with property');
+                    airtableBookings = [];
+                    return;
+                }
+                
+                // Get all bookings
                 const bookingsResponse = await makeAirtableRequest(config.tables.bookings);
                 
-                // Process bookings and assign them to beds
-                bookingsResponse.records.forEach(bookingRecord => {
-                    const fields = bookingRecord.fields;
-                    const accommodationField = fields.accommodation;
-                    const givenName = fields['Given Name (from Kids on Trip)'] || '';
-                    const familyName = fields['Family Name (from Kids on Trip)'] || '';
-                    const fullName = `${givenName} ${familyName}`.trim();
-                    
-                    if (accommodationField && fields['Arrival Date'] && fields['Departure Date']) {
-                        // Find the bed that matches this accommodation
-                        // You might need to adjust this logic based on how accommodation links to beds
-                        const bedId = Array.isArray(accommodationField) ? accommodationField[0] : accommodationField;
+                // Filter and process bookings
+                airtableBookings = bookingsResponse.records
+                    .filter(record => {
+                        const bookingCampIds = record.fields['Camp'];
+                        if (!bookingCampIds) return false;
                         
-                        // Create booking data in the format the app expects
-                        const booking = {
+                        // Check if any camp ID matches
+                        return propertyCampIds.some(campId => 
+                            Array.isArray(bookingCampIds) ? bookingCampIds.includes(campId) : bookingCampIds === campId
+                        );
+                    })
+                    .map(record => {
+                        const fields = record.fields;
+                        const givenName = Array.isArray(fields['Given Name (from Kids on Trip)']) 
+                            ? fields['Given Name (from Kids on Trip)'][0] 
+                            : fields['Given Name (from Kids on Trip)'] || '';
+                        const familyName = Array.isArray(fields['Family Name (from Kids on Trip)']) 
+                            ? fields['Family Name (from Kids on Trip)'][0] 
+                            : fields['Family Name (from Kids on Trip)'] || '';
+                        const fullName = `${givenName} ${familyName}`.trim();
+                        
+                        return {
+                            id: record.id,
+                            bedId: fields['accommodation'] ? fields['accommodation'][0] : null,
                             clientName: fullName,
-                            gender: fields.Gender,
-                            phone: fields.Phone,
+                            gender: Array.isArray(fields['Gender (from Kids on Trip)']) 
+                                ? fields['Gender (from Kids on Trip)'][0] 
+                                : fields['Gender (from Kids on Trip)'],
+                            phone: fields['Phone'] || '',
                             checkin: fields['Arrival Date'],
                             checkout: fields['Departure Date'],
-                            bedId: bedId
+                            kidId: fields['Kids on Trip'] ? fields['Kids on Trip'][0] : null
                         };
-                        
-                        console.log('Processed booking:', booking);
-                    }
-                });
+                    })
+                    .filter(booking => booking.bedId && booking.checkin && booking.checkout);
+                
+                console.log(`Loaded ${airtableBookings.length} bookings for property ${propertyId}`);
                 
             } catch (error) {
                 console.error('Error loading bookings:', error);
+                airtableBookings = [];
             }
         }
 
-        function selectProperty(id, name) {
+        function getBookingsForBed(bedId, weekStart = null, weekEnd = null) {
+            if (sampleDataLoaded) {
+                const bed = sampleData.beds.find(b => b.id === bedId);
+                return bed ? bed.bookings : [];
+            }
+            
+            // Filter airtableBookings for this bed
+            let bookings = airtableBookings.filter(b => b.bedId === bedId);
+            
+            // If week is specified, filter by date range
+            if (weekStart && weekEnd) {
+                bookings = bookings.filter(booking => {
+                    const checkIn = new Date(booking.checkin);
+                    const checkOut = new Date(booking.checkout);
+                    return checkIn <= weekEnd && checkOut > weekStart;
+                });
+            }
+            
+            return bookings;
+        }
+
+       async function selectProperty(id, name) {
             console.log('usao u select property', id, name);
             selectedProperty = { id, name };
             updateBreadcrumb();
             goToStep(2);
             loadRooms(id);
+            if (!sampleDataLoaded) {
+                await loadBookingsFromAirtable(id); // Pass the property ID
+            }
         }
 
         // function selectRoom(id, number) {
