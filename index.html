@@ -1117,6 +1117,10 @@
                         <p><strong>Contact:</strong> ${contact}</p>
                     </div>`;
                 }).join('');
+
+                // Store properties globally so we can access camp IDs later
+                window.loadedProperties = properties;
+
             } catch (error) {
                 container.innerHTML = `<div class="alert alert-warning">Error loading properties: ${error.message}</div>`;
             }
@@ -1360,9 +1364,16 @@
             if (sampleDataLoaded) return;
             
             try {
-                // Get the property's camp
-                const propertyResponse = await makeAirtableRequest(`${config.tables.properties}/${propertyId}`);
-                const propertyCampIds = propertyResponse.fields['Camp'];
+                // Find property from already-loaded data
+                const property = window.loadedProperties?.find(p => p.id === propertyId);
+                
+                if (!property) {
+                    console.error('Property not found in loaded data');
+                    airtableBookings = [];
+                    return;
+                }
+                
+                const propertyCampIds = property.campIds;
                 
                 if (!propertyCampIds || propertyCampIds.length === 0) {
                     console.warn('No camp associated with property');
@@ -1407,7 +1418,7 @@
                             kidId: fields['Kids on Trip'] ? fields['Kids on Trip'][0] : null
                         };
                     })
-                    .filter(booking => booking.bedId && booking.checkin && booking.checkout);
+                    .filter(booking => booking.checkin && booking.checkout);  // Don't require bedId
                 
                 console.log(`Loaded ${airtableBookings.length} bookings for property ${propertyId}`);
                 
