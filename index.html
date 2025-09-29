@@ -1430,6 +1430,30 @@
             }
         }
 
+        async function loadClientsFromBookings() {
+            if (sampleDataLoaded) {
+                return sampleData.clients;
+            }
+            
+            // Extract unique clients from the already-loaded airtableBookings
+            const clientsMap = new Map();
+            
+            airtableBookings.forEach(booking => {
+                if (booking.kidId && !clientsMap.has(booking.kidId)) {
+                    clientsMap.set(booking.kidId, {
+                        id: booking.kidId,
+                        name: booking.clientName,
+                        gender: booking.gender,
+                        phone: booking.phone,
+                        orderId: booking.id, // booking record ID for display
+                        checkin: booking.checkin
+                    });
+                }
+            });
+            
+            return Array.from(clientsMap.values());
+        }
+
         function getBookingsForBed(bedId, weekStart = null, weekEnd = null) {
             if (sampleDataLoaded) {
                 const bed = sampleData.beds.find(b => b.id === bedId);
@@ -1612,16 +1636,100 @@
             }
         }
 
-        function openAssignmentModal(bedId, bedNumber) {
+        // async function openAssignmentModal(bedId, bedNumber) {
+        //     selectedBed = { id: bedId, number: bedNumber };
+        //     document.getElementById('assignmentModal').style.display = 'block';
+            
+        //     setTimeout(() => {
+        //         setupModalForRoomDesignation();
+        //     }, 100);
+        // }
+
+        async function openAssignmentModal(bedId, bedNumber) {
             selectedBed = { id: bedId, number: bedNumber };
             document.getElementById('assignmentModal').style.display = 'block';
             
-            setTimeout(() => {
-                setupModalForRoomDesignation();
-            }, 100);
+            await setupModalForRoomDesignation();  // Change this line
         }
 
-        function setupModalForRoomDesignation() {
+
+        // function setupModalForRoomDesignation() {
+        //     let weekDesignation = 'Empty';
+        //     if (selectedWeekStart) {
+        //         weekDesignation = calculateRoomDesignationForWeek(selectedRoom.id, selectedWeekStart);
+        //     }
+            
+        //     const genderField = document.getElementById('clientGender');
+        //     const select = document.getElementById('clientSelect');
+            
+        //     const existingInfo = document.querySelector('.room-designation-info');
+        //     if (existingInfo) existingInfo.remove();
+            
+        //     const modalTitle = document.querySelector('#assignmentModal h2');
+        //     modalTitle.textContent = `Assign Client to Bed ${selectedBed.number}`;
+            
+        //     const roomInfo = document.createElement('div');
+        //     roomInfo.className = 'room-designation-info';
+            
+        //     // Get all clients and filter out those already assigned for this week
+        //     const allClients = sampleDataLoaded ? sampleData.clients : [];
+        //     let availableClients = getAvailableClientsForWeek(allClients, selectedWeekStart);
+            
+        //     if (weekDesignation === 'Boys Room') {
+        //         roomInfo.innerHTML = '🔵 <strong>Boys Room</strong> - Only showing available male clients for this week';
+        //         roomInfo.style.borderLeft = '4px solid #0066cc';
+        //         availableClients = availableClients.filter(client => client.gender === 'Male');
+        //         genderField.value = 'Male';
+        //         genderField.disabled = true;
+        //     } else if (weekDesignation === 'Girls Room') {
+        //         roomInfo.innerHTML = '🟣 <strong>Girls Room</strong> - Only showing available female clients for this week';
+        //         roomInfo.style.borderLeft = '4px solid #9933cc';
+        //         availableClients = availableClients.filter(client => client.gender === 'Female');
+        //         genderField.value = 'Female';
+        //         genderField.disabled = true;
+        //     } else {
+        //         roomInfo.innerHTML = `⚪ <strong>Empty Room</strong> - Week of ${selectedWeekStart ? selectedWeekStart.toLocaleDateString() : 'current week'} (Sunday-Saturday). First client assigned determines room designation.`;
+        //         roomInfo.style.borderLeft = '4px solid #95a5a6';
+        //         genderField.value = '';
+        //         genderField.disabled = false;
+        //     }
+            
+        //     modalTitle.parentNode.insertBefore(roomInfo, modalTitle.nextSibling);
+            
+        //     // Show count of available vs total clients
+        //     const totalClients = allClients.filter(client => 
+        //         weekDesignation === 'Boys Room' ? client.gender === 'Male' :
+        //         weekDesignation === 'Girls Room' ? client.gender === 'Female' :
+        //         true
+        //     ).length;
+            
+        //     const options = ['<option value="">Choose a client...</option>'];
+            
+        //     if (availableClients.length === 0) {
+        //         options.push('<option value="" disabled>No available clients for this week</option>');
+        //     } else {
+        //         availableClients.forEach(client => {
+        //             const genderIcon = client.gender === 'Male' ? '👨' : '👩';
+        //             options.push(`<option value="${client.id}" data-gender="${client.gender}">${genderIcon} ${client.name}</option>`);
+        //         });
+        //     }
+            
+        //     // Add info about filtered clients
+        //     if (availableClients.length < totalClients) {
+        //         const filteredCount = totalClients - availableClients.length;
+        //         options.push(`<option value="" disabled>--- ${filteredCount} client(s) already assigned this week ---</option>`);
+        //     }
+            
+        //     select.innerHTML = options.join('');
+            
+        //     if (selectedWeekStart) {
+        //         const sundayDate = selectedWeekStart.toISOString().split('T')[0];
+        //         document.getElementById('checkinDate').value = sundayDate;
+        //         calculateEndDate();
+        //     }
+        // }
+
+        async function setupModalForRoomDesignation() {
             let weekDesignation = 'Empty';
             if (selectedWeekStart) {
                 weekDesignation = calculateRoomDesignationForWeek(selectedRoom.id, selectedWeekStart);
@@ -1639,8 +1747,23 @@
             const roomInfo = document.createElement('div');
             roomInfo.className = 'room-designation-info';
             
-            // Get all clients and filter out those already assigned for this week
-            const allClients = sampleDataLoaded ? sampleData.clients : [];
+            // Get all clients based on data source
+            let allClients = [];
+            
+            if (sampleDataLoaded) {
+                allClients = sampleData.clients;
+            } else {
+                // Load clients from Airtable bookings for this property
+                select.innerHTML = '<option value="">Loading clients...</option>';
+                try {
+                    allClients = await loadClientsFromBookings();
+                } catch (error) {
+                    console.error('Error loading clients:', error);
+                    select.innerHTML = '<option value="">Error loading clients</option>';
+                    return;
+                }
+            }
+            
             let availableClients = getAvailableClientsForWeek(allClients, selectedWeekStart);
             
             if (weekDesignation === 'Boys Room') {
@@ -1664,7 +1787,6 @@
             
             modalTitle.parentNode.insertBefore(roomInfo, modalTitle.nextSibling);
             
-            // Show count of available vs total clients
             const totalClients = allClients.filter(client => 
                 weekDesignation === 'Boys Room' ? client.gender === 'Male' :
                 weekDesignation === 'Girls Room' ? client.gender === 'Female' :
@@ -1678,11 +1800,20 @@
             } else {
                 availableClients.forEach(client => {
                     const genderIcon = client.gender === 'Male' ? '👨' : '👩';
-                    options.push(`<option value="${client.id}" data-gender="${client.gender}">${genderIcon} ${client.name}</option>`);
+                    
+                    // Format: Order ID - Kid Name - Camp - Start Date
+                    let displayText = `${genderIcon} ${client.name}`;
+                    
+                    if (!sampleDataLoaded && client.orderId && client.checkin) {
+                        // For Airtable: show booking ID and start date
+                        const startDate = new Date(client.checkin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        displayText = `${client.orderId.substring(0, 8)} - ${client.name} - ${startDate}`;
+                    }
+                    
+                    options.push(`<option value="${client.id}" data-gender="${client.gender}">${displayText}</option>`);
                 });
             }
             
-            // Add info about filtered clients
             if (availableClients.length < totalClients) {
                 const filteredCount = totalClients - availableClients.length;
                 options.push(`<option value="" disabled>--- ${filteredCount} client(s) already assigned this week ---</option>`);
@@ -1697,33 +1828,72 @@
             }
         }
 
+        // function getAvailableClientsForWeek(allClients, weekStart) {
+        //     if (!weekStart || !sampleDataLoaded) {
+        //         return allClients;
+        //     }
+            
+        //     const weekEnd = new Date(weekStart);
+        //     weekEnd.setDate(weekStart.getDate() + 6);
+            
+        //     // Find clients already assigned for this week
+        //     const assignedClientIds = new Set();
+            
+        //     sampleData.beds.forEach(bed => {
+        //         bed.bookings.forEach(booking => {
+        //             const checkIn = new Date(booking.checkin);
+        //             const checkOut = new Date(booking.checkout);
+                    
+        //             // Check if booking overlaps with the selected week
+        //             if (checkIn <= weekEnd && checkOut > weekStart) {
+        //                 assignedClientIds.add(booking.clientId);
+        //             }
+        //         });
+        //     });
+            
+        //     // Return only clients not already assigned
+        //     const availableClients = allClients.filter(client => !assignedClientIds.has(client.id));
+            
+        //     console.log(`Week ${weekStart.toLocaleDateString()}: ${allClients.length} total clients, ${assignedClientIds.size} assigned, ${availableClients.length} available`);
+            
+        //     return availableClients;
+        // }
+
         function getAvailableClientsForWeek(allClients, weekStart) {
-            if (!weekStart || !sampleDataLoaded) {
+            if (!weekStart) {
                 return allClients;
             }
             
             const weekEnd = new Date(weekStart);
             weekEnd.setDate(weekStart.getDate() + 6);
             
-            // Find clients already assigned for this week
             const assignedClientIds = new Set();
             
-            sampleData.beds.forEach(bed => {
-                bed.bookings.forEach(booking => {
+            if (sampleDataLoaded) {
+                // Sample data logic
+                sampleData.beds.forEach(bed => {
+                    bed.bookings.forEach(booking => {
+                        const checkIn = new Date(booking.checkin);
+                        const checkOut = new Date(booking.checkout);
+                        if (checkIn <= weekEnd && checkOut > weekStart) {
+                            assignedClientIds.add(booking.clientId);
+                        }
+                    });
+                });
+            } else {
+                // Airtable data logic
+                airtableBookings.forEach(booking => {
                     const checkIn = new Date(booking.checkin);
                     const checkOut = new Date(booking.checkout);
-                    
-                    // Check if booking overlaps with the selected week
                     if (checkIn <= weekEnd && checkOut > weekStart) {
-                        assignedClientIds.add(booking.clientId);
+                        assignedClientIds.add(booking.kidId);
                     }
                 });
-            });
+            }
             
-            // Return only clients not already assigned
             const availableClients = allClients.filter(client => !assignedClientIds.has(client.id));
             
-            console.log(`Week ${weekStart.toLocaleDateString()}: ${allClients.length} total clients, ${assignedClientIds.size} assigned, ${availableClients.length} available`);
+            console.log(`Week ${weekStart.toLocaleDateString()}: ${allClients.length} total, ${assignedClientIds.size} assigned, ${availableClients.length} available`);
             
             return availableClients;
         }
