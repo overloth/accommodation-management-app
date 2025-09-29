@@ -1200,31 +1200,20 @@
         }
 
         async function loadBeds(roomId) {
-            console.log('ovo je room id');
-                        console.log(roomId);
             const container = document.getElementById('bedsContainer');
             container.innerHTML = '<div class="bed-card"><h3>Loading beds...</h3></div>';
 
             try {
                 let beds;
                 if (sampleDataLoaded) {
-                    console.log('sample data loaded for beds');
                     beds = sampleData.beds.filter(bed => bed.roomId === roomId);
                 } else {
                    const response = await makeAirtableRequest(config.tables.beds);
-                   console.log('ovo je response za beds');
-                        console.log(response);
                     beds = response.records
                         .filter(record => {
                             const roomsField = record.fields.Rooms;
                             const lookupRoomName = record.fields['Room Name (from Rooms)'];
-                            
-                            console.log(`🛏️ Checking bed: ${record.fields.Name}`);
-                            console.log(`  - Rooms field:`, roomsField);
-                            console.log(`  - Lookup room name:`, lookupRoomName);
-                            console.log(`  - Target room ID:`, roomId);
-                            console.log(`Checking bed ${record.fields.Name}: Rooms=${JSON.stringify(roomsField)}, Lookup=${JSON.stringify(lookupRoomName)}`);
-                            
+                                                        
                             // Check if linked to this room ID
                             if (roomsField && Array.isArray(roomsField) && roomsField.includes(roomId)) {
                                 return true;
@@ -1249,8 +1238,6 @@
                             status: record.fields['Status'] || 'Available',
                             bookings: []
                         }));
-                        console.log('ovo su beds');
-                        console.log(beds);
                 }
 
                 if (beds.length === 0) {
@@ -1476,7 +1463,6 @@
         }
 
        async function selectProperty(id, name) {
-            console.log('usao u select property', id, name);
             selectedProperty = { id, name };
             updateBreadcrumb();
             goToStep(2);
@@ -1497,7 +1483,6 @@
         // }
 
         function selectRoom(id, number) {
-            console.log('usao u select room', id, number);
             selectedRoom = { id, number };
             updateBreadcrumb();
             goToStep(4);  // Go directly to Step 4 (Manage Beds)
@@ -1514,7 +1499,6 @@
         }
 
         function selectRoomDate(roomId, roomNumber, date) {
-            console.log('usao u selectRoomDate', roomId, roomNumber, date);
             selectedRoom = { id: roomId, number: roomNumber };
             selectedDate = new Date(date + 'T12:00:00');
             
@@ -1990,7 +1974,6 @@
         }
 
         function updateOccupancyView() {
-            console.log('da li je usao u update occupancy view');
             if (!selectedProperty) {
                 document.getElementById('occupancyGrid').innerHTML = '<div class="alert alert-info">Please select a property first to view occupancy overview.</div>';
                 return;
@@ -2011,7 +1994,6 @@
         }
 
         function generateMonthlyOccupancyGrid(year, month, daysInMonth) {
-            console.log('da li je usaou generate monthly occupancy grip', year, month, daysInMonth);
             const container = document.getElementById('occupancyGrid');
             
             // Get the first day of the month and calculate the calendar grid
@@ -2250,7 +2232,6 @@
 
         // Event listeners
         window.addEventListener('load', function() {
-            console.log('Enhanced Bed Assignment Manager loaded successfully!');
             updateQuickStats();
         });
 
