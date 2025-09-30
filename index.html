@@ -1769,6 +1769,9 @@
 
                 availableClients.forEach(client => {
                     // const genderIcon = client.gender === 'Male' ? '👨' : '👩';
+
+                    console.log('client gender:');
+                    console.log(client.gender);
                     const genderIcon = client.gender === 'Male' ? '👨' : client.gender === 'Female' ? '👩' : '👤';
 
                     let displayText = `${genderIcon} ${client.name}`;
