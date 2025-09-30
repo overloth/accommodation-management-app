@@ -1342,7 +1342,7 @@
                     const fullName = `${givenName} ${familyName}`.trim() || 'Unnamed';
                     
                     const bookingId = fields['Booking ID (From CMS)'] || record.id;
-                    const camp = fields['Camp'] ? (Array.isArray(fields['Camp']) ? fields['Camp'][0] : fields['Camp']) : 'No Camp';
+                    const camp = fields['Camp Name (from Camp)'] ? (Array.isArray(fields['Camp Name (from Camp)']) ? fields['Camp Name (from Camp)'][0] : fields['Camp Name (from Camp)']) : 'No Camp';
                     
                     return {
                         id: record.id,
