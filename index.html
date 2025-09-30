@@ -1692,6 +1692,7 @@
             
             // Get all clients based on data source
             let allClients = [];
+            let availableClients = getAvailableClientsForWeek(allClients, selectedWeekStart);
             
             if (sampleDataLoaded) {
                 allClients = sampleData.clients;
@@ -1709,7 +1710,7 @@
                 }
             }
             
-            let availableClients = getAvailableClientsForWeek(allClients, selectedWeekStart);
+            
             
             if (weekDesignation === 'Boys Room') {
                 roomInfo.innerHTML = '🔵 <strong>Boys Room</strong> - Only showing available male clients for this week';
