@@ -818,6 +818,7 @@
         let sampleDataLoaded = false;
         let currentPropertyRooms = [];
         let airtableBookings = [];
+        let allClientsGlobal = [];
 
         // Enhanced sample data
         const sampleData = {
@@ -1738,6 +1739,7 @@
             }
 
             let availableClients = allClients;
+            allClientsGlobal = allClients; // Store for gender filtering
             console.log('Available clients (filtered):', availableClients);
             console.log('Available clients:', availableClients);
             
@@ -1820,6 +1822,43 @@
                 document.getElementById('checkinDate').value = sundayDate;
                 calculateEndDate();
             }
+        }
+
+        function filterClientsByGender() {
+            const selectedGender = document.getElementById('clientGender').value;
+            const select = document.getElementById('clientSelect');
+            
+            // Get the already camp-filtered clients
+            let filteredClients = allClientsGlobal; // We need to store this globally
+            
+            // Apply gender filter if a gender is selected
+            if (selectedGender) {
+                filteredClients = filteredClients.filter(client => client.gender === selectedGender);
+                console.log(`Filtered to ${filteredClients.length} ${selectedGender} clients`);
+            } else {
+                console.log(`Showing all ${filteredClients.length} clients (no gender filter)`);
+            }
+            
+            // Rebuild dropdown options
+            const options = ['<option value="">Choose a client...</option>'];
+            
+            if (filteredClients.length === 0) {
+                options.push('<option value="" disabled>No clients match the selected criteria</option>');
+            } else {
+                filteredClients.forEach(client => {
+                    const genderIcon = client.gender === 'Male' ? '👨' : client.gender === 'Female' ? '👩' : '👤';
+                    let displayText = `${genderIcon} ${client.name}`;
+                    
+                    if (!sampleDataLoaded) {
+                        const startDate = new Date(client.checkin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        displayText = `${genderIcon} ${client.bookingId} - ${client.name} - ${client.campName} - ${startDate}`;
+                    }
+                    
+                    options.push(`<option value="${client.id}" data-gender="${client.gender}">${displayText}</option>`);
+                });
+            }
+            
+            select.innerHTML = options.join('');
         }
 
         // function getAvailableClientsForWeek(allClients, weekStart) {
@@ -2250,6 +2289,10 @@
             if (event.target === modal) {
                 closeModal();
             }
+        });
+
+        document.getElementById('clientGender').addEventListener('change', function() {
+            filterClientsByGender();
         });
 
         // Keyboard shortcuts
