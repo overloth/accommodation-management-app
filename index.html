@@ -1328,51 +1328,40 @@
             try {
                 const bookingsResponse = await makeAirtableRequest(config.tables.bookings);
                 
-                console.log('Raw Airtable response:', bookingsResponse);
                 console.log('Total records from Airtable:', bookingsResponse.records.length);
-                
-                if (bookingsResponse.records.length > 0) {
-                    console.log('First record fields:', bookingsResponse.records[0].fields);
-                    console.log('All field names:', Object.keys(bookingsResponse.records[0].fields));
-                }
                 
                 airtableBookings = bookingsResponse.records.map(record => {
                     const fields = record.fields;
                     
-                    const givenName = Array.isArray(fields['Given Name (from Kids on Trip)']) 
-                        ? fields['Given Name (from Kids on Trip)'][0] 
-                        : fields['Given Name (from Kids on Trip)'] || '';
-                    const familyName = Array.isArray(fields['Family Name (from Kids on Trip)']) 
-                        ? fields['Family Name (from Kids on Trip)'][0] 
-                        : fields['Family Name (from Kids on Trip)'] || '';
-                    const fullName = `${givenName} ${familyName}`.trim();
+                    const givenName = Array.isArray(fields['Given Name (from Kid)']) 
+                        ? fields['Given Name (from Kid)'][0] 
+                        : fields['Given Name (from Kid)'] || '';
+                    const familyName = Array.isArray(fields['Family Name (from Kid)']) 
+                        ? fields['Family Name (from Kid)'][0] 
+                        : fields['Family Name (from Kid)'] || '';
+                    const fullName = `${givenName} ${familyName}`.trim() || 'Unnamed';
                     
                     const bookingId = fields['Booking ID (From CMS)'] || record.id;
-                    // const campName = Array.isArray(fields['Camp Name (from Camp)'])
-                    //     ? fields['Camp Name (from Camp)'][0]
-                    //     : fields['Camp Name (from Camp)'] || '';
-                    const campName = fields['Camp'] || '';
-                    
-                    console.log('Processing booking:', { givenName, familyName, fullName, bookingId, campName });
+                    const camp = fields['Camp'] ? (Array.isArray(fields['Camp']) ? fields['Camp'][0] : fields['Camp']) : 'No Camp';
                     
                     return {
                         id: record.id,
                         bookingId: bookingId,
                         bedId: fields['accommodation'] ? fields['accommodation'][0] : null,
                         clientName: fullName,
-                        gender: Array.isArray(fields['Gender (from Kids on Trip)']) 
-                            ? fields['Gender (from Kids on Trip)'][0] 
-                            : fields['Gender (from Kids on Trip)'],
+                        gender: Array.isArray(fields['Gender (from Kid)']) 
+                            ? fields['Gender (from Kid)'][0] 
+                            : fields['Gender (from Kid)'],
                         phone: fields['Phone'] || '',
                         checkin: fields['Arrival Date'],
                         checkout: fields['Departure Date'],
                         kidId: fields['Kids on Trip'] ? fields['Kids on Trip'][0] : null,
-                        campName: campName
+                        campName: camp
                     };
                 });
-                // .filter(booking => booking.checkin && booking.checkout && booking.clientName);
                 
-                console.log(`Loaded ${airtableBookings.length} bookings after filtering`);
+                console.log(`Loaded ${airtableBookings.length} bookings (no filters)`);
+                console.log('First booking:', airtableBookings[0]);
                 
             } catch (error) {
                 console.error('Error loading bookings:', error);
