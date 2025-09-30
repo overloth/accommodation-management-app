@@ -1348,9 +1348,10 @@
                     const fullName = `${givenName} ${familyName}`.trim();
                     
                     const bookingId = fields['Booking ID (From CMS)'] || record.id;
-                    const campName = Array.isArray(fields['Camp Name (from Camp)'])
-                        ? fields['Camp Name (from Camp)'][0]
-                        : fields['Camp Name (from Camp)'] || '';
+                    // const campName = Array.isArray(fields['Camp Name (from Camp)'])
+                    //     ? fields['Camp Name (from Camp)'][0]
+                    //     : fields['Camp Name (from Camp)'] || '';
+                    const campName = fields['Camp'] || '';
                     
                     console.log('Processing booking:', { givenName, familyName, fullName, bookingId, campName });
                     
@@ -1368,7 +1369,8 @@
                         kidId: fields['Kids on Trip'] ? fields['Kids on Trip'][0] : null,
                         campName: campName
                     };
-                }).filter(booking => booking.checkin && booking.checkout && booking.clientName);
+                });
+                // .filter(booking => booking.checkin && booking.checkout && booking.clientName);
                 
                 console.log(`Loaded ${airtableBookings.length} bookings after filtering`);
                 
