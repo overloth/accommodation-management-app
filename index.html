@@ -1692,7 +1692,7 @@
             
             // Get all clients based on data source
             let allClients = [];
-            let availableClients = getAvailableClientsForWeek(allClients, selectedWeekStart);
+            
             
             if (sampleDataLoaded) {
                 allClients = sampleData.clients;
@@ -1709,6 +1709,13 @@
                     return;
                 }
             }
+
+
+            console.log('All clients loaded:', allClients);
+
+            let availableClients = getAvailableClientsForWeek(allClients, selectedWeekStart);
+
+            console.log('Available clients:', availableClients);
             
             
             
