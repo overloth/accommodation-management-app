@@ -1097,7 +1097,8 @@
                                 id: record.id,
                                 name: record.fields['Property Name'],
                                 address: record.fields['Property Street Address'],
-                                contact: 'Not specified'
+                                contact: 'Not specified',
+                                campIds: record.fields['Camps'] || []
                             }));
                 }
 
@@ -1713,8 +1714,26 @@
             console.log('All clients loaded:', allClients);
 
             // let availableClients = getAvailableClientsForWeek(allClients, selectedWeekStart);
-            let availableClients = allClients;
-
+           // let availableClients = allClients;
+        // Filter by property's camps
+            if (!sampleDataLoaded && selectedProperty) {
+                const property = window.loadedProperties?.find(p => p.id === selectedProperty.id);
+                if (property && property.campIds && property.campIds.length > 0) {
+                    console.log('Property camp IDs:', property.campIds);
+                    
+                    allClients = allClients.filter(client => {
+                        // Check if client's booking camp matches any of the property's camps
+                        const booking = airtableBookings.find(b => b.kidId === client.id || b.id === client.id);
+                        if (!booking || !booking.campId) return false;
+                        
+                        const matches = property.campIds.includes(booking.campId);
+                        console.log(`Client ${client.name}, Camp: ${booking.campId}, Matches: ${matches}`);
+                        return matches;
+                    });
+                    
+                    console.log(`Filtered to ${allClients.length} clients for this property's camps`);
+                }
+            }
 
             console.log('Available clients:', availableClients);
             
