@@ -1768,13 +1768,14 @@
                 // });
 
                 availableClients.forEach(client => {
-                    const genderIcon = client.gender === 'Male' ? '👨' : '👩';
-                    
+                    // const genderIcon = client.gender === 'Male' ? '👨' : '👩';
+                    const genderIcon = client.gender === 'Male' ? '👨' : client.gender === 'Female' ? '👩' : '👤';
+
                     let displayText = `${genderIcon} ${client.name}`;
                     
                     if (!sampleDataLoaded) {
                         const startDate = new Date(client.checkin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                        displayText = `${client.bookingId} - ${client.name} - ${client.campName} - ${startDate}`;
+                        displayText = `${client.bookingId} - ${client.name} - ${client.campName} - ${startDate} - ${genderIcon}`;
                     }
                     
                     options.push(`<option value="${client.id}" data-gender="${client.gender}">${displayText}</option>`);
