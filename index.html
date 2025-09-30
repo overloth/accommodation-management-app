@@ -1349,9 +1349,9 @@
                         bookingId: bookingId,
                         bedId: fields['accommodation'] ? fields['accommodation'][0] : null,
                         clientName: fullName,
-                        gender: Array.isArray(fields['Gender (from Kid)']) 
-                            ? fields['Gender (from Kid)'][0] 
-                            : fields['Gender (from Kid)'],
+                        gender: Array.isArray(fields['Gender']) 
+                            ? fields['Gender'][0] 
+                            : fields['Gender'],
                         phone: fields['Phone'] || '',
                         checkin: fields['Arrival Date'],
                         checkout: fields['Departure Date'],
