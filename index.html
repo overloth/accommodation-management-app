@@ -1702,7 +1702,6 @@
                 try {
                     allClients = await loadClientsFromBookings();
                     console.log('All clients loaded:', allClients);
-                    console.log('Available clients:', availableClients);
                 } catch (error) {
                     console.error('Error loading clients:', error);
                     select.innerHTML = '<option value="">Error loading clients</option>';
