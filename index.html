@@ -1322,105 +1322,45 @@
             }
         }
 
-        // async function loadBookingsFromAirtable() {
-        //     if (sampleDataLoaded) return;
-            
-        //     try {
-        //         const bookingsResponse = await makeAirtableRequest(config.tables.bookings);
-                
-        //         // Process bookings and assign them to beds
-        //         bookingsResponse.records.forEach(bookingRecord => {
-        //             const fields = bookingRecord.fields;
-        //             const accommodationField = fields.accommodation;
-        //             const givenName = fields['Given Name (from Kids on Trip)'] || '';
-        //             const familyName = fields['Family Name (from Kids on Trip)'] || '';
-        //             const fullName = `${givenName} ${familyName}`.trim();
-                    
-        //             if (accommodationField && fields['Arrival Date'] && fields['Departure Date']) {
-        //                 // Find the bed that matches this accommodation
-        //                 // You might need to adjust this logic based on how accommodation links to beds
-        //                 const bedId = Array.isArray(accommodationField) ? accommodationField[0] : accommodationField;
-                        
-        //                 // Create booking data in the format the app expects
-        //                 const booking = {
-        //                     clientName: fullName,
-        //                     gender: fields.Gender,
-        //                     phone: fields.Phone,
-        //                     checkin: fields['Arrival Date'],
-        //                     checkout: fields['Departure Date'],
-        //                     bedId: bedId
-        //                 };
-                        
-        //                 console.log('Processed booking:', booking);
-        //             }
-        //         });
-                
-        //     } catch (error) {
-        //         console.error('Error loading bookings:', error);
-        //     }
-        // }
-
         async function loadBookingsFromAirtable(propertyId) {
             if (sampleDataLoaded) return;
             
             try {
-                // Find property from already-loaded data
-                const property = window.loadedProperties?.find(p => p.id === propertyId);
-                
-                if (!property) {
-                    console.error('Property not found in loaded data');
-                    airtableBookings = [];
-                    return;
-                }
-                
-                const propertyCampIds = property.campIds;
-                
-                if (!propertyCampIds || propertyCampIds.length === 0) {
-                    console.warn('No camp associated with property');
-                    airtableBookings = [];
-                    return;
-                }
-                
-                // Get all bookings
                 const bookingsResponse = await makeAirtableRequest(config.tables.bookings);
                 
-                // Filter and process bookings
-                airtableBookings = bookingsResponse.records
-                    .filter(record => {
-                        const bookingCampIds = record.fields['Camp'];
-                        if (!bookingCampIds) return false;
-                        
-                        // Check if any camp ID matches
-                        return propertyCampIds.some(campId => 
-                            Array.isArray(bookingCampIds) ? bookingCampIds.includes(campId) : bookingCampIds === campId
-                        );
-                    })
-                    .map(record => {
-                        const fields = record.fields;
-                        const givenName = Array.isArray(fields['Given Name (from Kids on Trip)']) 
-                            ? fields['Given Name (from Kids on Trip)'][0] 
-                            : fields['Given Name (from Kids on Trip)'] || '';
-                        const familyName = Array.isArray(fields['Family Name (from Kids on Trip)']) 
-                            ? fields['Family Name (from Kids on Trip)'][0] 
-                            : fields['Family Name (from Kids on Trip)'] || '';
-                        const fullName = `${givenName} ${familyName}`.trim();
-                        
-                        return {
-                            id: record.id,
-                            bedId: fields['accommodation'] ? fields['accommodation'][0] : null,
-                            clientName: fullName,
-                            gender: Array.isArray(fields['Gender (from Kids on Trip)']) 
-                                ? fields['Gender (from Kids on Trip)'][0] 
-                                : fields['Gender (from Kids on Trip)'],
-                            phone: fields['Phone'] || '',
-                            checkin: fields['Arrival Date'],
-                            checkout: fields['Departure Date'],
-                            kidId: fields['Kids on Trip'] ? fields['Kids on Trip'][0] : null
-                        };
-                    })
-                    .filter(booking => booking.checkin && booking.checkout);  // Don't require bedId
+                airtableBookings = bookingsResponse.records.map(record => {
+                    const fields = record.fields;
+                    
+                    const givenName = Array.isArray(fields['Given Name (from Kids on Trip)']) 
+                        ? fields['Given Name (from Kids on Trip)'][0] 
+                        : fields['Given Name (from Kids on Trip)'] || '';
+                    const familyName = Array.isArray(fields['Family Name (from Kids on Trip)']) 
+                        ? fields['Family Name (from Kids on Trip)'][0] 
+                        : fields['Family Name (from Kids on Trip)'] || '';
+                    const fullName = `${givenName} ${familyName}`.trim();
+                    
+                    const bookingId = fields['Booking ID (From CMS)'] || record.id;
+                    const campName = Array.isArray(fields['Camp Name (from Camp)'])
+                        ? fields['Camp Name (from Camp)'][0]
+                        : fields['Camp Name (from Camp)'] || '';
+                    
+                    return {
+                        id: record.id,
+                        bookingId: bookingId,
+                        bedId: fields['accommodation'] ? fields['accommodation'][0] : null,
+                        clientName: fullName,
+                        gender: Array.isArray(fields['Gender (from Kids on Trip)']) 
+                            ? fields['Gender (from Kids on Trip)'][0] 
+                            : fields['Gender (from Kids on Trip)'],
+                        phone: fields['Phone'] || '',
+                        checkin: fields['Arrival Date'],
+                        checkout: fields['Departure Date'],
+                        kidId: fields['Kids on Trip'] ? fields['Kids on Trip'][0] : null,
+                        campName: campName
+                    };
+                }).filter(booking => booking.checkin && booking.checkout && booking.clientName);
                 
-                console.log(`Loaded ${airtableBookings.length} bookings for property ${propertyId}`);
+                console.log(`Loaded ${airtableBookings.length} bookings`);
                 
             } catch (error) {
                 console.error('Error loading bookings:', error);
@@ -1433,23 +1373,15 @@
                 return sampleData.clients;
             }
             
-            // Extract unique clients from the already-loaded airtableBookings
-            const clientsMap = new Map();
-            
-            airtableBookings.forEach(booking => {
-                if (booking.kidId && !clientsMap.has(booking.kidId)) {
-                    clientsMap.set(booking.kidId, {
-                        id: booking.kidId,
-                        name: booking.clientName,
-                        gender: booking.gender,
-                        phone: booking.phone,
-                        orderId: booking.id, // booking record ID for display
-                        checkin: booking.checkin
-                    });
-                }
-            });
-            
-            return Array.from(clientsMap.values());
+            return airtableBookings.map(booking => ({
+                id: booking.kidId || booking.id,
+                name: booking.clientName,
+                gender: booking.gender,
+                phone: booking.phone,
+                bookingId: booking.bookingId,
+                campName: booking.campName,
+                checkin: booking.checkin
+            }));
         }
 
         function getBookingsForBed(bedId, weekStart = null, weekEnd = null) {
@@ -1793,16 +1725,29 @@
             if (availableClients.length === 0) {
                 options.push('<option value="" disabled>No available clients for this week</option>');
             } else {
+                // availableClients.forEach(client => {
+                //     const genderIcon = client.gender === 'Male' ? '👨' : '👩';
+                    
+                //     // Format: Order ID - Kid Name - Camp - Start Date
+                //     let displayText = `${genderIcon} ${client.name}`;
+                    
+                //     if (!sampleDataLoaded && client.orderId && client.checkin) {
+                //         // For Airtable: show booking ID and start date
+                //         const startDate = new Date(client.checkin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                //         displayText = `${client.orderId.substring(0, 8)} - ${client.name} - ${startDate}`;
+                //     }
+                    
+                //     options.push(`<option value="${client.id}" data-gender="${client.gender}">${displayText}</option>`);
+                // });
+                
                 availableClients.forEach(client => {
                     const genderIcon = client.gender === 'Male' ? '👨' : '👩';
                     
-                    // Format: Order ID - Kid Name - Camp - Start Date
                     let displayText = `${genderIcon} ${client.name}`;
                     
-                    if (!sampleDataLoaded && client.orderId && client.checkin) {
-                        // For Airtable: show booking ID and start date
+                    if (!sampleDataLoaded) {
                         const startDate = new Date(client.checkin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                        displayText = `${client.orderId.substring(0, 8)} - ${client.name} - ${startDate}`;
+                        displayText = `${client.bookingId} - ${client.name} - ${client.campName} - ${startDate}`;
                     }
                     
                     options.push(`<option value="${client.id}" data-gender="${client.gender}">${displayText}</option>`);
