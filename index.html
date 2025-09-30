@@ -1405,14 +1405,29 @@
             return bookings;
         }
 
-       async function selectProperty(id, name) {
+       // async function selectProperty(id, name) {
+       //      selectedProperty = { id, name };
+       //      updateBreadcrumb();
+       //      goToStep(2);
+       //      loadRooms(id);
+       //      if (!sampleDataLoaded) {
+       //          await loadBookingsFromAirtable(id); // Pass the property ID
+       //      }
+       //  }
+
+        async function selectProperty(id, name) {
             selectedProperty = { id, name };
             updateBreadcrumb();
+            
+            // WAIT for bookings to load before continuing
+            if (!sampleDataLoaded) {
+                const loadingMsg = document.getElementById('roomsGrid');
+                if (loadingMsg) loadingMsg.innerHTML = '<div class="card"><h3>Loading bookings...</h3></div>';
+                await loadBookingsFromAirtable(id);
+            }
+            
             goToStep(2);
             loadRooms(id);
-            if (!sampleDataLoaded) {
-                await loadBookingsFromAirtable(id); // Pass the property ID
-            }
         }
 
         // function selectRoom(id, number) {
@@ -1684,6 +1699,8 @@
                 select.innerHTML = '<option value="">Loading clients...</option>';
                 try {
                     allClients = await loadClientsFromBookings();
+                    console.log('All clients loaded:', allClients);
+                    console.log('Available clients:', availableClients);
                 } catch (error) {
                     console.error('Error loading clients:', error);
                     select.innerHTML = '<option value="">Error loading clients</option>';
@@ -1739,7 +1756,7 @@
                     
                 //     options.push(`<option value="${client.id}" data-gender="${client.gender}">${displayText}</option>`);
                 // });
-                
+
                 availableClients.forEach(client => {
                     const genderIcon = client.gender === 'Male' ? '👨' : '👩';
                     
