@@ -1325,6 +1325,31 @@
             }
         }
 
+        async function loadBedAssignmentsData(propertyId) {
+            if (sampleDataLoaded) return;
+            
+            try {
+                const assignmentsResponse = await makeAirtableRequest(config.tables.bedAssignments);
+                
+                window.bedAssignments = assignmentsResponse.records.map(record => {
+                    const fields = record.fields;
+                    return {
+                        id: record.id,
+                        bedId: fields['Beds'] ? fields['Beds'][0] : null,
+                        checkin: fields['Start Date'],
+                        checkout: fields['End Date'],
+                        clientName: fields['Client Name (from Booking)'] || 'Unnamed',
+                        gender: fields['Gender (from Booking)']
+                    };
+                });
+                
+                console.log(`Loaded ${window.bedAssignments.length} bed assignments`);
+            } catch (error) {
+                console.error('Error loading bed assignments:', error);
+                window.bedAssignments = [];
+            }
+        }
+
         async function loadBookingsFromAirtable(propertyId) {
             if (sampleDataLoaded) return;
             
@@ -1397,7 +1422,8 @@
             }
             
             // Filter airtableBookings for this bed
-            let bookings = airtableBookings.filter(b => b.bedId === bedId);
+            // let bookings = airtableBookings.filter(b => b.bedId === bedId);
+            let bookings = window.bedAssignments ? window.bedAssignments.filter(b => b.bedId === bedId) : [];
             
             // If week is specified, filter by date range
             if (weekStart && weekEnd) {
@@ -1426,11 +1452,18 @@
             updateBreadcrumb();
             
             // WAIT for bookings to load before continuing
+            // if (!sampleDataLoaded) {
+            //     const loadingMsg = document.getElementById('roomsGrid');
+            //     if (loadingMsg) loadingMsg.innerHTML = '<div class="card"><h3>Loading bookings...</h3></div>';
+            //     await loadBookingsFromAirtable(id);
+            // }
+
             if (!sampleDataLoaded) {
-                const loadingMsg = document.getElementById('roomsGrid');
-                if (loadingMsg) loadingMsg.innerHTML = '<div class="card"><h3>Loading bookings...</h3></div>';
-                await loadBookingsFromAirtable(id);
-            }
+                   const loadingMsg = document.getElementById('roomsGrid');
+                   if (loadingMsg) loadingMsg.innerHTML = '<div class="card"><h3>Loading bookings...</h3></div>';
+                   await loadBookingsFromAirtable(id);
+                   await loadBedAssignmentsData(id);
+               }
             
             goToStep(2);
             loadRooms(id);
