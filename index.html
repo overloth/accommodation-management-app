@@ -1095,22 +1095,16 @@
                     });
                 });
             } else {
-                // Airtable mode - check bed assignments
+                // Airtable mode - check bed assignments for THIS room
                 if (window.bedAssignments) {
                     window.bedAssignments.forEach(assignment => {
+                        // Only check assignments for THIS room
+                        if (assignment.roomId !== roomId) return;
+                        
                         const checkIn = new Date(assignment.checkin);
                         const checkOut = new Date(assignment.checkout);
                         
                         if (checkIn <= weekEnd && checkOut > weekStart) {
-                            // Get the bed's room
-                            const bed = currentPropertyRooms.flatMap(room => 
-                                // This is a simplified check - you may need to adjust based on your data structure
-                                assignment.bedId
-                            );
-                            
-                            // Check if this assignment is for a bed in this room
-                            // You'll need to match bed to room here
-                            // For now, simplified version:
                             clientsStayingThisWeek.push({
                                 gender: assignment.gender,
                                 originalCheckin: checkIn
