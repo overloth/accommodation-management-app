@@ -1387,6 +1387,8 @@
             } catch (error) {
                 container.innerHTML = `<div class="alert alert-warning">Error loading beds: ${error.message}</div>`;
             }
+
+            updateBedManagementTitle();
         }
 
         async function loadBedAssignmentsData(propertyId) {
@@ -1397,6 +1399,12 @@
                 
                 window.bedAssignments = assignmentsResponse.records.map(record => {
                     const fields = record.fields;
+
+                    let gender = fields['Gender (from Booking)'];
+                    if (Array.isArray(gender)) {
+                        gender = gender[0];
+                    }
+
                     return {
                         id: record.id,
                         bedId: fields['Beds'] ? fields['Beds'][0] : null,
@@ -1404,7 +1412,7 @@
                         checkin: fields['Start Date'],
                         checkout: fields['End Date'],
                         clientName: fields['Client Name (from Booking)'] || 'Unnamed',
-                        gender: fields['Gender (from Booking)']
+                        gender: gender
                     };
                 });
                 
