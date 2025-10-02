@@ -805,7 +805,8 @@
                 rooms: 'Rooms', 
                 beds: 'Beds',
                 clients: 'Clients',
-                bookings: 'Bookings'
+                bookings: 'Bookings',
+                bedAssignments: 'Bed Assignments'
             }
         };
 
@@ -2062,6 +2063,29 @@
         //                     }
         //                 }]
         //             });
+
+                        // Update the booking in Airtable to link it to this bed
+                        await makeAirtableRequest(config.tables.bookings, 'PATCH', {
+                            records: [{
+                                id: booking.id,
+                                fields: {
+                                    'Assigned Bed': [selectedBed.id]
+                                }
+                            }]
+                        });
+                        
+                        // Create Bed Assignment record for date tracking
+                        await makeAirtableRequest(config.tables.bedAssignments, 'POST', {
+                            records: [{
+                                fields: {
+                                    'Beds': [selectedBed.id],
+                                    'Rooms': [selectedRoom.id],
+                                    'Booking': [booking.id],
+                                    'Start Date': checkin,
+                                    'End Date': checkout
+                                }
+                            }]
+                        });
                     
         //             // Update local cache
         //             booking.bedId = selectedBed.id;
