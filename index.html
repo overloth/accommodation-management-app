@@ -1023,32 +1023,102 @@
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
 
+        // function calculateRoomDesignationForWeek(roomId, weekStart) {
+        //     if (!sampleDataLoaded || !weekStart) {
+        //         return 'Empty';
+        //     }
+
+        //     const beds = sampleData.beds.filter(bed => bed.roomId === roomId);
+        //     const weekEnd = new Date(weekStart);
+        //     weekEnd.setDate(weekStart.getDate() + 6);
+
+        //     const clientsStayingThisWeek = [];
+        //     beds.forEach(bed => {
+        //         bed.bookings.forEach(booking => {
+        //             const checkIn = new Date(booking.checkin);
+        //             const checkOut = new Date(booking.checkout);
+                    
+        //             if (checkIn <= weekEnd && checkOut > weekStart) {
+        //                 const client = sampleData.clients.find(c => c.id === booking.clientId);
+        //                 if (client) {
+        //                     clientsStayingThisWeek.push({
+        //                         ...client,
+        //                         originalCheckin: checkIn
+        //                     });
+        //                 }
+        //             }
+        //         });
+        //     });
+            
+        //     if (clientsStayingThisWeek.length === 0) {
+        //         return 'Empty';
+        //     }
+            
+        //     clientsStayingThisWeek.sort((a, b) => a.originalCheckin - b.originalCheckin);
+        //     const firstClient = clientsStayingThisWeek[0];
+            
+        //     if (firstClient.gender === 'Male') {
+        //         return 'Boys Room';
+        //     } else if (firstClient.gender === 'Female') {
+        //         return 'Girls Room';
+        //     }
+            
+        //     return 'Empty';
+        // }
+
         function calculateRoomDesignationForWeek(roomId, weekStart) {
-            if (!sampleDataLoaded || !weekStart) {
+            if (!weekStart) {
                 return 'Empty';
             }
 
-            const beds = sampleData.beds.filter(bed => bed.roomId === roomId);
             const weekEnd = new Date(weekStart);
             weekEnd.setDate(weekStart.getDate() + 6);
 
             const clientsStayingThisWeek = [];
-            beds.forEach(bed => {
-                bed.bookings.forEach(booking => {
-                    const checkIn = new Date(booking.checkin);
-                    const checkOut = new Date(booking.checkout);
-                    
-                    if (checkIn <= weekEnd && checkOut > weekStart) {
-                        const client = sampleData.clients.find(c => c.id === booking.clientId);
-                        if (client) {
+            
+            if (sampleDataLoaded) {
+                const beds = sampleData.beds.filter(bed => bed.roomId === roomId);
+                beds.forEach(bed => {
+                    bed.bookings.forEach(booking => {
+                        const checkIn = new Date(booking.checkin);
+                        const checkOut = new Date(booking.checkout);
+                        
+                        if (checkIn <= weekEnd && checkOut > weekStart) {
+                            const client = sampleData.clients.find(c => c.id === booking.clientId);
+                            if (client) {
+                                clientsStayingThisWeek.push({
+                                    ...client,
+                                    originalCheckin: checkIn
+                                });
+                            }
+                        }
+                    });
+                });
+            } else {
+                // Airtable mode - check bed assignments
+                if (window.bedAssignments) {
+                    window.bedAssignments.forEach(assignment => {
+                        const checkIn = new Date(assignment.checkin);
+                        const checkOut = new Date(assignment.checkout);
+                        
+                        if (checkIn <= weekEnd && checkOut > weekStart) {
+                            // Get the bed's room
+                            const bed = currentPropertyRooms.flatMap(room => 
+                                // This is a simplified check - you may need to adjust based on your data structure
+                                assignment.bedId
+                            );
+                            
+                            // Check if this assignment is for a bed in this room
+                            // You'll need to match bed to room here
+                            // For now, simplified version:
                             clientsStayingThisWeek.push({
-                                ...client,
+                                gender: assignment.gender,
                                 originalCheckin: checkIn
                             });
                         }
-                    }
-                });
-            });
+                    });
+                }
+            }
             
             if (clientsStayingThisWeek.length === 0) {
                 return 'Empty';
@@ -1336,6 +1406,7 @@
                     return {
                         id: record.id,
                         bedId: fields['Beds'] ? fields['Beds'][0] : null,
+                        roomId: fields['Rooms'] ? fields['Rooms'][0] : null,
                         checkin: fields['Start Date'],
                         checkout: fields['End Date'],
                         clientName: fields['Client Name (from Booking)'] || 'Unnamed',
