@@ -733,7 +733,7 @@
                         </div>
                     </div>
                 </div>
-                <button class="btn btn-secondary" onclick="goToStep(1)">← Back to Properties</button>
+                <button class="btn btn-secondary" onclick="goToStep(2)">← Back to Rooms</button>
             </div>
 
             <!-- Step 4: Manage Beds -->
@@ -1232,7 +1232,6 @@
                     
                     return `<div class="card" onclick="selectRoom('${room.id}', '${number}')">
                         <h3>🚪 Room ${number}
-                            <span class="room-designation ${designationClass}">${designation}</span>
                         </h3>
                         <p><strong>Type:</strong> ${type}</p>
                         <p><strong>Capacity:</strong> ${capacity} beds</p>
@@ -1888,7 +1887,7 @@
                 availableClients = availableClients.filter(client => !assignedKidIds.has(client.id));
                 console.log(`Removed ${allClients.length - availableClients.length} already assigned clients`);
             }
-            
+
             console.log('Available clients:', availableClients);
             
             
