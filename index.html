@@ -2416,9 +2416,11 @@
                 const assignmentsOnDate = window.bedAssignments.filter(assignment => {
                     if (assignment.roomId !== roomId) return false;
                     
-                    const checkIn = new Date(assignment.checkin);
-                    const checkOut = new Date(assignment.checkout);
-                    return date >= checkIn && date <= checkOut;
+                    const checkIn = new Date(assignment.checkin + 'T00:00:00');
+                    const checkOut = new Date(assignment.checkout + 'T23:59:59');
+                    const currentDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                    
+                    return currentDate >= checkIn && currentDate <= checkOut;
                 });
                 
                 if (assignmentsOnDate.length === 0) {
