@@ -1873,22 +1873,41 @@
                 weekEnd.setDate(selectedWeekStart.getDate() + 6);
                 
                 const assignedKidIds = new Set();
+                
+                console.log('Checking assignments for week:', selectedWeekStart.toISOString(), 'to', weekEnd.toISOString());
+                console.log('Total bed assignments:', window.bedAssignments.length);
+                
                 window.bedAssignments.forEach(assignment => {
+                    if (!assignment.checkin || !assignment.checkout) return;
+                    
                     const checkIn = new Date(assignment.checkin + 'T00:00:00');
                     const checkOut = new Date(assignment.checkout + 'T23:59:59');
                     
                     // Check if assignment overlaps with selected week
-                    if (checkIn <= weekEnd && checkOut >= selectedWeekStart) {
+                    const overlaps = checkIn <= weekEnd && checkOut >= selectedWeekStart;
+                    
+                    if (overlaps) {
                         // Find the booking to get the kidId
                         const booking = airtableBookings.find(b => b.id === assignment.bookingId);
                         if (booking && booking.kidId) {
                             assignedKidIds.add(booking.kidId);
+                            console.log('Client assigned this week:', booking.clientName, 'kidId:', booking.kidId);
                         }
                     }
                 });
                 
-                availableClients = availableClients.filter(client => !assignedKidIds.has(client.id));
-                console.log(`Removed ${allClients.length - availableClients.length} already assigned clients for this week`);
+                console.log('Total assigned kid IDs:', assignedKidIds.size);
+                console.log('Clients before filtering:', availableClients.length);
+                
+                availableClients = availableClients.filter(client => {
+                    const isAssigned = assignedKidIds.has(client.id);
+                    if (isAssigned) {
+                        console.log('Filtering out assigned client:', client.name, 'id:', client.id);
+                    }
+                    return !isAssigned;
+                });
+                
+                console.log('Clients after filtering:', availableClients.length);
             }
 
             console.log('Available clients:', availableClients);
