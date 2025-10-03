@@ -2174,33 +2174,140 @@
             }
         }
 
-        async function releaseBed(bedId) {
-            if (!confirm('Are you sure you want to release this bed for the selected week?')) return;
+        // async function releaseBed(bedId) {
+        //     if (!confirm('Are you sure you want to release this bed for the selected week?')) return;
             
-            try {
-                if (sampleDataLoaded && selectedWeekStart) {
-                    const bed = sampleData.beds.find(b => b.id === bedId);
-                    if (bed) {
-                        const weekEnd = new Date(selectedWeekStart);
-                        weekEnd.setDate(selectedWeekStart.getDate() + 6);
+        //     try {
+        //         if (sampleDataLoaded && selectedWeekStart) {
+        //             const bed = sampleData.beds.find(b => b.id === bedId);
+        //             if (bed) {
+        //                 const weekEnd = new Date(selectedWeekStart);
+        //                 weekEnd.setDate(selectedWeekStart.getDate() + 6);
                         
-                        bed.bookings = bed.bookings.filter(booking => {
-                            const checkIn = new Date(booking.checkin);
-                            const checkOut = new Date(booking.checkout);
-                            return !(checkIn <= weekEnd && checkOut > selectedWeekStart);
-                        });
+        //                 bed.bookings = bed.bookings.filter(booking => {
+        //                     const checkIn = new Date(booking.checkin);
+        //                     const checkOut = new Date(booking.checkout);
+        //                     return !(checkIn <= weekEnd && checkOut > selectedWeekStart);
+        //                 });
+        //             }
+        //         }
+                
+        //         loadBeds(selectedRoom.id);
+        //         loadRooms(selectedProperty.id);
+        //         updateOccupancyView();
+        //         updateQuickStats();
+        //         showNotification('Bed released successfully!', 'success');
+        //     } catch (error) {
+        //         showNotification('Error releasing bed: ' + error.message, 'error');
+        //     }
+        // }
+
+        async function releaseBed(bedId) {
+                    if (!confirm('Are you sure you want to release this bed for the selected week?')) return;
+                    
+                    try {
+                        if (sampleDataLoaded && selectedWeekStart) {
+                            // Sample data mode - existing logic
+                            const bed = sampleData.beds.find(b => b.id === bedId);
+                            if (bed) {
+                                const weekEnd = new Date(selectedWeekStart);
+                                weekEnd.setDate(selectedWeekStart.getDate() + 6);
+                                
+                                bed.bookings = bed.bookings.filter(booking => {
+                                    const checkIn = new Date(booking.checkin);
+                                    const checkOut = new Date(booking.checkout);
+                                    return !(checkIn <= weekEnd && checkOut > selectedWeekStart);
+                                });
+                            }
+                        } else if (!sampleDataLoaded && selectedWeekStart) {
+                            // Airtable mode - update or delete bed assignment
+                            const weekEnd = new Date(selectedWeekStart);
+                            weekEnd.setDate(selectedWeekStart.getDate() + 6);
+                            
+                            // Find assignment for this bed that overlaps with the selected week
+                            const assignment = window.bedAssignments.find(a => {
+                                if (a.bedId !== bedId) return false;
+                                
+                                const checkIn = new Date(a.checkin);
+                                const checkOut = new Date(a.checkout);
+                                return checkIn <= weekEnd && checkOut >= selectedWeekStart;
+                            });
+                            
+                            if (!assignment) {
+                                showNotification('No assignment found for this week', 'error');
+                                return;
+                            }
+                            
+                            const assignmentStart = new Date(assignment.checkin);
+                            const assignmentEnd = new Date(assignment.checkout);
+                            
+                            // Calculate assignment duration in weeks
+                            const durationDays = Math.ceil((assignmentEnd - assignmentStart) / (1000 * 60 * 60 * 24)) + 1;
+                            const durationWeeks = Math.ceil(durationDays / 7);
+                            
+                            console.log(`Assignment: ${assignment.checkin} to ${assignment.checkout} (${durationWeeks} weeks)`);
+                            console.log(`Releasing week: ${selectedWeekStart.toISOString().split('T')[0]} to ${weekEnd.toISOString().split('T')[0]}`);
+                            
+                            if (durationWeeks === 1) {
+                                // Delete the assignment entirely
+                                await makeAirtableRequest(`${config.tables.bedAssignments}/${assignment.id}`, 'DELETE');
+                                console.log('Deleted assignment:', assignment.id);
+                                showNotification('Bed assignment deleted', 'success');
+                            } else {
+                                // Assignment spans multiple weeks - need to update dates
+                                const weekStartStr = selectedWeekStart.toISOString().split('T')[0];
+                                const weekEndStr = weekEnd.toISOString().split('T')[0];
+                                
+                                if (assignmentStart.toISOString().split('T')[0] === weekStartStr) {
+                                    // Releasing the first week - move start date forward
+                                    const newStartDate = new Date(selectedWeekStart);
+                                    newStartDate.setDate(newStartDate.getDate() + 7); // Move to next Sunday
+                                    const newStartStr = newStartDate.toISOString().split('T')[0];
+                                    
+                                    await makeAirtableRequest(config.tables.bedAssignments, 'PATCH', {
+                                        records: [{
+                                            id: assignment.id,
+                                            fields: {
+                                                'Start Date': newStartStr
+                                            }
+                                        }]
+                                    });
+                                    console.log('Updated start date to:', newStartStr);
+                                    showNotification('Assignment updated - start date moved forward', 'success');
+                                } else if (assignmentEnd.toISOString().split('T')[0] === weekEndStr) {
+                                    // Releasing the last week - move end date backward
+                                    const newEndDate = new Date(selectedWeekStart);
+                                    newEndDate.setDate(newEndDate.getDate() - 1); // Move to previous Saturday
+                                    const newEndStr = newEndDate.toISOString().split('T')[0];
+                                    
+                                    await makeAirtableRequest(config.tables.bedAssignments, 'PATCH', {
+                                        records: [{
+                                            id: assignment.id,
+                                            fields: {
+                                                'End Date': newEndStr
+                                            }
+                                        }]
+                                    });
+                                    console.log('Updated end date to:', newEndStr);
+                                    showNotification('Assignment updated - end date moved backward', 'success');
+                                } else {
+                                    // Releasing a middle week - need to split into two assignments
+                                    showNotification('Cannot release middle week of multi-week assignment. Please release first or last week.', 'error');
+                                    return;
+                                }
+                            }
+                            
+                            // Reload data
+                            await loadBedAssignmentsData(selectedProperty.id);
+                        }
+                        
+                        loadBeds(selectedRoom.id);
+                        showNotification('Bed released successfully!', 'success');
+                    } catch (error) {
+                        console.error('Error releasing bed:', error);
+                        showNotification('Error releasing bed: ' + error.message, 'error');
                     }
                 }
-                
-                loadBeds(selectedRoom.id);
-                loadRooms(selectedProperty.id);
-                updateOccupancyView();
-                updateQuickStats();
-                showNotification('Bed released successfully!', 'success');
-            } catch (error) {
-                showNotification('Error releasing bed: ' + error.message, 'error');
-            }
-        }
 
         function updateOccupancyView() {
             if (!selectedProperty) {
