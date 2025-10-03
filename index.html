@@ -2400,62 +2400,61 @@
         // }
 
         function getRoomOccupancyForDate(roomId, date) {
-            // For Airtable mode, we need to check actual bed data
             if (!sampleDataLoaded) {
-                // Since we don't have booking data from Airtable loaded yet,
-                // we can show the number of beds available but can't show occupancy
+                // Airtable mode - check bed assignments
+                if (!window.bedAssignments || window.bedAssignments.length === 0) {
+                    const roomObj = currentPropertyRooms.find(r => r.id === roomId);
+                    const bedCount = roomObj ? (roomObj.capacity || 0) : 0;
+                    return { 
+                        class: 'available', 
+                        content: bedCount > 0 ? bedCount.toString() : '', 
+                        tooltip: `${bedCount} bed(s) available` 
+                    };
+                }
+                
+                // Check assignments for this room and date
+                const assignmentsOnDate = window.bedAssignments.filter(assignment => {
+                    if (assignment.roomId !== roomId) return false;
+                    
+                    const checkIn = new Date(assignment.checkin);
+                    const checkOut = new Date(assignment.checkout);
+                    return date >= checkIn && date <= checkOut;
+                });
+                
+                if (assignmentsOnDate.length === 0) {
+                    const roomObj = currentPropertyRooms.find(r => r.id === roomId);
+                    const bedCount = roomObj ? (roomObj.capacity || 0) : 0;
+                    return { 
+                        class: 'available', 
+                        content: bedCount > 0 ? bedCount.toString() : '', 
+                        tooltip: `${bedCount} bed(s) available` 
+                    };
+                }
+                
+                // Calculate week designation
+                const dayOfWeek = date.getDay();
+                const weekStart = new Date(date);
+                weekStart.setDate(date.getDate() - dayOfWeek);
+                const weekDesignation = calculateRoomDesignationForWeek(roomId, weekStart);
+                
+                let cssClass = 'available';
+                if (weekDesignation === 'Boys Room') cssClass = 'boys';
+                else if (weekDesignation === 'Girls Room') cssClass = 'girls';
+                
                 const roomObj = currentPropertyRooms.find(r => r.id === roomId);
-                const bedCount = roomObj ? (roomObj.capacity || 0) : 0;
+                const totalBeds = roomObj ? (roomObj.capacity || 0) : 0;
+                
+                if (assignmentsOnDate.length >= totalBeds) cssClass = 'occupied';
+                
+                const clientNames = assignmentsOnDate.map(a => a.clientName).join(', ');
+                const tooltip = `${weekDesignation}: ${clientNames}`;
                 
                 return { 
-                    class: 'available', 
-                    content: bedCount > 0 ? bedCount.toString() : '', 
-                    tooltip: `${bedCount} bed(s) available - Booking data not loaded` 
+                    class: cssClass, 
+                    content: assignmentsOnDate.length.toString(),
+                    tooltip: tooltip
                 };
             }
-            
-            // Sample data mode (existing logic)
-            const beds = sampleData.beds.filter(bed => bed.roomId === roomId);
-            const clientsStaying = [];
-            
-            beds.forEach(bed => {
-                bed.bookings.forEach(booking => {
-                    const checkIn = new Date(booking.checkin);
-                    const checkOut = new Date(booking.checkout);
-                    
-                    if (date >= checkIn && date < checkOut) {
-                        const client = sampleData.clients.find(c => c.id === booking.clientId);
-                        if (client) {
-                            clientsStaying.push(client);
-                        }
-                    }
-                });
-            });
-            
-            if (clientsStaying.length === 0) {
-                return { class: 'available', content: beds.length.toString(), tooltip: `${beds.length} bed(s) available` };
-            }
-            
-            const dayOfWeek = date.getDay();
-            const weekStart = new Date(date);
-            weekStart.setDate(date.getDate() - dayOfWeek);
-            
-            const weekDesignation = calculateRoomDesignationForWeek(roomId, weekStart);
-            
-            let cssClass = 'occupied';
-            if (weekDesignation === 'Boys Room') cssClass = 'boys';
-            else if (weekDesignation === 'Girls Room') cssClass = 'girls';
-            
-            if (clientsStaying.length === beds.length) cssClass = 'occupied';
-            
-            const clientNames = clientsStaying.map(c => c.name).join(', ');
-            const tooltip = `${weekDesignation}: ${clientNames}`;
-            
-            return { 
-                class: cssClass, 
-                content: clientsStaying.length.toString(),
-                tooltip: tooltip
-            };
         }
 
         // Event listeners
