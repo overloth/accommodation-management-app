@@ -1006,7 +1006,8 @@
                 }
                 
                 const endDate = new Date(startDate);
-                endDate.setDate(startDate.getDate() + (numberOfWeeks * 7) - 1); // End on Saturday
+                // endDate.setDate(startDate.getDate() + (numberOfWeeks * 7) - 1); // End on Saturday
+                endDate.setDate(startDate.getDate() + (numberOfWeeks * 7)); // End on Saturday (6 days after Sunday)
                 
                 const endDateString = endDate.toISOString().split('T')[0];
                 document.getElementById('checkoutDate').value = endDateString;
