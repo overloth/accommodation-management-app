@@ -1650,7 +1650,15 @@
                 
                 document.getElementById('propertyTitle').textContent = `Monthly Occupancy - ${selectedProperty.name}`;
                 populateMonthSelector();
-                updateOccupancyView();
+                
+                // Load bed assignments before showing occupancy
+                if (!sampleDataLoaded) {
+                    loadBedAssignmentsData(selectedProperty.id).then(() => {
+                        updateOccupancyView();
+                    });
+                } else {
+                    updateOccupancyView();
+                }
             }
         }
 
