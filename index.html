@@ -1358,7 +1358,16 @@
                                 const client = sampleData.clients.find(c => c.id === activeBooking.clientId);
                                 clientName = client ? client.name : null;
                             } else {
-                                clientName = activeBooking.clientName; // Airtable booking already has the name
+                                // clientName = activeBooking.clientName; // Airtable booking already has the name
+                                // For Airtable, get both name and booking ID
+                                 const booking = airtableBookings.find(b => 
+                                        b.kidId === activeBooking.id || 
+                                        (activeBooking.bookingId && b.id === activeBooking.bookingId)
+                                    );
+                                    clientName = activeBooking.clientName;
+                                    if (booking && booking.bookingId) {
+                                        clientName = `${activeBooking.clientName} (Order: ${booking.bookingId})`;
+                                    }
                             }
                             
                             isCurrentlyOccupied = true;
@@ -1857,6 +1866,29 @@
             let availableClients = allClients;
             allClientsGlobal = allClients; // Store for gender filtering
             console.log('Available clients (filtered):', availableClients);
+
+            // Filter out already assigned clients for this week
+            if (!sampleDataLoaded && selectedWeekStart && window.bedAssignments) {
+                const weekEnd = new Date(selectedWeekStart);
+                weekEnd.setDate(selectedWeekStart.getDate() + 6);
+                
+                const assignedKidIds = new Set();
+                window.bedAssignments.forEach(assignment => {
+                    const checkIn = new Date(assignment.checkin);
+                    const checkOut = new Date(assignment.checkout);
+                    
+                    if (checkIn <= weekEnd && checkOut >= selectedWeekStart) {
+                        const booking = airtableBookings.find(b => b.id === assignment.bookingId);
+                        if (booking && booking.kidId) {
+                            assignedKidIds.add(booking.kidId);
+                        }
+                    }
+                });
+                
+                availableClients = availableClients.filter(client => !assignedKidIds.has(client.id));
+                console.log(`Removed ${allClients.length - availableClients.length} already assigned clients`);
+            }
+            
             console.log('Available clients:', availableClients);
             
             
