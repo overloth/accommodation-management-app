@@ -1873,10 +1873,12 @@
                 
                 const assignedKidIds = new Set();
                 window.bedAssignments.forEach(assignment => {
-                    const checkIn = new Date(assignment.checkin);
-                    const checkOut = new Date(assignment.checkout);
+                    const checkIn = new Date(assignment.checkin + 'T00:00:00');
+                    const checkOut = new Date(assignment.checkout + 'T23:59:59');
                     
+                    // Check if assignment overlaps with selected week
                     if (checkIn <= weekEnd && checkOut >= selectedWeekStart) {
+                        // Find the booking to get the kidId
                         const booking = airtableBookings.find(b => b.id === assignment.bookingId);
                         if (booking && booking.kidId) {
                             assignedKidIds.add(booking.kidId);
@@ -1885,7 +1887,7 @@
                 });
                 
                 availableClients = availableClients.filter(client => !assignedKidIds.has(client.id));
-                console.log(`Removed ${allClients.length - availableClients.length} already assigned clients`);
+                console.log(`Removed ${allClients.length - availableClients.length} already assigned clients for this week`);
             }
 
             console.log('Available clients:', availableClients);
@@ -1897,13 +1899,13 @@
                 roomInfo.style.borderLeft = '4px solid #0066cc';
                 availableClients = availableClients.filter(client => client.gender === 'Male');
                 genderField.value = 'Male';
-                genderField.disabled = true;
+                // genderField.disabled = true;
             } else if (weekDesignation === 'Girls Room') {
                 roomInfo.innerHTML = '🟣 <strong>Girls Room</strong> - Only showing available female clients for this week';
                 roomInfo.style.borderLeft = '4px solid #9933cc';
                 availableClients = availableClients.filter(client => client.gender === 'Female');
                 genderField.value = 'Female';
-                genderField.disabled = true;
+                // genderField.disabled = true;
             } else {
                 roomInfo.innerHTML = `⚪ <strong>Empty Room</strong> - Week of ${selectedWeekStart ? selectedWeekStart.toLocaleDateString() : 'current week'} (Sunday-Saturday). First client assigned determines room designation.`;
                 roomInfo.style.borderLeft = '4px solid #95a5a6';
@@ -1949,7 +1951,12 @@
                     let displayText = `${genderIcon} ${client.name}`;
                     
                     if (!sampleDataLoaded) {
-                        const startDate = new Date(client.checkin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        // const startDate = new Date(client.checkin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const dateObj = new Date(client.checkin + 'T00:00:00');
+                        const day = String(dateObj.getDate()).padStart(2, '0');
+                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const year = dateObj.getFullYear();
+                        const startDate = `${day}.${month}.${year}`;
                         displayText = `${client.bookingId} - ${client.name} - ${client.campName} - ${startDate} - ${genderIcon}`;
                     }
                     
@@ -1997,7 +2004,12 @@
                     let displayText = `${genderIcon} ${client.name}`;
                     
                     if (!sampleDataLoaded) {
-                        const startDate = new Date(client.checkin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        // const startDate = new Date(client.checkin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const dateObj = new Date(client.checkin + 'T00:00:00');
+                        const day = String(dateObj.getDate()).padStart(2, '0');
+                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const year = dateObj.getFullYear();
+                        const startDate = `${day}.${month}.${year}`;
                         displayText = `${genderIcon} ${client.bookingId} - ${client.name} - ${client.campName} - ${startDate}`;
                     }
                     
