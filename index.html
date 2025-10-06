@@ -1445,7 +1445,7 @@
                 
                 airtableBookings = bookingsResponse.records.map(record => {
                     const fields = record.fields;
-                    
+                    console.log("fields: ", fields);
                     const givenName = Array.isArray(fields['Given Name (from Kids on Trip)']) 
                     ? fields['Given Name (from Kids on Trip)'][0] 
                     : fields['Given Name (from Kids on Trip)'] || '';
@@ -1453,6 +1453,10 @@
                     ? fields['Family Name (from Kids on Trip)'][0] 
                     : fields['Family Name (from Kids on Trip)'] || '';
                     const fullName = `${givenName} ${familyName}`.trim() || 'Unnamed';
+                    console.log("given name ", givenName );
+                    console.log("familyName ", familyName);
+                    console.log("full name ", fullName);
+
                     
                     const bookingId = fields['Booking ID (From CMS)'] || record.id;
                     const campId = fields['Camp'] ? (Array.isArray(fields['Camp']) ? fields['Camp'][0] : fields['Camp']) : null;
