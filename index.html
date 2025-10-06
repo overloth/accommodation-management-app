@@ -1364,6 +1364,7 @@
                                         (activeBooking.bookingId && b.id === activeBooking.bookingId)
                                     );
                                     clientName = activeBooking.clientName;
+                                    console.log("activeBooking: ",activeBooking);
                                     if (booking && booking.bookingId) {
                                         clientName = `${activeBooking.clientName} (Order: ${booking.bookingId})`;
                                     }
