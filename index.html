@@ -1358,7 +1358,7 @@
                                 clientName = client ? client.name : null;
                             } else {
                                 // clientName = activeBooking.clientName; // Airtable booking already has the name
-                                // For Airtable, get both name and booking ID
+                                For Airtable, get both name and booking ID
                                  const booking = airtableBookings.find(b => 
                                         b.kidId === activeBooking.id || 
                                         (activeBooking.bookingId && b.id === activeBooking.bookingId)
@@ -1368,6 +1368,7 @@
                                     if (booking && booking.bookingId) {
                                         clientName = `${activeBooking.clientName} (Order: ${booking.bookingId})`;
                                     }
+
                             }
                             
                             isCurrentlyOccupied = true;
@@ -1445,12 +1446,12 @@
                 airtableBookings = bookingsResponse.records.map(record => {
                     const fields = record.fields;
                     
-                    const givenName = Array.isArray(fields['Given Name (from Kid)']) 
-                        ? fields['Given Name (from Kid)'][0] 
-                        : fields['Given Name (from Kid)'] || '';
-                    const familyName = Array.isArray(fields['Family Name (from Kid)']) 
-                        ? fields['Family Name (from Kid)'][0] 
-                        : fields['Family Name (from Kid)'] || '';
+                    const givenName = Array.isArray(fields['Given Name (from Kids on Trip)']) 
+                    ? fields['Given Name (from Kids on Trip)'][0] 
+                    : fields['Given Name (from Kids on Trip)'] || '';
+                const familyName = Array.isArray(fields['Family Name (from Kids on Trip)']) 
+                    ? fields['Family Name (from Kids on Trip)'][0] 
+                    : fields['Family Name (from Kids on Trip)'] || '';
                     const fullName = `${givenName} ${familyName}`.trim() || 'Unnamed';
                     
                     const bookingId = fields['Booking ID (From CMS)'] || record.id;
