@@ -1416,6 +1416,15 @@
                         gender = gender[0];
                     }
 
+                    // Extract given name and family name from bed assignments
+                    const givenName = Array.isArray(fields['Given Name (from Kid) (from Booking)']) 
+                        ? fields['Given Name (from Kid) (from Booking)'][0] 
+                        : fields['Given Name (from Kid) (from Booking)'] || '';
+                    const familyName = Array.isArray(fields['Family Name (from Kid) (from Booking)']) 
+                        ? fields['Family Name (from Kid) (from Booking)'][0] 
+                        : fields['Family Name (from Kid) (from Booking)'] || '';
+                    const fullName = `${givenName} ${familyName}`.trim() || 'Unnamed';
+
                     return {
                         id: record.id,
                         bedId: fields['Beds'] ? fields['Beds'][0] : null,
@@ -1423,8 +1432,7 @@
                         bookingId: fields['Booking'] ? fields['Booking'][0] : null,
                         checkin: fields['Start Date'],
                         checkout: fields['End Date'],
-                        // clientName: fields['Client Name (from Booking)'] || 'Unnamed',
-                        clientName: null,
+                        clientName: fullName,
                         gender: gender
                     };
                 });
