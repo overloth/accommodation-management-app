@@ -1357,18 +1357,17 @@
                                 const client = sampleData.clients.find(c => c.id === activeBooking.clientId);
                                 clientName = client ? client.name : null;
                             } else {
-                                // clientName = activeBooking.clientName; // Airtable booking already has the name
-                                // For Airtable, get both name and booking ID
-                                 const booking = airtableBookings.find(b => 
-                                        b.kidId === activeBooking.id || 
-                                        (activeBooking.bookingId && b.id === activeBooking.bookingId)
-                                    );
-                                    clientName = activeBooking.clientName;
-                                    console.log("activeBooking: ",activeBooking);
-                                    if (booking && booking.bookingId) {
-                                        clientName = `${activeBooking.clientName} (Order: ${booking.bookingId})`;
-                                    }
-
+                                // For Airtable, get name from bed assignment
+                                clientName = activeBooking.clientName;
+                                
+                                // Try to get booking ID from airtableBookings
+                                const booking = airtableBookings.find(b => b.id === activeBooking.bookingId);
+                                console.log("activeBooking: ", activeBooking);
+                                console.log("Found booking: ", booking);
+                                
+                                if (booking && booking.bookingId) {
+                                    clientName = `${clientName} (Order: ${booking.bookingId})`;
+                                }
                             }
                             
                             isCurrentlyOccupied = true;
@@ -1471,6 +1470,17 @@
                     const campId = fields['Camp'] ? (Array.isArray(fields['Camp']) ? fields['Camp'][0] : fields['Camp']) : null;
                     const camp = fields['Camp Name (from Camp)'] ? (Array.isArray(fields['Camp Name (from Camp)']) ? fields['Camp Name (from Camp)'][0] : fields['Camp Name (from Camp)']) : 'No Camp';
                     
+                    // Extract Age and Mother Tongue
+                    const age = Array.isArray(fields['Age (from Kids on Trip)']) 
+                        ? fields['Age (from Kids on Trip)'][0] 
+                        : fields['Age (from Kids on Trip)'];
+                    const motherTongue = Array.isArray(fields['Mother Tongue (from Kids on Trip)']) 
+                        ? fields['Mother Tongue (from Kids on Trip)'][0] 
+                        : fields['Mother Tongue (from Kids on Trip)'];
+                    const course = Array.isArray(fields['Course (from Kids on Trip)']) 
+                        ? fields['Course (from Kids on Trip)'][0] 
+                        : fields['Course (from Kids on Trip)'];
+
                     return {
                         id: record.id,
                         bookingId: bookingId,
@@ -1484,7 +1494,10 @@
                         checkin: fields['Arrival Date'],
                         checkout: fields['Departure Date'],
                         kidId: fields['Kids on Trip'] ? fields['Kids on Trip'][0] : null,
-                        campName: camp
+                        campName: camp,
+                        age: age || 'N/A',
+                        motherTongue: motherTongue || 'N/A',
+                        course: course || 'N/A'
                     };
                 });
                 
