@@ -1472,13 +1472,26 @@
                     console.log("familyName ", familyName);
                     console.log("full name ", fullName);
 
-                    // Extract Age and Mother Tongue
-                    const age = Array.isArray(fields['Age (from Kids on Trip)']) 
-                        ? fields['Age (from Kids on Trip)'][0] 
-                        : fields['Age (from Kids on Trip)'];
-                    const motherTongue = Array.isArray(fields['Mother Tongue (from Kids on Trip)']) 
-                        ? fields['Mother Tongue (from Kids on Trip)'][0] 
-                        : fields['Mother Tongue (from Kids on Trip)'];
+                    // Extract Age and Mother Tongue - handle various data formats
+                    let age = fields['Age (from Kids on Trip)'];
+                    if (Array.isArray(age)) {
+                        age = age[0];
+                    }
+                    // Convert to number if it's a string, handle NaN
+                    if (age && !isNaN(age)) {
+                        age = Number(age);
+                    } else {
+                        age = null;
+                    }
+
+                    let motherTongue = fields['Mother Tongue (from Kids on Trip)'];
+                    if (Array.isArray(motherTongue)) {
+                        motherTongue = motherTongue[0];
+                    }
+                    // Ensure it's a string
+                    if (motherTongue && typeof motherTongue === 'object') {
+                        motherTongue = null;
+                    }
                     
                     const bookingId = fields['Booking ID (From CMS)'] || record.id;
                     const campId = fields['Camp'] ? (Array.isArray(fields['Camp']) ? fields['Camp'][0] : fields['Camp']) : null;
