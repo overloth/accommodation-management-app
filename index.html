@@ -1360,13 +1360,20 @@
                                 // For Airtable, get name from bed assignment
                                 clientName = activeBooking.clientName;
                                 
-                                // Try to get booking ID from airtableBookings
+                                // Try to get booking details from airtableBookings
                                 const booking = airtableBookings.find(b => b.id === activeBooking.bookingId);
                                 console.log("activeBooking: ", activeBooking);
                                 console.log("Found booking: ", booking);
                                 
-                                if (booking && booking.bookingId) {
-                                    clientName = `${clientName} (Order: ${booking.bookingId})`;
+                                if (booking) {
+                                    const details = [];
+                                    if (booking.bookingId) details.push(`Order: ${booking.bookingId}`);
+                                    if (booking.age) details.push(`${booking.age}y`);
+                                    if (booking.motherTongue) details.push(booking.motherTongue);
+                                    
+                                    if (details.length > 0) {
+                                        clientName = `${clientName} (${details.join(' / ')})`;
+                                    }
                                 }
                             }
                             
@@ -1465,11 +1472,6 @@
                     console.log("familyName ", familyName);
                     console.log("full name ", fullName);
 
-                    
-                    const bookingId = fields['Booking ID (From CMS)'] || record.id;
-                    const campId = fields['Camp'] ? (Array.isArray(fields['Camp']) ? fields['Camp'][0] : fields['Camp']) : null;
-                    const camp = fields['Camp Name (from Camp)'] ? (Array.isArray(fields['Camp Name (from Camp)']) ? fields['Camp Name (from Camp)'][0] : fields['Camp Name (from Camp)']) : 'No Camp';
-                    
                     // Extract Age and Mother Tongue
                     const age = Array.isArray(fields['Age (from Kids on Trip)']) 
                         ? fields['Age (from Kids on Trip)'][0] 
@@ -1477,10 +1479,11 @@
                     const motherTongue = Array.isArray(fields['Mother Tongue (from Kids on Trip)']) 
                         ? fields['Mother Tongue (from Kids on Trip)'][0] 
                         : fields['Mother Tongue (from Kids on Trip)'];
-                    const course = Array.isArray(fields['Course (from Kids on Trip)']) 
-                        ? fields['Course (from Kids on Trip)'][0] 
-                        : fields['Course (from Kids on Trip)'];
-
+                    
+                    const bookingId = fields['Booking ID (From CMS)'] || record.id;
+                    const campId = fields['Camp'] ? (Array.isArray(fields['Camp']) ? fields['Camp'][0] : fields['Camp']) : null;
+                    const camp = fields['Camp Name (from Camp)'] ? (Array.isArray(fields['Camp Name (from Camp)']) ? fields['Camp Name (from Camp)'][0] : fields['Camp Name (from Camp)']) : 'No Camp';
+                    
                     return {
                         id: record.id,
                         bookingId: bookingId,
@@ -1495,9 +1498,8 @@
                         checkout: fields['Departure Date'],
                         kidId: fields['Kids on Trip'] ? fields['Kids on Trip'][0] : null,
                         campName: camp,
-                        age: age || 'N/A',
-                        motherTongue: motherTongue || 'N/A',
-                        course: course || 'N/A'
+                        age: age || null,
+                        motherTongue: motherTongue || null
                     };
                 });
                 
