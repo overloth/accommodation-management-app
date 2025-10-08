@@ -1370,6 +1370,8 @@
                                     if (booking.bookingId) details.push(`Order: ${booking.bookingId}`);
                                     if (booking.age) details.push(`${booking.age}y`);
                                     if (booking.motherTongue) details.push(booking.motherTongue);
+                                    if (booking.languageStudying) details.push(booking.languageStudying);
+                                    if (booking.campName) details.push(booking.campName);
                                     
                                     if (details.length > 0) {
                                         clientName = `${clientName} (${details.join(' / ')})`;
@@ -1492,6 +1494,15 @@
                     if (motherTongue && typeof motherTongue === 'object') {
                         motherTongue = null;
                     }
+
+                    // Extract Language Studying
+                    let languageStudying = fields['Language Studying (from Bookings by Kid)'];
+                    if (Array.isArray(languageStudying)) {
+                        languageStudying = languageStudying[0];
+                    }
+                    if (languageStudying && typeof languageStudying === 'object') {
+                        languageStudying = null;
+                    }
                     
                     const bookingId = fields['Booking ID (From CMS)'] || record.id;
                     const campId = fields['Camp'] ? (Array.isArray(fields['Camp']) ? fields['Camp'][0] : fields['Camp']) : null;
@@ -1512,7 +1523,8 @@
                         kidId: fields['Kids on Trip'] ? fields['Kids on Trip'][0] : null,
                         campName: camp,
                         age: age || null,
-                        motherTongue: motherTongue || null
+                        motherTongue: motherTongue || null,
+                        languageStudying: languageStudying || null
                     };
                 });
                 
