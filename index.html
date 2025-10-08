@@ -1495,14 +1495,18 @@
                         motherTongue = null;
                     }
 
-                    // Extract Language Studying
-                    let languageStudying = fields['Language Studying (from Bookings by Kid)'];
-                    if (Array.isArray(languageStudying)) {
-                        languageStudying = languageStudying[0];
-                    }
-                    if (languageStudying && typeof languageStudying === 'object') {
-                        languageStudying = null;
-                    }
+                   // Extract Language Studying - use the lookup field that has the actual name
+                   let languageStudying = fields['Language Name (from Language Studying) (from Bookings by Kid)'];
+                   if (!languageStudying) {
+                       // Fallback to another possible field name
+                       languageStudying = fields['Language Studying Name (from Bookings by Kid)'];
+                   }
+                   if (Array.isArray(languageStudying)) {
+                       languageStudying = languageStudying[0];
+                   }
+                   if (languageStudying && typeof languageStudying === 'object') {
+                       languageStudying = null;
+                   }
                     
                     const bookingId = fields['Booking ID (From CMS)'] || record.id;
                     const campId = fields['Camp'] ? (Array.isArray(fields['Camp']) ? fields['Camp'][0] : fields['Camp']) : null;
