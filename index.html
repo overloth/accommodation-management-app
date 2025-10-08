@@ -2301,6 +2301,43 @@
                 showNotification('Please select a check-in date.', 'error');
                 return;
             }
+
+            // Check room designation and warn if gender mismatch
+                if (selectedWeekStart) {
+                    const weekDesignation = calculateRoomDesignationForWeek(selectedRoom.id, selectedWeekStart);
+                    
+                    // Determine the client's gender
+                    let assigningGender = clientGender;
+                    if (clientId && !newClientName) {
+                        // Existing client - get gender from the client object
+                        const client = sampleDataLoaded 
+                            ? sampleData.clients.find(c => c.id === clientId)
+                            : allClientsGlobal.find(c => c.id === clientId);
+                        if (client) {
+                            assigningGender = client.gender;
+                        }
+                    }
+                    
+                    // Check for gender mismatch
+                    let mismatch = false;
+                    let warningMessage = '';
+                    
+                    if (weekDesignation === 'Boys Room' && assigningGender === 'Female') {
+                        mismatch = true;
+                        warningMessage = '⚠️ WARNING: This is currently a BOYS ROOM, but you are trying to assign a FEMALE client.\n\nThis will change the room designation to a Girls Room for this week.\n\nAre you sure you want to continue?';
+                    } else if (weekDesignation === 'Girls Room' && assigningGender === 'Male') {
+                        mismatch = true;
+                        warningMessage = '⚠️ WARNING: This is currently a GIRLS ROOM, but you are trying to assign a MALE client.\n\nThis will change the room designation to a Boys Room for this week.\n\nAre you sure you want to continue?';
+                    }
+                    
+                    if (mismatch) {
+                        if (!confirm(warningMessage)) {
+                            console.log('User cancelled assignment due to gender mismatch');
+                            return; // User cancelled
+                        }
+                        console.log('User confirmed assignment despite gender mismatch');
+                    }
+                }
             
             try {
                 if (sampleDataLoaded) {
