@@ -2096,15 +2096,51 @@
             const selectedGender = document.getElementById('clientGender').value;
             const select = document.getElementById('clientSelect');
             
-            // Get the already camp-filtered clients
-            let filteredClients = allClientsGlobal; // We need to store this globally
+            // Start with all clients (already filtered by camp)
+            let filteredClients = allClientsGlobal;
+            
+            // Re-apply the "already assigned" filter
+            if (!sampleDataLoaded && selectedWeekStart && window.bedAssignments) {
+                const weekEnd = new Date(selectedWeekStart);
+                weekEnd.setDate(selectedWeekStart.getDate() + 6);
+                weekEnd.setHours(23, 59, 59, 999);
+                
+                const weekStartTime = selectedWeekStart.getTime();
+                const weekEndTime = weekEnd.getTime();
+                
+                const assignedKidIds = new Set();
+                
+                window.bedAssignments.forEach(assignment => {
+                    if (!assignment.checkin || !assignment.checkout) return;
+                    
+                    const checkIn = new Date(assignment.checkin);
+                    const checkOut = new Date(assignment.checkout);
+                    
+                    const checkInTime = checkIn.getTime();
+                    const checkOutTime = checkOut.getTime();
+                    
+                    // Check if assignment overlaps with selected week
+                    const overlaps = checkInTime <= weekEndTime && checkOutTime >= weekStartTime;
+                    
+                    if (overlaps) {
+                        const booking = airtableBookings.find(b => b.id === assignment.bookingId);
+                        if (booking && booking.kidId) {
+                            assignedKidIds.add(booking.kidId);
+                        }
+                    }
+                });
+                
+                // Filter out already assigned clients
+                filteredClients = filteredClients.filter(client => !assignedKidIds.has(client.id));
+                console.log(`After removing assigned: ${filteredClients.length} clients available`);
+            }
             
             // Apply gender filter if a gender is selected
             if (selectedGender) {
                 filteredClients = filteredClients.filter(client => client.gender === selectedGender);
                 console.log(`Filtered to ${filteredClients.length} ${selectedGender} clients`);
             } else {
-                console.log(`Showing all ${filteredClients.length} clients (no gender filter)`);
+                console.log(`Showing all ${filteredClients.length} available clients (no gender filter)`);
             }
             
             // Rebuild dropdown options
@@ -2118,7 +2154,6 @@
                     let displayText = `${genderIcon} ${client.name}`;
                     
                     if (!sampleDataLoaded) {
-                        // const startDate = new Date(client.checkin).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         const dateObj = new Date(client.checkin + 'T00:00:00');
                         const day = String(dateObj.getDate()).padStart(2, '0');
                         const month = String(dateObj.getMonth() + 1).padStart(2, '0');
