@@ -391,6 +391,11 @@
             color: white;
         }
 
+        .room-designation.mixed {
+            background: #e67e22;
+            color: white;
+        }
+
         .room-designation.empty {
             background: #95a5a6;
             color: white;
@@ -797,7 +802,7 @@
 
     <!-- Confirmation Modal -->
     <div class="modal" id="confirmationModal">
-        <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-content" style="max-width: 500px;">
             <span class="close" onclick="closeConfirmationModal()">&times;</span>
             <div style="text-align: center; padding: 20px 0;">
                 <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
@@ -1131,19 +1136,41 @@
                 }
             }
             
+            // if (clientsStayingThisWeek.length === 0) {
+            //     return 'Empty';
+            // }
+            
+            // clientsStayingThisWeek.sort((a, b) => a.originalCheckin - b.originalCheckin);
+            // const firstClient = clientsStayingThisWeek[0];
+            
+            // if (firstClient.gender === 'Male') {
+            //     return 'Boys Room';
+            // } else if (firstClient.gender === 'Female') {
+            //     return 'Girls Room';
+            // }
+            
+            // return 'Empty';
+
             if (clientsStayingThisWeek.length === 0) {
                 return 'Empty';
             }
-            
-            clientsStayingThisWeek.sort((a, b) => a.originalCheckin - b.originalCheckin);
-            const firstClient = clientsStayingThisWeek[0];
-            
-            if (firstClient.gender === 'Male') {
-                return 'Boys Room';
-            } else if (firstClient.gender === 'Female') {
-                return 'Girls Room';
+
+            // Check if all clients are the same gender
+            const genders = new Set(clientsStayingThisWeek.map(c => c.gender));
+
+            if (genders.size === 1) {
+                // All same gender
+                const gender = Array.from(genders)[0];
+                if (gender === 'Male') {
+                    return 'Boys Room';
+                } else if (gender === 'Female') {
+                    return 'Girls Room';
+                }
+            } else if (genders.size > 1) {
+                // Mixed genders
+                return 'Mixed Room';
             }
-            
+
             return 'Empty';
         }
 
@@ -1151,6 +1178,7 @@
             switch(designation.toLowerCase()) {
                 case 'boys room': return 'boys';
                 case 'girls room': return 'girls';
+                case 'mixed room': return 'mixed';
                 case 'occupied': return 'occupied';
                 default: return 'empty';
             }
@@ -2357,13 +2385,24 @@
                     // Check for gender mismatch
                     let mismatch = false;
                     let warningMessage = '';
-                    
+
+                    // Get the client name
+                    let clientName = newClientName || 'this client';
+                    if (clientId && !newClientName) {
+                        const client = sampleDataLoaded 
+                            ? sampleData.clients.find(c => c.id === clientId)
+                            : allClientsGlobal.find(c => c.id === clientId);
+                        if (client) {
+                            clientName = client.name;
+                        }
+                    }
+
                     if (weekDesignation === 'Boys Room' && assigningGender === 'Female') {
                         mismatch = true;
-                        warningMessage = '⚠️ WARNING: This is currently a BOYS ROOM, but you are trying to assign a FEMALE client.\n\nThis will change the room designation to a Girls Room for this week.\n\nAre you sure you want to continue?';
+                        warningMessage = `⚠️ WARNING: This is currently a BOYS ROOM, but you are trying to assign ${clientName} (FEMALE).\n\nThis will change the room designation to a MIXED ROOM for this week.\n\nAre you sure you want to continue?`;
                     } else if (weekDesignation === 'Girls Room' && assigningGender === 'Male') {
                         mismatch = true;
-                        warningMessage = '⚠️ WARNING: This is currently a GIRLS ROOM, but you are trying to assign a MALE client.\n\nThis will change the room designation to a Boys Room for this week.\n\nAre you sure you want to continue?';
+                        warningMessage = `⚠️ WARNING: This is currently a GIRLS ROOM, but you are trying to assign ${clientName} (MALE).\n\nThis will change the room designation to a MIXED ROOM for this week.\n\nAre you sure you want to continue?`;
                     }
                     
                     if (mismatch) {
