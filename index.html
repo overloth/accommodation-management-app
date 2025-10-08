@@ -392,7 +392,7 @@
         }
 
         .room-designation.mixed {
-            background: #e67e22;
+            background: #16a085;
             color: white;
         }
 
@@ -529,6 +529,12 @@
             background: #f0d4f0;
             border-color: #9933cc;
             color: #5c1a5c;
+        }
+
+        .occupancy-cell.mixed {
+            background: #d4f1e8;
+            border-color: #16a085;
+            color: #0d5e4a;
         }
 
         .legend {
@@ -727,6 +733,10 @@
                         <div class="legend-item">
                             <div class="legend-color" style="background: #f0d4f0; border-color: #9933cc;"></div>
                             <span>Girls Room</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #d4f1e8; border-color: #16a085;"></div>
+                            <span>Mixed Room</span>
                         </div>
                         <div class="legend-item">
                             <div class="legend-color" style="background: #fadbd8; border-color: #e74c3c;"></div>
@@ -2997,10 +3007,11 @@
                 let cssClass = 'available';
                 if (weekDesignation === 'Boys Room') cssClass = 'boys';
                 else if (weekDesignation === 'Girls Room') cssClass = 'girls';
-                
+                else if (weekDesignation === 'Mixed Room') cssClass = 'mixed';
+
                 const roomObj = currentPropertyRooms.find(r => r.id === roomId);
                 const totalBeds = roomObj ? (roomObj.capacity || 0) : 0;
-                
+
                 if (assignmentsOnDate.length >= totalBeds) cssClass = 'occupied';
                 
                 const clientNames = assignmentsOnDate.map(a => a.clientName).join(', ');
