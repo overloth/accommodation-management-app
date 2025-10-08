@@ -2142,32 +2142,69 @@
             } else {
                 console.log(`Showing all ${filteredClients.length} available clients (no gender filter)`);
             }
-            
-            // Rebuild dropdown options
-            const options = ['<option value="">Choose a client...</option>'];
-            
-            if (filteredClients.length === 0) {
-                options.push('<option value="" disabled>No clients match the selected criteria</option>');
-            } else {
-                filteredClients.forEach(client => {
-                    const genderIcon = client.gender === 'Male' ? '👨' : client.gender === 'Female' ? '👩' : '👤';
-                    let displayText = `${genderIcon} ${client.name}`;
-                    
-                    if (!sampleDataLoaded) {
-                        const dateObj = new Date(client.checkin + 'T00:00:00');
-                        const day = String(dateObj.getDate()).padStart(2, '0');
-                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                        const year = dateObj.getFullYear();
-                        const startDate = `${day}.${month}.${year}`;
-                        displayText = `${genderIcon} ${client.bookingId} - ${client.name} - ${client.campName} - ${startDate}`;
-                    }
-                    
-                    options.push(`<option value="${client.id}" data-gender="${client.gender}">${displayText}</option>`);
-                });
+
+            // Calculate how many clients were filtered out
+                const totalClientsForGender = selectedGender 
+                    ? allClientsGlobal.filter(c => c.gender === selectedGender).length 
+                    : allClientsGlobal.length;
+                const filteredOutCount = totalClientsForGender - filteredClients.length;
+                
+                // Rebuild dropdown options
+                const options = ['<option value="">Choose a client...</option>'];
+                
+                if (filteredClients.length === 0) {
+                    options.push('<option value="" disabled>No clients match the selected criteria</option>');
+                } else {
+                    filteredClients.forEach(client => {
+                        const genderIcon = client.gender === 'Male' ? '👨' : client.gender === 'Female' ? '👩' : '👤';
+                        let displayText = `${genderIcon} ${client.name}`;
+                        
+                        if (!sampleDataLoaded) {
+                            const dateObj = new Date(client.checkin + 'T00:00:00');
+                            const day = String(dateObj.getDate()).padStart(2, '0');
+                            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                            const year = dateObj.getFullYear();
+                            const startDate = `${day}.${month}.${year}`;
+                            displayText = `${genderIcon} ${client.bookingId} - ${client.name} - ${client.campName} - ${startDate}`;
+                        }
+                        
+                        options.push(`<option value="${client.id}" data-gender="${client.gender}">${displayText}</option>`);
+                    });
+                }
+                
+                // Add info about filtered clients
+                if (filteredOutCount > 0) {
+                    options.push(`<option value="" disabled>--- ${filteredOutCount} client(s) already assigned this week ---</option>`);
+                }
+                
+                select.innerHTML = options.join('');
             }
             
-            select.innerHTML = options.join('');
-        }
+        //     // Rebuild dropdown options
+        //     const options = ['<option value="">Choose a client...</option>'];
+            
+        //     if (filteredClients.length === 0) {
+        //         options.push('<option value="" disabled>No clients match the selected criteria</option>');
+        //     } else {
+        //         filteredClients.forEach(client => {
+        //             const genderIcon = client.gender === 'Male' ? '👨' : client.gender === 'Female' ? '👩' : '👤';
+        //             let displayText = `${genderIcon} ${client.name}`;
+                    
+        //             if (!sampleDataLoaded) {
+        //                 const dateObj = new Date(client.checkin + 'T00:00:00');
+        //                 const day = String(dateObj.getDate()).padStart(2, '0');
+        //                 const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        //                 const year = dateObj.getFullYear();
+        //                 const startDate = `${day}.${month}.${year}`;
+        //                 displayText = `${genderIcon} ${client.bookingId} - ${client.name} - ${client.campName} - ${startDate}`;
+        //             }
+                    
+        //             options.push(`<option value="${client.id}" data-gender="${client.gender}">${displayText}</option>`);
+        //         });
+        //     }
+            
+        //     select.innerHTML = options.join('');
+        // }
 
         // function getAvailableClientsForWeek(allClients, weekStart) {
         //     if (!weekStart || !sampleDataLoaded) {
