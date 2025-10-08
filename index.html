@@ -1369,8 +1369,8 @@
                                     const details = [];
                                     if (booking.bookingId) details.push(`Order: ${booking.bookingId}`);
                                     if (booking.age) details.push(`${booking.age}y`);
-                                    if (booking.motherTongue) details.push(booking.motherTongue);
-                                    if (booking.languageStudying) details.push(booking.languageStudying);
+                                    if (booking.motherTongue) details.push(`Mother tongue: ${booking.motherTongue}`);
+                                    if (booking.languageStudying) details.push(`Learning language: ${booking.languageStudying}`);
                                     if (booking.campName) details.push(booking.campName);
                                     
                                     if (details.length > 0) {
