@@ -1454,6 +1454,8 @@
                         makeAirtableRequest(config.tables.bedAssignments)
                     ]);
 
+                    console.log("📦 Airtable data:", { propertiesRes, roomsRes, bedsRes, assignmentsRes });
+
                     const totalProperties = propertiesRes.records.length;
                     const totalRooms = roomsRes.records.length;
                     const totalBeds = bedsRes.records.length;
@@ -1476,6 +1478,8 @@
                 totalPropertiesEl.textContent = totalRoomsEl.textContent = totalBedsEl.textContent = '0';
                 occupancyRateEl.textContent = '0%';
             }
+
+            console.log("🔍 Updating stats…", { sampleDataLoaded, config });
         }
 
 
