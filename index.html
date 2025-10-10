@@ -1456,17 +1456,55 @@
 
                     console.log("📦 Airtable data:", { propertiesRes, roomsRes, bedsRes, assignmentsRes });
 
-                    const totalProperties = propertiesRes.records.length;
-                    const totalRooms = roomsRes.records.length;
-                    const totalBeds = bedsRes.records.length;
+                    // Filter for Switzerland properties only
+                    const swissProperties = propertiesRes.records.filter(record => {
+                        const countryName = record.fields['Country Name (from Property Country)'];
+                        return countryName === 'Switzerland' || 
+                               (Array.isArray(countryName) && countryName.includes('Switzerland'));
+                    });
+                    
+                    const swissPropertyIds = swissProperties.map(p => p.id);
+                    
+                    // Filter rooms that belong to Swiss properties
+                    const swissRooms = roomsRes.records.filter(record => {
+                        const propertyField = record.fields.Property;
+                        return propertyField && Array.isArray(propertyField) && 
+                               propertyField.some(propId => swissPropertyIds.includes(propId));
+                    });
+                    
+                    const swissRoomIds = swissRooms.map(r => r.id);
+                    
+                    // Filter beds that belong to Swiss rooms
+                    const swissBeds = bedsRes.records.filter(record => {
+                        const roomsField = record.fields.Rooms;
+                        return roomsField && Array.isArray(roomsField) && 
+                               roomsField.some(roomId => swissRoomIds.includes(roomId));
+                    });
+                    
+                    const swissBedIds = swissBeds.map(b => b.id);
 
-                    // Count occupied beds (those that have a linked booking)
+                    const totalProperties = swissProperties.length;
+                    const totalRooms = swissRooms.length;
+                    const totalBeds = swissBeds.length;
+
+                    // Count occupied beds (only for Swiss beds)
+                    const today = new Date();
                     const occupiedBeds = assignmentsRes.records.filter(r => {
-                        const status = r.fields['Status'] || '';
-                        return status.toLowerCase().includes('occupied') || r.fields['Booking'];
+                        // Check if bed is in Swiss properties
+                        const bedField = r.fields['Beds'];
+                        if (!bedField || !Array.isArray(bedField)) return false;
+                        if (!bedField.some(bedId => swissBedIds.includes(bedId))) return false;
+                        
+                        // Check if currently occupied
+                        const startDate = r.fields['Start Date'] ? new Date(r.fields['Start Date']) : null;
+                        const endDate = r.fields['End Date'] ? new Date(r.fields['End Date']) : null;
+                        
+                        return startDate && endDate && today >= startDate && today <= endDate;
                     }).length;
 
                     const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+
+                    console.log("📊 Swiss stats:", { totalProperties, totalRooms, totalBeds, occupiedBeds, occupancyRate });
 
                     totalPropertiesEl.textContent = totalProperties;
                     totalRoomsEl.textContent = totalRooms;
