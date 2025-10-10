@@ -8,6 +8,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
         * {
@@ -915,7 +916,7 @@
         <div class="content">
             <!-- Configuration Section -->
             <div class="config-section">
-                <h3>🔧 System Configuration</h3>
+                <div class="config-section" style="display: none;" id="configSection">
                 <div class="alert alert-warning">
                     <strong>Setup Required:</strong> Configure your Airtable connection or use sample data for testing.
                 </div>
@@ -1119,6 +1120,7 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore();
 
         // Configuration and State
         let config = {
@@ -1193,7 +1195,9 @@
         let isLoggedIn = false;
 
         // Firebase auth state observer
-        auth.onAuthStateChanged(function(user) {
+        // Firebase auth state observer
+        // Firebase auth state observer
+        auth.onAuthStateChanged(async function(user) {
             if (user) {
                 // User is signed in
                 currentUser = {
@@ -1203,17 +1207,13 @@
                 };
                 isLoggedIn = true;
                 
-                // Load config from localStorage
-                const savedToken = localStorage.getItem('airtableToken');
-                const savedBaseId = localStorage.getItem('airtableBaseId');
+                // Load config from Firebase
+                const configLoaded = await loadConfigFromFirebase();
                 
-                if (savedToken && savedBaseId) {
-                    config.token = savedToken;
-                    config.baseId = savedBaseId;
-                    
-                    // Populate config fields
-                    document.getElementById('airtableToken').value = savedToken;
-                    document.getElementById('baseId').value = savedBaseId;
+                if (configLoaded) {
+                    console.log('✅ Configuration ready');
+                } else {
+                    console.log('ℹ️ No configuration - sample data mode available');
                 }
                 
                 showMainApp();
@@ -1296,9 +1296,12 @@
             if (sampleDataLoaded) {
                 loadProperties();
                 updateQuickStats();
-            } else {
-                // Try to load from Airtable
+            } else if (config.token && config.baseId) {
+                // Configuration available - try to load from Airtable
                 loadProperties().then(() => updateQuickStats());
+            } else {
+                // No configuration - show message
+                console.log('ℹ️ No Airtable configuration. Use sample data to explore.');
             }
         }
 
@@ -1521,24 +1524,53 @@
         }
 
 
-        function saveConfig() {
-            const token = document.getElementById('airtableToken').value;
-            const baseId = document.getElementById('baseId').value;
-            
-            if (!token || !baseId) {
-                showNotification('Please enter both Airtable Token and Base ID', 'error');
-                return;
+        // Load configuration from Firebase
+        async function loadConfigFromFirebase() {
+            try {
+                const configRef = database.ref('config/airtable');
+                const snapshot = await configRef.once('value');
+                const configData = snapshot.val();
+                
+                if (configData && configData.token && configData.baseId) {
+                    config.token = configData.token;
+                    config.baseId = configData.baseId;
+                    
+                    // Store in localStorage as backup
+                    localStorage.setItem('airtableToken', configData.token);
+                    localStorage.setItem('airtableBaseId', configData.baseId);
+                    
+                    console.log('✅ Configuration loaded from Firebase');
+                    
+                    // Update status message
+                    const statusEl = document.getElementById('configStatus');
+                    if (statusEl) {
+                        statusEl.className = 'alert alert-success';
+                        statusEl.innerHTML = '<strong>✅ Connected to Airtable</strong> - Data is being loaded from your Airtable base.';
+                    }
+                    
+                    return true;
+                } else {
+                    console.warn('⚠️ No configuration found in Firebase');
+                    
+                    const statusEl = document.getElementById('configStatus');
+                    if (statusEl) {
+                        statusEl.className = 'alert alert-warning';
+                        statusEl.innerHTML = '<strong>⚠️ No Airtable configuration found</strong> - Please use sample data or contact administrator.';
+                    }
+                    
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Error loading config from Firebase:', error);
+                
+                const statusEl = document.getElementById('configStatus');
+                if (statusEl) {
+                    statusEl.className = 'alert alert-warning';
+                    statusEl.innerHTML = '<strong>⚠️ Could not load configuration</strong> - Please use sample data.';
+                }
+                
+                return false;
             }
-            
-            config.token = token;
-            config.baseId = baseId;
-            
-            // Save to localStorage
-            localStorage.setItem('airtableToken', token);
-            localStorage.setItem('airtableBaseId', baseId);
-            
-            showNotification('Configuration saved successfully!', 'success');
-            loadProperties();
         }
 
         function loadSampleData() {
