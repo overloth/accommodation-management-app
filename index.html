@@ -1409,32 +1409,75 @@
                 }
 
         // Update statistics
-        function updateQuickStats() {
-            if (!sampleDataLoaded) return;
-            
-            const totalProperties = sampleData.properties.length;
-            const totalRooms = sampleData.rooms.length;
-            const totalBeds = sampleData.beds.length;
-            
-            let occupiedBeds = 0;
-            const today = new Date();
-            
-            sampleData.beds.forEach(bed => {
-                const hasActiveBooking = bed.bookings.some(booking => {
-                    const checkin = new Date(booking.checkin);
-                    const checkout = new Date(booking.checkout);
-                    return today >= checkin && today <= checkout;
-                });
-                if (hasActiveBooking) occupiedBeds++;
-            });
-            
-            const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
-            
-            document.getElementById('totalProperties').textContent = totalProperties;
-            document.getElementById('totalRooms').textContent = totalRooms;
-            document.getElementById('totalBeds').textContent = totalBeds;
-            document.getElementById('occupancyRate').textContent = occupancyRate + '%';
+        async function updateQuickStats() {
+            const totalPropertiesEl = document.getElementById('totalProperties');
+            const totalRoomsEl = document.getElementById('totalRooms');
+            const totalBedsEl = document.getElementById('totalBeds');
+            const occupancyRateEl = document.getElementById('occupancyRate');
+
+            try {
+                if (sampleDataLoaded) {
+                    // --- SAMPLE DATA ---
+                    const totalProperties = sampleData.properties.length;
+                    const totalRooms = sampleData.rooms.length;
+                    const totalBeds = sampleData.beds.length;
+
+                    let occupiedBeds = 0;
+                    const today = new Date();
+
+                    sampleData.beds.forEach(bed => {
+                        const hasActiveBooking = bed.bookings.some(booking => {
+                            const checkin = new Date(booking.checkin);
+                            const checkout = new Date(booking.checkout);
+                            return today >= checkin && today <= checkout;
+                        });
+                        if (hasActiveBooking) occupiedBeds++;
+                    });
+
+                    const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+
+                    totalPropertiesEl.textContent = totalProperties;
+                    totalRoomsEl.textContent = totalRooms;
+                    totalBedsEl.textContent = totalBeds;
+                    occupancyRateEl.textContent = occupancyRate + '%';
+                } else {
+                    // --- AIRTABLE DATA ---
+                    if (!config.token || !config.baseId) {
+                        console.warn('Airtable config missing, cannot update stats');
+                        return;
+                    }
+
+                    const [propertiesRes, roomsRes, bedsRes, assignmentsRes] = await Promise.all([
+                        makeAirtableRequest(config.tables.properties),
+                        makeAirtableRequest(config.tables.rooms),
+                        makeAirtableRequest(config.tables.beds),
+                        makeAirtableRequest(config.tables.bedAssignments)
+                    ]);
+
+                    const totalProperties = propertiesRes.records.length;
+                    const totalRooms = roomsRes.records.length;
+                    const totalBeds = bedsRes.records.length;
+
+                    // Count occupied beds (those that have a linked booking)
+                    const occupiedBeds = assignmentsRes.records.filter(r => {
+                        const status = r.fields['Status'] || '';
+                        return status.toLowerCase().includes('occupied') || r.fields['Booking'];
+                    }).length;
+
+                    const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+
+                    totalPropertiesEl.textContent = totalProperties;
+                    totalRoomsEl.textContent = totalRooms;
+                    totalBedsEl.textContent = totalBeds;
+                    occupancyRateEl.textContent = occupancyRate + '%';
+                }
+            } catch (error) {
+                console.error('Error updating quick stats:', error);
+                totalPropertiesEl.textContent = totalRoomsEl.textContent = totalBedsEl.textContent = '0';
+                occupancyRateEl.textContent = '0%';
+            }
         }
+
 
         function saveConfig() {
             const token = document.getElementById('airtableToken').value;
