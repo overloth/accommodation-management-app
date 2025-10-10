@@ -219,6 +219,90 @@
             color: white;
         }
 
+        .room-overview-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .room-overview-card:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: #3498db;
+        }
+
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .room-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+        }
+
+        .room-stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .room-stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .room-stat-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        .mini-bed-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f8f9fa;
+            transition: all 0.2s ease;
+        }
+
+        .mini-bed-card:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .mini-bed-card.occupied {
+            border-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.05);
+        }
+
+        .mini-bed-card.available {
+            border-color: #27ae60;
+            background: rgba(39, 174, 96, 0.05);
+        }
+
+        .mini-bed-info {
+            flex: 1;
+        }
+
+        .mini-bed-status {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
         .btn {
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
@@ -686,6 +770,10 @@
                     <div class="step-number">4</div>
                     <span>Manage Beds</span>
                 </div>
+                <div class="step" id="step5">
+                    <div class="step-number">5</div>
+                    <span>Daily Overview</span>
+                </div>
             </div>
 
             <!-- Breadcrumb -->
@@ -758,6 +846,13 @@
                 <div id="bedsContainer"></div>
                 <button class="btn btn-secondary" onclick="goToStep(3)">← Back to Overview</button>
             </div>
+            <!-- Step 5: Daily Overview -->
+            <div class="section" id="section5">
+                <h2 id="dailyOverviewTitle">📅 Daily Overview</h2>
+                <div class="alert alert-info" id="dailyInfo" style="margin-bottom: 20px;"></div>
+                <div id="dailyRoomsContainer"></div>
+                <button class="btn btn-secondary" onclick="goToStep(3)">← Back to Calendar</button>
+            </div>
         </div>
     </div>
 
@@ -825,6 +920,8 @@
             </div>
         </div>
     </div>
+
+
 
     <script>
         // Configuration and State
@@ -1464,6 +1561,169 @@
             updateBedManagementTitle();
         }
 
+        async function loadDailyOverview() {
+            const container = document.getElementById('dailyRoomsContainer');
+            container.innerHTML = '<div class="card"><h3>Loading daily overview...</h3></div>';
+            
+            try {
+                let rooms;
+                if (sampleDataLoaded) {
+                    rooms = sampleData.rooms.filter(room => room.propertyId === selectedProperty.id);
+                } else {
+                    rooms = currentPropertyRooms || [];
+                }
+                
+                if (rooms.length === 0) {
+                    container.innerHTML = '<div class="alert alert-info">No rooms found for this property.</div>';
+                    return;
+                }
+                
+                let html = '';
+                
+                for (const room of rooms) {
+                    // Get all beds for this room
+                    let beds;
+                    if (sampleDataLoaded) {
+                        beds = sampleData.beds.filter(bed => bed.roomId === room.id);
+                    } else {
+                        const response = await makeAirtableRequest(config.tables.beds);
+                        beds = response.records
+                            .filter(record => {
+                                const roomsField = record.fields.Rooms;
+                                const lookupRoomName = record.fields['Room Name (from Rooms)'];
+                                
+                                if (roomsField && Array.isArray(roomsField) && roomsField.includes(room.id)) {
+                                    return true;
+                                }
+                                
+                                if (lookupRoomName) {
+                                    if (Array.isArray(lookupRoomName)) {
+                                        return lookupRoomName.includes(room.number);
+                                    } else {
+                                        return lookupRoomName === room.number;
+                                    }
+                                }
+                                
+                                return false;
+                            })
+                            .map(record => ({
+                                id: record.id,
+                                number: record.fields['Name'],
+                                roomId: room.id,
+                                status: record.fields['Status'] || 'Available',
+                                bookings: []
+                            }));
+                    }
+                    
+                    // Calculate occupied/available beds
+                    let occupiedCount = 0;
+                    let bedsHtml = '';
+                    
+                    if (selectedWeekStart) {
+                        const weekEnd = new Date(selectedWeekStart);
+                        weekEnd.setDate(selectedWeekStart.getDate() + 6);
+                        
+                        beds.forEach(bed => {
+                            const bookings = getBookingsForBed(bed.id, selectedWeekStart, weekEnd);
+                            const isOccupied = bookings.length > 0;
+                            
+                            if (isOccupied) occupiedCount++;
+                            
+                            let clientInfo = '';
+                            if (isOccupied) {
+                                const booking = bookings[0];
+                                if (sampleDataLoaded) {
+                                    const client = sampleData.clients.find(c => c.id === booking.clientId);
+                                    clientInfo = client ? client.name : 'Unknown';
+                                } else {
+                                    clientInfo = booking.clientName;
+                                    
+                                    // Try to get additional details
+                                    const fullBooking = airtableBookings.find(b => b.id === booking.bookingId);
+                                    if (fullBooking) {
+                                        const details = [];
+                                        if (fullBooking.bookingId) details.push(fullBooking.bookingId);
+                                        if (fullBooking.age) details.push(`${fullBooking.age}y`);
+                                        if (fullBooking.motherTongue) details.push(fullBooking.motherTongue);
+                                        if (details.length > 0) {
+                                            clientInfo = `${clientInfo} (${details.join(' / ')})`;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            const statusClass = isOccupied ? 'occupied' : 'available';
+                            const statusText = isOccupied ? 'Occupied' : 'Available';
+                            const displayInfo = isOccupied ? clientInfo : 'Available';
+                            
+                            bedsHtml += `
+                                <div class="mini-bed-card ${statusClass}">
+                                    <div class="mini-bed-info">
+                                        <strong>Bed ${bed.number}</strong>
+                                        <div style="font-size: 0.85rem; color: #7f8c8d; margin-top: 3px;">
+                                            ${displayInfo}
+                                        </div>
+                                    </div>
+                                    <span class="mini-bed-status ${statusClass}">${statusText}</span>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    const availableCount = beds.length - occupiedCount;
+                    const occupancyPercent = beds.length > 0 ? Math.round((occupiedCount / beds.length) * 100) : 0;
+                    
+                    // Calculate room designation for this week
+                    const weekDesignation = calculateRoomDesignationForWeek(room.id, selectedWeekStart);
+                    const designationClass = getRoomDesignationClass(weekDesignation);
+                    
+                    html += `
+                        <div class="room-overview-card">
+                            <div class="room-header">
+                                <div>
+                                    <h3 style="margin: 0;">
+                                        🚪 Room ${room.number}
+                                        <span class="room-designation ${designationClass}">${weekDesignation}</span>
+                                    </h3>
+                                    <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 0.9rem;">
+                                        ${room.type || 'Standard'} • ${beds.length} beds total
+                                    </p>
+                                </div>
+                                <div class="room-stats">
+                                    <div class="room-stat-item">
+                                        <span class="room-stat-number" style="color: #27ae60;">${availableCount}</span>
+                                        <span class="room-stat-label">Available</span>
+                                    </div>
+                                    <div class="room-stat-item">
+                                        <span class="room-stat-number" style="color: #e74c3c;">${occupiedCount}</span>
+                                        <span class="room-stat-label">Occupied</span>
+                                    </div>
+                                    <div class="room-stat-item">
+                                        <span class="room-stat-number" style="color: #3498db;">${occupancyPercent}%</span>
+                                        <span class="room-stat-label">Occupancy</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="beds-list">
+                                ${bedsHtml}
+                            </div>
+                            <div style="margin-top: 15px; text-align: right;">
+                                <button class="btn btn-small" onclick="selectRoomFromDaily('${room.id}', '${room.number}')">
+                                    Manage This Room →
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading daily overview:', error);
+                container.innerHTML = `<div class="alert alert-warning">Error loading daily overview: ${error.message}</div>`;
+            }
+        }
+
         async function loadBedAssignmentsData(propertyId) {
             if (sampleDataLoaded) return;
             
@@ -1715,6 +1975,31 @@
             // updateBedManagementTitle();
         }
 
+        function selectDate(year, month, day) {
+            // Create date object
+            selectedDate = new Date(parseInt(year), parseInt(month), parseInt(day));
+            
+            // Calculate week start (Sunday)
+            const dayOfWeek = selectedDate.getDay();
+            selectedWeekStart = new Date(selectedDate);
+            selectedWeekStart.setDate(selectedDate.getDate() - dayOfWeek);
+            
+            console.log('Selected date:', selectedDate);
+            console.log('Week start:', selectedWeekStart);
+            
+            // Update title and show daily overview
+            updateDailyOverviewTitle();
+            goToStep(5);
+            loadDailyOverview();
+        }
+
+        function selectRoomFromDaily(roomId, roomNumber) {
+            selectedRoom = { id: roomId, number: roomNumber };
+            updateBedManagementTitle();
+            goToStep(4);
+            loadBeds(roomId);
+        }
+
         function populateMonthSelector() {
             const monthSelect = document.getElementById('monthSelect');
             const currentDate = new Date();
@@ -1791,6 +2076,21 @@
                 } else {
                     updateOccupancyView();
                 }
+            } else if (step === 5) {
+                if (!selectedProperty) {
+                    showNotification('Please select a property first.', 'error');
+                    goToStep(1);
+                    return;
+                }
+                
+                if (!selectedDate) {
+                    showNotification('Please select a date first.', 'error');
+                    goToStep(3);
+                    return;
+                }
+                
+                updateDailyOverviewTitle();
+                loadDailyOverview();
             }
         }
 
@@ -1810,6 +2110,26 @@
                 document.getElementById('weekInfo').innerHTML = 
                     `<strong>📅 Week:</strong> ${formatDateShort(selectedWeekStart)} - ${formatDateShort(weekEndDate)} (Sunday-Saturday) | 
                      <strong>🏠 Property:</strong> ${selectedProperty.name}`;
+            }
+        }
+
+        function updateDailyOverviewTitle() {
+            if (selectedProperty && selectedDate && selectedWeekStart) {
+                const weekEndDate = new Date(selectedWeekStart);
+                weekEndDate.setDate(selectedWeekStart.getDate() + 6);
+                
+                const formatDateShort = (date) => date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                
+                document.getElementById('dailyOverviewTitle').innerHTML = 
+                    `📅 Daily Overview - ${formatDateShort(selectedDate)}`;
+                
+                document.getElementById('dailyInfo').innerHTML = 
+                    `<strong>🏠 Property:</strong> ${selectedProperty.name} | 
+                     <strong>📅 Week:</strong> ${formatDateShort(selectedWeekStart)} - ${formatDateShort(weekEndDate)} (Sunday-Saturday)`;
             }
         }
 
@@ -2863,7 +3183,13 @@
                 const weekendClass = isWeekend ? ' weekend' : '';
                 const dimmedStyle = !dayInfo.isCurrentMonth ? ' style="opacity: 0.4; background: #95a5a6;"' : '';
                 
-                html += `<div class="day-header${weekendClass}"${dimmedStyle}>${dayName}<br>${dayInfo.day}</div>`;
+                //html += `<div class="day-header${weekendClass}"${dimmedStyle}>${dayName}<br>${dayInfo.day}</div>`;
+                const onclickDay = dayInfo.isCurrentMonth ? `selectDate('${dayInfo.year}', '${dayInfo.month}', '${dayInfo.day}')` : '';
+                html += `<div class="day-header${weekendClass}"${dimmedStyle} 
+                         onclick="${onclickDay}" 
+                         style="cursor: ${dayInfo.isCurrentMonth ? 'pointer' : 'default'};">
+                    ${dayName}<br>${dayInfo.day}
+                </div>`;
             });
             
             let propertyRooms = [];
