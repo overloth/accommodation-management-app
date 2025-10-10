@@ -392,7 +392,7 @@
         }
 
         .room-designation.mixed {
-            background: #16a085;
+            background: #e67e22;
             color: white;
         }
 
@@ -531,10 +531,10 @@
             color: #5c1a5c;
         }
 
-        .occupancy-cell.mixed {
-            background: #d4f1e8;
-            border-color: #16a085;
-            color: #0d5e4a;
+       .occupancy-cell.mixed {
+            background: #fde3cf;
+            border-color: #e67e22;
+            color: #a04000;
         }
 
         .legend {
@@ -735,7 +735,7 @@
                             <span>Girls Room</span>
                         </div>
                         <div class="legend-item">
-                            <div class="legend-color" style="background: #d4f1e8; border-color: #16a085;"></div>
+                            <div class="legend-color" style="background: #fde3cf; border-color: #e67e22;"></div>
                             <span>Mixed Room</span>
                         </div>
                         <div class="legend-item">
@@ -3003,16 +3003,26 @@
                 const weekStart = new Date(date);
                 weekStart.setDate(date.getDate() - dayOfWeek);
                 const weekDesignation = calculateRoomDesignationForWeek(roomId, weekStart);
-                
+
+                console.log(`Date: ${date.toISOString().split('T')[0]}, Room: ${roomId}, Designation: ${weekDesignation}, Assignments: ${assignmentsOnDate.length}`);
+
                 let cssClass = 'available';
-                if (weekDesignation === 'Boys Room') cssClass = 'boys';
-                else if (weekDesignation === 'Girls Room') cssClass = 'girls';
-                else if (weekDesignation === 'Mixed Room') cssClass = 'mixed';
+                if (weekDesignation === 'Boys Room') {
+                    cssClass = 'boys';
+                } else if (weekDesignation === 'Girls Room') {
+                    cssClass = 'girls';
+                } else if (weekDesignation === 'Mixed Room') {
+                    cssClass = 'mixed';
+                }
 
                 const roomObj = currentPropertyRooms.find(r => r.id === roomId);
                 const totalBeds = roomObj ? (roomObj.capacity || 0) : 0;
 
-                if (assignmentsOnDate.length >= totalBeds) cssClass = 'occupied';
+                if (assignmentsOnDate.length >= totalBeds) {
+                    cssClass = 'occupied';
+                }
+
+                console.log(`Final CSS class: ${cssClass}`);
                 
                 const clientNames = assignmentsOnDate.map(a => a.clientName).join(', ');
                 const tooltip = `${weekDesignation}: ${clientNames}`;
