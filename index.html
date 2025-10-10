@@ -50,7 +50,31 @@
             font-size: 1.1rem;
         }
 
+        .stats-wrapper {
+            background: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+
         .quick-stats {
+            position: static;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            text-align: center;
+            min-width: 120px;
+        }
+
+        /*.quick-stats {
             position: absolute;
             top: 20px;
             right: 30px;
@@ -64,7 +88,7 @@
             border-radius: 10px;
             text-align: center;
             backdrop-filter: blur(10px);
-        }
+        }*/
 
         .stat-number {
             font-size: 1.5rem;
@@ -832,6 +856,7 @@
     <div class="login-container" id="loginScreen">
         <div class="login-card">
             <div class="login-header">
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
                 <div class="login-logo">🏨</div>
                 <h1>Bed Assignment Manager</h1>
                 <p>Please log in to continue</p>
@@ -882,6 +907,11 @@
     <!-- Main Application (hidden until login) -->
     <div class="container" id="mainApp" style="display: none;">
         <div class="header">
+            <h1>🏨 Bed Assignment Manager</h1>
+            <p>Manage your property beds efficiently with advanced features</p>
+        </div>
+
+        <div class="stats-wrapper">
             <div class="quick-stats">
                 <div class="stat-card">
                     <span class="stat-number" id="totalProperties">0</span>
@@ -900,8 +930,6 @@
                     <span class="stat-label">Occupied</span>
                 </div>
             </div>
-            <h1>🏨 Bed Assignment Manager</h1>
-            <p>Manage your property beds efficiently with advanced features</p>
         </div>
 
         <div class="content">
@@ -1342,10 +1370,13 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             
-            // Load the application
+            // Load data
             if (sampleDataLoaded) {
                 loadProperties();
                 updateQuickStats();
+            } else {
+                // Try to load from Airtable
+                loadProperties().then(() => updateQuickStats());
             }
         }
 
