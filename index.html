@@ -22,6 +22,12 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        body.loaded {
+            opacity: 1;
         }
 
         .container {
@@ -855,7 +861,7 @@
 </head>
 <body>
     <!-- Login Screen -->
-    <div class="login-container" id="loginScreen">
+    <div class="login-container" id="loginScreen" style="display: none;">
         <div class="login-card">
             <div class="login-header">
                 <div class="login-logo">🏨</div>
@@ -3844,6 +3850,11 @@
             if (event.key === 'Escape') {
                 closeModal();
             }
+        });
+
+        // Prevent flash of login screen
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.classList.add('loaded');
         });
     </script>
 </body>
