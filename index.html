@@ -2918,17 +2918,23 @@
                 console.log('Total bed assignments:', window.bedAssignments.length);
                 console.log('Total bookings:', airtableBookings.length);
                 
-                // First, let's see what we have
-                console.log('All bed assignments:', window.bedAssignments);
+                // Filter assignments for THIS property's rooms only
+                const propertyRoomIds = new Set(currentPropertyRooms.map(r => r.id));
                 
                 window.bedAssignments.forEach(assignment => {
+                    // Skip assignments not in this property
+                    if (!propertyRoomIds.has(assignment.roomId)) {
+                        console.log('Skipping assignment - different property');
+                        return;
+                    }
+                    
                     if (!assignment.checkin || !assignment.checkout) {
                         console.log('Skipping assignment - missing dates:', assignment);
                         return;
                     }
                     
-                    const checkIn = new Date(assignment.checkin);
-                    const checkOut = new Date(assignment.checkout);
+                    const checkIn = new Date(assignment.checkin + 'T00:00:00');
+                    const checkOut = new Date(assignment.checkout + 'T23:59:59');
                     
                     const checkInTime = checkIn.getTime();
                     const checkOutTime = checkOut.getTime();
@@ -2936,7 +2942,7 @@
                     // Check if assignment overlaps with selected week
                     const overlaps = checkInTime <= weekEndTime && checkOutTime >= weekStartTime;
                     
-                    console.log(`Assignment ${assignment.id}:`, {
+                    console.log(`Assignment ${assignment.id} (Room: ${assignment.roomId}):`, {
                         checkin: assignment.checkin,
                         checkout: assignment.checkout,
                         overlaps: overlaps,
