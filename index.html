@@ -1599,7 +1599,9 @@
             const numberOfWeeks = parseInt(document.getElementById('numberOfWeeks').value) || 1;
             
             if (checkinDate) {
-                const startDate = new Date(checkinDate + 'T00:00:00');
+                // Parse date correctly to avoid timezone issues
+                const [year, month, day] = checkinDate.split('-').map(num => parseInt(num));
+                const startDate = new Date(year, month - 1, day);
                 
                 // VERIFY: Ensure check-in is on Sunday (day 0)
                 if (startDate.getDay() !== 0) {
@@ -1607,11 +1609,9 @@
                     console.warn('Camp weeks should start on Sunday');
                 }
                 
-                const endDate = new Date(startDate);
-                // endDate.setDate(startDate.getDate() + (numberOfWeeks * 7) - 1); // End on Saturday
-                endDate.setDate(startDate.getDate() + (numberOfWeeks * 7)); // End on Saturday (6 days after Sunday)
+                const endDate = new Date(year, month - 1, day + (numberOfWeeks * 7) - 1);
                 
-                const endDateString = endDate.toISOString().split('T')[0];
+                const endDateString = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
                 document.getElementById('checkoutDate').value = endDateString;
                 
                 console.log('Check-in (Sunday):', checkinDate, '(day', startDate.getDay(), ')');
@@ -3052,8 +3052,16 @@
             
             select.innerHTML = options.join('');
             
+            // if (selectedWeekStart) {
+            //     const sundayDate = selectedWeekStart.toISOString().split('T')[0];
+            //     document.getElementById('checkinDate').value = sundayDate;
+            //     calculateEndDate();
+            // }
             if (selectedWeekStart) {
-                const sundayDate = selectedWeekStart.toISOString().split('T')[0];
+                const year = selectedWeekStart.getFullYear();
+                const month = String(selectedWeekStart.getMonth() + 1).padStart(2, '0');
+                const day = String(selectedWeekStart.getDate()).padStart(2, '0');
+                const sundayDate = `${year}-${month}-${day}`;
                 document.getElementById('checkinDate').value = sundayDate;
                 calculateEndDate();
             }
