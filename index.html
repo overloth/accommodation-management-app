@@ -375,6 +375,12 @@
             margin: 0 5px;
         }
 
+        .btn-extra-small {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            margin: 0 3px;
+        }
+
         .form-group {
             margin-bottom: 15px;
         }
@@ -2005,7 +2011,7 @@
                     const bedNumber = bed.number || 'Unknown';
                     const displayStatus = isCurrentlyOccupied ? 'Occupied' : 'Available';
                     const assignText = isCurrentlyOccupied ? 'Release' : 'Assign';
-                    const buttonClass = isCurrentlyOccupied ? 'btn btn-secondary' : 'btn';
+                    const buttonClass = isCurrentlyOccupied ? 'btn btn-secondary btn-extra-small' : 'btn btn-extra-small';
                     const buttonAction = isCurrentlyOccupied ? 
                         `releaseBed('${bed.id}')` : 
                         `openAssignmentModal('${bed.id}', '${bedNumber}')`;
@@ -2429,8 +2435,18 @@
         }
 
         function selectRoomDate(roomId, roomNumber, date) {
+            // selectedRoom = { id: roomId, number: roomNumber };
+            // selectedDate = new Date(date + 'T12:00:00');
+            
+            // const dayOfWeek = selectedDate.getDay();
+            // selectedWeekStart = new Date(selectedDate);
+            // selectedWeekStart.setDate(selectedDate.getDate() - dayOfWeek);
+
             selectedRoom = { id: roomId, number: roomNumber };
-            selectedDate = new Date(date + 'T12:00:00');
+                
+            // Parse the date string correctly (format: YYYY-MM-DD)
+            const [year, month, day] = date.split('-').map(num => parseInt(num));
+            selectedDate = new Date(year, month - 1, day); // month is 0-indexed
             
             const dayOfWeek = selectedDate.getDay();
             selectedWeekStart = new Date(selectedDate);
