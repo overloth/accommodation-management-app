@@ -2581,6 +2581,101 @@
             }
         }
 
+        function calculateWeekAverages(weekStart) {
+            if (!weekStart) return null;
+            
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
+            
+            const weekStartTime = weekStart.getTime();
+            const weekEndTime = weekEnd.getTime();
+            
+            const assignedKids = [];
+            
+            if (sampleDataLoaded) {
+                sampleData.beds.forEach(bed => {
+                    const room = sampleData.rooms.find(r => r.id === bed.roomId);
+                    if (!room || room.propertyId !== selectedProperty.id) return;
+                    
+                    bed.bookings.forEach(booking => {
+                        const checkIn = new Date(booking.checkin);
+                        const checkOut = new Date(booking.checkout);
+                        const checkInTime = checkIn.getTime();
+                        const checkOutTime = checkOut.getTime();
+                        
+                        if (checkInTime <= weekEndTime && checkOutTime >= weekStartTime) {
+                            const client = sampleData.clients.find(c => c.id === booking.clientId);
+                            if (client) {
+                                assignedKids.push({
+                                    gender: client.gender,
+                                    age: client.age || null
+                                });
+                            }
+                        }
+                    });
+                });
+            } else {
+                if (window.bedAssignments) {
+                    window.bedAssignments.forEach(assignment => {
+                        const room = currentPropertyRooms.find(r => r.id === assignment.roomId);
+                        if (!room) return;
+                        
+                        if (!assignment.checkin || !assignment.checkout) return;
+                        
+                        const checkIn = new Date(assignment.checkin);
+                        const checkOut = new Date(assignment.checkout);
+                        const checkInTime = checkIn.getTime();
+                        const checkOutTime = checkOut.getTime();
+                        
+                        if (checkInTime <= weekEndTime && checkOutTime >= weekStartTime) {
+                            const booking = airtableBookings.find(b => b.id === assignment.bookingId);
+                            if (booking && booking.age) {
+                                assignedKids.push({
+                                    gender: assignment.gender,
+                                    age: booking.age
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            
+            const kidsWithAge = assignedKids.filter(kid => kid.age !== null && !isNaN(kid.age));
+            
+            if (kidsWithAge.length === 0) {
+                return {
+                    overall: null,
+                    boys: null,
+                    girls: null,
+                    totalKids: assignedKids.length,
+                    kidsWithAgeData: 0
+                };
+            }
+            
+            const overallAvg = kidsWithAge.reduce((sum, kid) => sum + kid.age, 0) / kidsWithAge.length;
+            
+            const boys = kidsWithAge.filter(kid => kid.gender === 'Male');
+            const boysAvg = boys.length > 0 
+                ? boys.reduce((sum, kid) => sum + kid.age, 0) / boys.length 
+                : null;
+            
+            const girls = kidsWithAge.filter(kid => kid.gender === 'Female');
+            const girlsAvg = girls.length > 0 
+                ? girls.reduce((sum, kid) => sum + kid.age, 0) / girls.length 
+                : null;
+            
+            return {
+                overall: Math.round(overallAvg * 10) / 10,
+                boys: boysAvg ? Math.round(boysAvg * 10) / 10 : null,
+                girls: girlsAvg ? Math.round(girlsAvg * 10) / 10 : null,
+                totalKids: assignedKids.length,
+                kidsWithAgeData: kidsWithAge.length,
+                boysCount: boys.length,
+                girlsCount: girls.length
+            };
+        }
+
         function updateDailyOverviewTitle() {
             if (selectedProperty && selectedDate && selectedWeekStart) {
                 const weekEndDate = new Date(selectedWeekStart);
@@ -2595,9 +2690,30 @@
                 document.getElementById('dailyOverviewTitle').innerHTML = 
                     `📅 Daily Overview - ${formatDateShort(selectedDate)}`;
                 
+                const ageStats = calculateWeekAverages(selectedWeekStart);
+                
+                let ageInfo = '';
+                if (ageStats && ageStats.kidsWithAgeData > 0) {
+                    const parts = [];
+                    
+                    if (ageStats.overall !== null) {
+                        parts.push(`<strong>👥 Average Age:</strong> ${ageStats.overall} years`);
+                    }
+                    
+                    if (ageStats.boys !== null) {
+                        parts.push(`<strong>👨 Boys:</strong> ${ageStats.boys} years (${ageStats.boysCount} kids)`);
+                    }
+                    
+                    if (ageStats.girls !== null) {
+                        parts.push(`<strong>👩 Girls:</strong> ${ageStats.girls} years (${ageStats.girlsCount} kids)`);
+                    }
+                    
+                    ageInfo = ` | ${parts.join(' | ')}`;
+                }
+                
                 document.getElementById('dailyInfo').innerHTML = 
                     `<strong>🏠 Property:</strong> ${selectedProperty.name} | 
-                     <strong>📅 Week:</strong> ${formatDateShort(selectedWeekStart)} - ${formatDateShort(weekEndDate)} (Sunday-Saturday)`;
+                     <strong>📅 Week:</strong> ${formatDateShort(selectedWeekStart)} - ${formatDateShort(weekEndDate)} (Sunday-Saturday)${ageInfo}`;
             }
         }
 
