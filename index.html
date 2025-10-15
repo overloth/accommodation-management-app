@@ -2902,26 +2902,18 @@
             allClientsGlobal = allClients; // Store for gender filtering
             console.log('Available clients (filtered):', availableClients);
 
-            // Filter out already assigned clients - check for ANY overlap with existing assignments
-            if (!sampleDataLoaded && selectedWeekStart && window.bedAssignments) {
-                // Calculate the full duration for the new assignment
-                // We'll check against a reasonable default (e.g., 4 weeks) since user hasn't selected duration yet
-                // This will be updated when they change the weeks selector
-                const maxWeeksToCheck = 52; // Check up to 1 year ahead
-                const checkEndDate = new Date(selectedWeekStart);
-                checkEndDate.setDate(checkEndDate.getDate() + (maxWeeksToCheck * 7));
-                checkEndDate.setHours(23, 59, 59, 999);
-                
+            // Filter out clients who currently have ANY active bed assignment in this property
+            if (!sampleDataLoaded && window.bedAssignments) {
                 const assignedKidIds = new Set();
                 
                 console.log('=== FILTERING ASSIGNED CLIENTS ===');
-                console.log('Check range:', selectedWeekStart.toISOString(), 'to', checkEndDate.toISOString());
                 console.log('Total bed assignments:', window.bedAssignments.length);
                 console.log('Total bookings:', airtableBookings.length);
                 
                 // Filter assignments for THIS property's rooms only
                 const propertyRoomIds = new Set(currentPropertyRooms.map(r => r.id));
                 
+                // Simply check if client has ANY bed assignment in this property
                 window.bedAssignments.forEach(assignment => {
                     // Skip assignments not in this property
                     if (!propertyRoomIds.has(assignment.roomId)) {
@@ -2932,23 +2924,13 @@
                         return;
                     }
                     
-                    const assignmentStart = new Date(assignment.checkin + 'T00:00:00');
-                    const assignmentEnd = new Date(assignment.checkout + 'T23:59:59');
+                    // Find the booking to get the kidId
+                    const booking = airtableBookings.find(b => b.id === assignment.bookingId);
                     
-                    // Check if this assignment overlaps with the check period
-                    // An assignment overlaps if it starts before our check period ends
-                    // AND ends after our selected week starts
-                    const overlaps = assignmentStart < checkEndDate && assignmentEnd >= selectedWeekStart;
-                    
-                    if (overlaps) {
-                        // Find the booking to get the kidId
-                        const booking = airtableBookings.find(b => b.id === assignment.bookingId);
-                        
-                        if (booking && booking.kidId) {
-                            assignedKidIds.add(booking.kidId);
-                            console.log('✓ Filtered out:', booking.clientName, 
-                                       'assigned from', assignment.checkin, 'to', assignment.checkout);
-                        }
+                    if (booking && booking.kidId) {
+                        assignedKidIds.add(booking.kidId);
+                        console.log('✓ Filtered out:', booking.clientName, 
+                                   'currently assigned from', assignment.checkin, 'to', assignment.checkout);
                     }
                 });
                 
@@ -2958,7 +2940,7 @@
                 availableClients = availableClients.filter(client => {
                     const isAssigned = assignedKidIds.has(client.id);
                     if (isAssigned) {
-                        console.log(`Client ${client.name} (${client.id}): FILTERED OUT - already assigned`);
+                        console.log(`Client ${client.name} (${client.id}): FILTERED OUT - already has a bed assignment`);
                     }
                     return !isAssigned;
                 });
@@ -3070,45 +3052,33 @@
            // Start with all clients (already filtered by camp)
            let filteredClients = allClientsGlobal;
            
-           // Re-apply the "already assigned" filter - check for ANY active assignment
-          if (!sampleDataLoaded && selectedWeekStart && window.bedAssignments) {
-              // Check for assignments up to 1 year ahead
-              const maxWeeksToCheck = 52;
-              const checkEndDate = new Date(selectedWeekStart);
-              checkEndDate.setDate(checkEndDate.getDate() + (maxWeeksToCheck * 7));
-              checkEndDate.setHours(23, 59, 59, 999);
-              
-              const assignedKidIds = new Set();
-              
-              // Filter assignments for THIS property's rooms only
-              const propertyRoomIds = new Set(currentPropertyRooms.map(r => r.id));
-              
-              window.bedAssignments.forEach(assignment => {
-                  // Skip assignments not in this property
-                  if (!propertyRoomIds.has(assignment.roomId)) {
-                      return;
-                  }
-                  
-                  if (!assignment.checkin || !assignment.checkout) return;
-                  
-                  const assignmentStart = new Date(assignment.checkin + 'T00:00:00');
-                  const assignmentEnd = new Date(assignment.checkout + 'T23:59:59');
-                  
-                  // Check if assignment overlaps with our check period
-                  const overlaps = assignmentStart < checkEndDate && assignmentEnd >= selectedWeekStart;
-                  
-                  if (overlaps) {
-                      const booking = airtableBookings.find(b => b.id === assignment.bookingId);
-                      if (booking && booking.kidId) {
-                          assignedKidIds.add(booking.kidId);
-                      }
-                  }
-              });
-              
-              // Filter out already assigned clients
-              filteredClients = filteredClients.filter(client => !assignedKidIds.has(client.id));
-              console.log(`After removing assigned: ${filteredClients.length} clients available`);
-          }
+           // Re-apply the "already assigned" filter - check if client has ANY bed assignment
+           if (!sampleDataLoaded && window.bedAssignments) {
+               const assignedKidIds = new Set();
+               
+               // Filter assignments for THIS property's rooms only
+               const propertyRoomIds = new Set(currentPropertyRooms.map(r => r.id));
+               
+               // Simply check if client has ANY bed assignment in this property
+               window.bedAssignments.forEach(assignment => {
+                   // Skip assignments not in this property
+                   if (!propertyRoomIds.has(assignment.roomId)) {
+                       return;
+                   }
+                   
+                   if (!assignment.checkin || !assignment.checkout) return;
+                   
+                   // Find the booking to get the kidId
+                   const booking = airtableBookings.find(b => b.id === assignment.bookingId);
+                   if (booking && booking.kidId) {
+                       assignedKidIds.add(booking.kidId);
+                   }
+               });
+               
+               // Filter out already assigned clients
+               filteredClients = filteredClients.filter(client => !assignedKidIds.has(client.id));
+               console.log(`After removing assigned: ${filteredClients.length} clients available`);
+           }
            
            // Apply gender filter if a gender is selected
            if (selectedGender) {
