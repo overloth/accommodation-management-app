@@ -2002,6 +2002,18 @@
                                         clientName = `${clientName} (${details.join(' / ')})`;
                                     }
                                 }
+
+                                // Add notes section if available
+                                if (booking.accommodationNotes || booking.roommateWishes) {
+                                    clientName += '<br><div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">';
+                                    if (booking.accommodationNotes) {
+                                        clientName += `<div style="margin-bottom: 4px;"><strong>📝 Notes:</strong> ${booking.accommodationNotes}</div>`;
+                                    }
+                                    if (booking.roommateWishes) {
+                                        clientName += `<div><strong>🤝 Roommate Wishes:</strong> ${booking.roommateWishes}</div>`;
+                                    }
+                                    clientName += '</div>';
+                                }
                             }
                             
                             isCurrentlyOccupied = true;
@@ -2122,6 +2134,19 @@
                                         if (details.length > 0) {
                                             clientInfo = `${clientInfo} (${details.join(' / ')})`;
                                         }
+                                    }
+
+                                    // Add notes if available
+                                    if (fullBooking.accommodationNotes || fullBooking.roommateWishes) {
+                                        clientInfo += '<br><small style="color: #e67e22; font-weight: bold;">';
+                                        if (fullBooking.accommodationNotes) {
+                                            clientInfo += `📝 ${fullBooking.accommodationNotes}`;
+                                        }
+                                        if (fullBooking.roommateWishes) {
+                                            if (fullBooking.accommodationNotes) clientInfo += ' | ';
+                                            clientInfo += `🤝 ${fullBooking.roommateWishes}`;
+                                        }
+                                        clientInfo += '</small>';
                                     }
                                 }
                             }
@@ -2304,6 +2329,10 @@
                    }
 
                    console.log('Final languageStudying:', languageStudying);
+
+                   // Extract new fields: Accommodation Notes and Roommate Wishes
+                    let accommodationNotes = fields['Accommodation Notes'] || '';
+                    let roommateWishes = fields['Roommate Wishes'] || '';
                     
                     const bookingId = fields['Booking ID (From CMS)'] || record.id;
                     const campId = fields['Camp'] ? (Array.isArray(fields['Camp']) ? fields['Camp'][0] : fields['Camp']) : null;
@@ -2325,7 +2354,9 @@
                         campName: camp,
                         age: age || null,
                         motherTongue: motherTongue || null,
-                        languageStudying: languageStudying || null
+                        languageStudying: languageStudying || null,
+                        accommodationNotes: accommodationNotes,
+                        roommateWishes: roommateWishes
                     };
                 });
                 
