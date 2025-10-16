@@ -2008,9 +2008,15 @@
                                     const checkoutDateField = activeBooking.checkout || (booking ? booking.checkout : null);
 
                                     if (checkoutDateField) {
-                                        const checkoutDate = new Date(checkoutDateField);
+                                        const checkoutDate = new Date(checkoutDateField + 'T00:00:00');
+                                        const weekEndDate = new Date(weekEnd);
+                                        weekEndDate.setHours(23, 59, 59, 999);
                                         
-                                        if (checkoutDate <= weekEnd) {
+                                        console.log('Checkout date:', checkoutDateField, 'Parsed:', checkoutDate);
+                                        console.log('Week end:', weekEndDate);
+                                        console.log('Is ending this week?', checkoutDate <= weekEndDate);
+                                        
+                                        if (checkoutDate <= weekEndDate) {
                                             stayStatusInfo = '<br><span style="display: inline-block; margin-top: 5px; padding: 3px 8px; background: #e67e22; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">🏁 Ending This Week</span>';
                                         } else {
                                             stayStatusInfo = '<br><span style="display: inline-block; margin-top: 5px; padding: 3px 8px; background: #27ae60; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">✓ Continuing Stay</span>';
