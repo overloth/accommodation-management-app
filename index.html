@@ -2004,24 +2004,17 @@
                                     }
 
                                     // Check if ending this week
-                                    if (booking && booking.checkout) {
-                                        const checkoutDate = new Date(booking.checkout);
-                                        console.log('=== STAY STATUS DEBUG ===');
-                                        console.log('Booking checkout:', booking.checkout);
-                                        console.log('Checkout date object:', checkoutDate);
-                                        console.log('Week end:', weekEnd);
-                                        console.log('Is ending this week?', checkoutDate <= weekEnd);
+                                    // activeBooking has the bed assignment data, booking has the full booking details
+                                    const checkoutDateField = activeBooking.checkout || (booking ? booking.checkout : null);
+
+                                    if (checkoutDateField) {
+                                        const checkoutDate = new Date(checkoutDateField);
                                         
                                         if (checkoutDate <= weekEnd) {
                                             stayStatusInfo = '<br><span style="display: inline-block; margin-top: 5px; padding: 3px 8px; background: #e67e22; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">🏁 Ending This Week</span>';
-                                            console.log('Set ENDING status');
                                         } else {
                                             stayStatusInfo = '<br><span style="display: inline-block; margin-top: 5px; padding: 3px 8px; background: #27ae60; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">✓ Continuing Stay</span>';
-                                            console.log('Set CONTINUING status');
                                         }
-                                        console.log('stayStatusInfo:', stayStatusInfo);
-                                    } else {
-                                        console.log('No booking or no checkout date');
                                     }
                                 }
 
