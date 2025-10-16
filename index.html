@@ -1966,6 +1966,7 @@
 
                     let clientName = null;
                     let isCurrentlyOccupied = false;
+                    let stayStatusInfo = '';
 
                     if (selectedWeekStart) {
                         const weekEnd = new Date(selectedWeekStart);
@@ -2001,6 +2002,16 @@
                                     if (details.length > 0) {
                                         clientName = `${clientName} (${details.join(' / ')})`;
                                     }
+
+                                    // Check if ending this week
+                                    if (booking.checkout) {
+                                        const checkoutDate = new Date(booking.checkout);
+                                        if (checkoutDate <= weekEnd) {
+                                            stayStatusInfo = '<br><span style="display: inline-block; margin-top: 5px; padding: 3px 8px; background: #e67e22; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">🏁 Ending This Week</span>';
+                                        } else {
+                                            stayStatusInfo = '<br><span style="display: inline-block; margin-top: 5px; padding: 3px 8px; background: #27ae60; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">✓ Continuing Stay</span>';
+                                        }
+                                    }
                                 }
 
                                 // Add notes section if available
@@ -2031,7 +2042,7 @@
                     return `<div class="bed-card ${displayStatus.toLowerCase()}">
                         <div class="bed-info">
                             <h4>🛏️ Bed ${bedNumber}</h4>
-                            <p>${clientName ? `Occupied by: ${clientName}` : 'Available for assignment'}</p>
+                            <p>${clientName ? `Occupied by: ${clientName}${stayStatusInfo}` : 'Available for assignment'}</p>
                             ${selectedWeekStart ? `<p><small>Week: ${selectedWeekStart.toLocaleDateString()} - ${new Date(selectedWeekStart.getTime() + 6*24*60*60*1000).toLocaleDateString()}</small></p>` : ''}
                         </div>
                         <div>
@@ -2155,12 +2166,43 @@
                             const statusText = isOccupied ? 'Occupied' : 'Available';
                             const displayInfo = isOccupied ? clientInfo : 'Available';
                             
+                            // bedsHtml += `
+                            //     <div class="mini-bed-card ${statusClass}">
+                            //         <div class="mini-bed-info">
+                            //             <strong>Bed ${bed.number}</strong>
+                            //             <div style="font-size: 0.85rem; color: #7f8c8d; margin-top: 3px;">
+                            //                 ${displayInfo}
+                            //             </div>
+                            //         </div>
+                            //         <span class="mini-bed-status ${statusClass}">${statusText}</span>
+                            //     </div>
+                            // `;
+
+                            // Check if ending this week
+                            let stayInfo = '';
+                            if (isOccupied && !sampleDataLoaded) {
+                                const booking = bookings[0];
+                                const fullBooking = airtableBookings.find(b => b.id === booking.bookingId);
+                                if (fullBooking && fullBooking.checkout) {
+                                    const checkoutDate = new Date(fullBooking.checkout);
+                                    const weekEndDate = new Date(selectedWeekStart);
+                                    weekEndDate.setDate(weekEndDate.getDate() + 6);
+                                    
+                                    if (checkoutDate <= weekEndDate) {
+                                        stayInfo = '<span style="color: #e67e22; font-weight: bold; margin-left: 8px;">🏁 Ending This Week</span>';
+                                    } else {
+                                        stayInfo = '<span style="color: #27ae60; font-weight: bold; margin-left: 8px;">✓ Continuing Stay</span>';
+                                    }
+                                }
+                            }
+
                             bedsHtml += `
                                 <div class="mini-bed-card ${statusClass}">
                                     <div class="mini-bed-info">
                                         <strong>Bed ${bed.number}</strong>
                                         <div style="font-size: 0.85rem; color: #7f8c8d; margin-top: 3px;">
                                             ${displayInfo}
+                                            ${stayInfo}
                                         </div>
                                     </div>
                                     <span class="mini-bed-status ${statusClass}">${statusText}</span>
