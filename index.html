@@ -3332,6 +3332,7 @@
 
         function closeConfirmationModal() {
             document.getElementById('confirmationModal').style.display = 'none';
+            document.getElementById('confirmButton').style.display = 'block'; // Reset button visibility
             confirmationCallback = null;
         }
 
@@ -3340,6 +3341,57 @@
                 confirmationCallback();
             }
             closeConfirmationModal();
+        }
+
+        function checkBedConflict(bedId, checkinDate, checkoutDate, excludeAssignmentId = null) {
+            // Parse dates correctly
+            const newCheckin = new Date(checkinDate + 'T00:00:00');
+            const newCheckout = new Date(checkoutDate + 'T23:59:59');
+            
+            if (sampleDataLoaded) {
+                // Sample data mode
+                const bed = sampleData.beds.find(b => b.id === bedId);
+                if (!bed) return null;
+                
+                for (const booking of bed.bookings) {
+                    const existingCheckin = new Date(booking.checkin);
+                    const existingCheckout = new Date(booking.checkout);
+                    
+                    // Check if dates overlap
+                    if (newCheckin <= existingCheckout && newCheckout >= existingCheckin) {
+                        const client = sampleData.clients.find(c => c.id === booking.clientId);
+                        return {
+                            conflict: true,
+                            clientName: client ? client.name : 'Unknown',
+                            checkin: booking.checkin,
+                            checkout: booking.checkout
+                        };
+                    }
+                }
+            } else {
+                // Airtable mode - check bed assignments
+                if (!window.bedAssignments) return null;
+                
+                for (const assignment of window.bedAssignments) {
+                    if (assignment.bedId !== bedId) continue;
+                    if (excludeAssignmentId && assignment.id === excludeAssignmentId) continue;
+                    
+                    const existingCheckin = new Date(assignment.checkin + 'T00:00:00');
+                    const existingCheckout = new Date(assignment.checkout + 'T23:59:59');
+                    
+                    // Check if dates overlap
+                    if (newCheckin <= existingCheckout && newCheckout >= existingCheckin) {
+                        return {
+                            conflict: true,
+                            clientName: assignment.clientName,
+                            checkin: assignment.checkin,
+                            checkout: assignment.checkout
+                        };
+                    }
+                }
+            }
+            
+            return null; // No conflict
         }
 
         async function assignBed() {
@@ -3524,6 +3576,32 @@
         }
 
         async function performBedAssignment(clientId, newClientName, clientGender, phone, checkin, checkout) {
+
+            // Check for conflicts BEFORE attempting to assign
+            const conflict = checkBedConflict(selectedBed.id, checkin, checkout);
+            
+            if (conflict) {
+                const conflictMessage = `
+                    <strong>⚠️ Bed Assignment Conflict!</strong><br><br>
+                    <strong>Bed ${selectedBed.number}</strong> is already assigned to <strong>${conflict.clientName}</strong><br>
+                    from <strong>${new Date(conflict.checkin).toLocaleDateString()}</strong> 
+                    to <strong>${new Date(conflict.checkout).toLocaleDateString()}</strong><br><br>
+                    The dates overlap with your requested assignment.<br><br>
+                    Please choose a different bed or different dates.
+                `;
+                
+                showNotification('Cannot assign - bed already occupied for these dates!', 'error');
+                
+                // Show detailed conflict modal
+                document.getElementById('confirmationMessage').innerHTML = conflictMessage;
+                document.getElementById('confirmationModal').style.display = 'block';
+                
+                // Remove the confirm button since this is just informational
+                document.getElementById('confirmButton').style.display = 'none';
+                
+                return;
+            }
+            
             try {
                 if (sampleDataLoaded) {
                     // Sample data mode - existing logic
