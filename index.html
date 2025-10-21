@@ -733,6 +733,54 @@
             background: #3498db;
         }
 
+        .kids-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .kids-table th {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .kids-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        .kids-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-badge.assigned {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-badge.not-assigned {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
         .login-container {
                     min-height: 100vh;
                     display: flex;
@@ -966,6 +1014,10 @@
                     <div class="step-number">5</div>
                     <span>Daily Overview</span>
                 </div>
+                <div class="step" id="step6">
+                    <div class="step-number">6</div>
+                    <span>Kids Overview</span>
+                </div>
             </div>
 
             <!-- Breadcrumb -->
@@ -983,6 +1035,7 @@
                 <div class="grid" id="roomsGrid"></div>
                 <button class="btn btn-secondary" onclick="goToStep(1)">← Back to Properties</button>
                 <button class="btn" onclick="goToStep(3)">View Occupancy Overview →</button>
+                <button class="btn" onclick="goToStep(6)" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">👥 View Kids Overview</button>
             </div>
 
             <!-- Step 3: Occupancy Overview -->
@@ -1044,6 +1097,32 @@
                 <div class="alert alert-info" id="dailyInfo" style="margin-bottom: 20px;"></div>
                 <div id="dailyRoomsContainer"></div>
                 <button class="btn btn-secondary" onclick="goToStep(3)">← Back to Calendar</button>
+            </div>
+            <!-- Step 6: Kids Overview -->
+            <div class="section" id="section6">
+                <h2>👥 Kids Overview</h2>
+                <div class="alert alert-info" style="margin-bottom: 20px;">
+                    <strong>📋 Viewing all bookings for:</strong> <span id="kidsOverviewProperty">All Properties</span>
+                </div>
+                
+                <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button class="btn btn-small" id="filterAll" onclick="filterKids('all')" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                        All Kids (<span id="countAll">0</span>)
+                    </button>
+                    <button class="btn btn-small" id="filterAssigned" onclick="filterKids('assigned')" style="background: linear-gradient(135deg, #27ae60, #229954);">
+                        ✓ Assigned (<span id="countAssigned">0</span>)
+                    </button>
+                    <button class="btn btn-small" id="filterNotAssigned" onclick="filterKids('not-assigned')" style="background: linear-gradient(135deg, #e67e22, #d35400);">
+                        ⚠ Not Assigned (<span id="countNotAssigned">0</span>)
+                    </button>
+                    <input type="text" id="searchKids" placeholder="Search by name or booking ID..." 
+                           style="flex: 1; min-width: 200px; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 20px;" 
+                           oninput="filterKids(currentKidsFilter)">
+                </div>
+
+                <div id="kidsListContainer" style="margin-bottom: 20px;"></div>
+                
+                <button class="btn btn-secondary" onclick="goToStep(1)">← Back to Properties</button>
             </div>
         </div>
     </div>
@@ -1159,6 +1238,8 @@
         let currentPropertyRooms = [];
         let airtableBookings = [];
         let allClientsGlobal = [];
+        let currentKidsFilter = 'all';
+        let allKidsData = [];
 
         // Enhanced sample data
         const sampleData = {
@@ -2661,6 +2742,30 @@
                 
                 updateDailyOverviewTitle();
                 loadDailyOverview();
+            } else if (step === 6) {
+                // Kids Overview - load all kids
+                if (!sampleDataLoaded) {
+                    // Ensure bookings are loaded
+                    if (airtableBookings.length === 0) {
+                        loadBookingsFromAirtable(null).then(() => {
+                            loadBedAssignmentsData(null).then(() => {
+                                loadKidsOverview();
+                            });
+                        });
+                    } else {
+                        // Load bed assignments if not already loaded
+                        if (!window.bedAssignments) {
+                            loadBedAssignmentsData(null).then(() => {
+                                loadKidsOverview();
+                            });
+                        } else {
+                            loadKidsOverview();
+                        }
+                    }
+                } else {
+                    showNotification('Kids overview is only available in Airtable mode', 'info');
+                    goToStep(1);
+                }
             }
         }
 
@@ -4130,6 +4235,168 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.body.classList.add('loaded');
         });
+
+        // ============================================
+        // KIDS OVERVIEW FUNCTIONS
+        // ============================================
+
+        async function loadKidsOverview() {
+            const container = document.getElementById('kidsListContainer');
+            container.innerHTML = '<div style="text-align: center; padding: 40px;"><h3>Loading all kids...</h3></div>';
+            
+            try {
+                // Create set of assigned kid IDs
+                const assignedKidIds = new Set();
+                if (window.bedAssignments) {
+                    window.bedAssignments.forEach(assignment => {
+                        const booking = airtableBookings.find(b => b.id === assignment.bookingId);
+                        if (booking && booking.kidId) {
+                            assignedKidIds.add(booking.kidId);
+                        }
+                    });
+                }
+                
+                // Map bookings to kids data
+                allKidsData = airtableBookings.map(booking => ({
+                    id: booking.kidId || booking.id,
+                    bookingId: booking.bookingId,
+                    name: booking.clientName,
+                    gender: booking.gender,
+                    phone: booking.phone || 'N/A',
+                    campName: booking.campName,
+                    checkin: booking.checkin,
+                    checkout: booking.checkout,
+                    age: booking.age,
+                    motherTongue: booking.motherTongue,
+                    languageStudying: booking.languageStudying,
+                    accommodationNotes: booking.accommodationNotes,
+                    roommateWishes: booking.roommateWishes,
+                    isAssigned: assignedKidIds.has(booking.kidId || booking.id),
+                    bedId: booking.bedId
+                }));
+                
+                console.log(`Loaded ${allKidsData.length} kids`);
+                
+                // Update property name display
+                document.getElementById('kidsOverviewProperty').textContent = 
+                    selectedProperty ? selectedProperty.name : 'All Properties';
+                
+                renderKidsList();
+                
+            } catch (error) {
+                console.error('Error loading kids overview:', error);
+                container.innerHTML = `<div class="alert alert-warning">Error loading kids: ${error.message}</div>`;
+            }
+        }
+
+        function filterKids(filterType) {
+            currentKidsFilter = filterType;
+            renderKidsList();
+        }
+
+        function renderKidsList() {
+            const container = document.getElementById('kidsListContainer');
+            const searchInput = document.getElementById('searchKids');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            
+            // Filter kids based on current filter and search
+            let filteredKids = allKidsData;
+            
+            // Apply status filter
+            if (currentKidsFilter === 'assigned') {
+                filteredKids = filteredKids.filter(kid => kid.isAssigned);
+            } else if (currentKidsFilter === 'not-assigned') {
+                filteredKids = filteredKids.filter(kid => !kid.isAssigned);
+            }
+            
+            // Apply search filter
+            if (searchTerm) {
+                filteredKids = filteredKids.filter(kid => 
+                    kid.name.toLowerCase().includes(searchTerm) ||
+                    (kid.bookingId && kid.bookingId.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            // Update counts
+            const totalCount = allKidsData.length;
+            const assignedCount = allKidsData.filter(k => k.isAssigned).length;
+            const notAssignedCount = allKidsData.filter(k => !k.isAssigned).length;
+            
+            document.getElementById('countAll').textContent = totalCount;
+            document.getElementById('countAssigned').textContent = assignedCount;
+            document.getElementById('countNotAssigned').textContent = notAssignedCount;
+            
+            // Update button styles
+            document.getElementById('filterAll').style.opacity = currentKidsFilter === 'all' ? '1' : '0.6';
+            document.getElementById('filterAssigned').style.opacity = currentKidsFilter === 'assigned' ? '1' : '0.6';
+            document.getElementById('filterNotAssigned').style.opacity = currentKidsFilter === 'not-assigned' ? '1' : '0.6';
+            
+            if (filteredKids.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">No kids found matching the selected filter.</div>';
+                return;
+            }
+            
+            // Create table
+            let html = `
+                <table class="kids-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Name</th>
+                            <th>Gender</th>
+                            <th>Camp</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Age</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            filteredKids.forEach(kid => {
+                const genderIcon = kid.gender === 'Male' ? '👨' : kid.gender === 'Female' ? '👩' : '👤';
+                const statusClass = kid.isAssigned ? 'assigned' : 'not-assigned';
+                const statusText = kid.isAssigned ? '✅ Assigned' : '❌ Not Assigned';
+                
+                const checkinDate = kid.checkin ? new Date(kid.checkin).toLocaleDateString() : 'N/A';
+                const checkoutDate = kid.checkout ? new Date(kid.checkout).toLocaleDateString() : 'N/A';
+                
+                let notesHtml = '';
+                if (kid.accommodationNotes || kid.roommateWishes) {
+                    notesHtml = '<div style="font-size: 0.85rem;">';
+                    if (kid.accommodationNotes) {
+                        notesHtml += `<div>📝 ${kid.accommodationNotes}</div>`;
+                    }
+                    if (kid.roommateWishes) {
+                        notesHtml += `<div>🤝 ${kid.roommateWishes}</div>`;
+                    }
+                    notesHtml += '</div>';
+                }
+                
+                html += `
+                    <tr>
+                        <td><strong>${kid.bookingId || 'N/A'}</strong></td>
+                        <td>${genderIcon} ${kid.name}</td>
+                        <td>${kid.gender || 'N/A'}</td>
+                        <td>${kid.campName || 'N/A'}</td>
+                        <td>${checkinDate}</td>
+                        <td>${checkoutDate}</td>
+                        <td>${kid.age || 'N/A'}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>${notesHtml || '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = html;
+        }
     </script>
 </body>
 </html>
