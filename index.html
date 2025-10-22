@@ -4436,18 +4436,36 @@
                 const assignedKidIds = new Set();
                 const kidAssignmentInfo = {};
                 
-                if (window.bedAssignments) {
+                // Try to find beds and rooms in multiple locations
+                let bedsArray, roomsArray;
+                
+                // Check different possible locations for beds and rooms
+                if (typeof beds !== 'undefined') {
+                    bedsArray = beds;
+                    roomsArray = rooms;
+                } else if (window.beds) {
+                    bedsArray = window.beds;
+                    roomsArray = window.rooms;
+                } else if (window.currentPropertyBeds) {
+                    bedsArray = window.currentPropertyBeds;
+                    roomsArray = window.currentPropertyRooms;
+                } else {
+                    bedsArray = [];
+                    roomsArray = [];
+                }
+                
+                console.log('🔍 DEBUG: Found', bedsArray.length, 'beds and', roomsArray.length, 'rooms');
+                
+                if (window.bedAssignments && bedsArray.length > 0) {
                     window.bedAssignments.forEach(assignment => {
                         const booking = airtableBookings.find(b => b.id === assignment.bookingId);
                         if (booking && booking.kidId) {
                             assignedKidIds.add(booking.kidId);
                             
                             // Get property and room info for this assignment
-                            // Use window.beds to access global beds array
-                            const bed = window.beds ? window.beds.find(b => b.id === assignment.bedId) : null;
+                            const bed = bedsArray.find(b => b.id === assignment.bedId);
                             if (bed) {
-                                // Use window.rooms to access global rooms array
-                                const room = window.rooms ? window.rooms.find(r => r.id === bed.roomId) : null;
+                                const room = roomsArray.find(r => r.id === bed.roomId);
                                 if (room) {
                                     let propertyName = 'Unknown Property';
                                     
@@ -4461,16 +4479,24 @@
                                         }
                                     }
                                     
+                                    console.log('✅ Kid', booking.clientName, '→ Property:', propertyName, ', Room:', room.name);
+                                    
                                     kidAssignmentInfo[booking.kidId] = {
                                         propertyName: propertyName,
                                         roomName: room.name,
                                         roomId: room.id,
                                         bedId: assignment.bedId
                                     };
+                                } else {
+                                    console.log('⚠️ Room not found for bed:', bed.id);
                                 }
+                            } else {
+                                console.log('⚠️ Bed not found:', assignment.bedId);
                             }
                         }
                     });
+                } else {
+                    console.warn('⚠️ Either no bedAssignments or no beds/rooms loaded');
                 }
                 
                 // Map bookings to kids data
@@ -4503,7 +4529,11 @@
                     };
                 });
                 
-                console.log(`Loaded ${allKidsData.length} kids`);
+                console.log(`✅ Loaded ${allKidsData.length} kids`);
+                const sampleAssigned = allKidsData.find(k => k.isAssigned);
+                if (sampleAssigned) {
+                    console.log('📋 Sample assigned kid:', sampleAssigned.name, '→', sampleAssigned.propertyName, '/', sampleAssigned.roomName);
+                }
                 
                 // Update property name display
                 document.getElementById('kidsOverviewProperty').textContent = 
@@ -4512,7 +4542,7 @@
                 renderKidsList();
                 
             } catch (error) {
-                console.error('Error loading kids overview:', error);
+                console.error('❌ Error loading kids overview:', error);
                 container.innerHTML = `<div class="alert alert-warning">Error loading kids: ${error.message}</div>`;
             }
         }
