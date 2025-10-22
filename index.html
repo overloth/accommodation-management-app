@@ -2609,6 +2609,10 @@
                     makeAirtableRequest(config.tables.properties)
                 ]);
 
+                // Store globally for later lookup (used to show bed names)
+                window.allBeds = bedsRes.records;
+
+
                 // Build quick lookup maps for efficiency
                 const bedsById = {};
                 bedsRes.records.forEach(r => { bedsById[r.id] = r; });
@@ -4927,7 +4931,7 @@
                             <th>Age</th>
                             <th>Status</th>
                             <th>Start Date</th>
-                            ${filter === 'assigned' ? '<th>Bed</th>' : ''}
+                            ${currentKidsFilter === 'assigned' ? '<th>Bed</th>' : ''}
                             <th>Notes</th>
                         </tr>
                     </thead>
@@ -4965,7 +4969,7 @@
                         <td>${kid.age || 'N/A'}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                         <td>${kid.startDate || '-'}</td>
-                        ${filter === 'assigned' ? `<td>${kid.bedName || '-'}</td>` : ''}
+                        ${currentKidsFilter === 'assigned' ? `<td>${kid.bedName || '-'}</td>` : ''}
                         <td>${notesHtml || '-'}</td>
                     </tr>
                 `;
