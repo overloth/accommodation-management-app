@@ -4633,22 +4633,27 @@
             // Render grouped view
             let html = '';
             
-            Object.keys(groupedKids).sort().forEach(campName => {
-                const campKids = groupedKids[campName];
-                const campKidsCount = Object.values(campKids).reduce((sum, roomKids) => sum + roomKids.length, 0);
+            Object.keys(groupedKids).sort().forEach(groupName => {
+                const groupKids = groupedKids[groupName];
+                const groupKidsCount = Object.values(groupKids).reduce((sum, roomKids) => sum + roomKids.length, 0);
+                
+                // Determine icon and label based on filter
+                const isPropertyGroup = currentKidsFilter === 'assigned';
+                const groupIcon = isPropertyGroup ? '🏠' : '🏕️';
+                const groupLabel = groupName;
                 
                 html += `
                     <div class="camp-group">
                         <div class="camp-group-header">
-                            <span>🏕️ ${campName}</span>
-                            <span class="camp-group-count">${campKidsCount} kid${campKidsCount !== 1 ? 's' : ''}</span>
+                            <span>${groupIcon} ${groupLabel}</span>
+                            <span class="camp-group-count">${groupKidsCount} kid${groupKidsCount !== 1 ? 's' : ''}</span>
                         </div>
                 `;
                 
                 // For assigned kids, group by room
                 if (currentKidsFilter === 'assigned') {
-                    Object.keys(campKids).sort().forEach(roomName => {
-                        const roomKids = campKids[roomName];
+                    Object.keys(groupKids).sort().forEach(roomName => {
+                        const roomKids = groupKids[roomName];
                         
                         html += `
                             <div class="room-group">
@@ -4662,8 +4667,8 @@
                     });
                 } else {
                     // For non-assigned or all kids, just show by camp
-                    const allCampKids = Object.values(campKids).flat();
-                    html += renderKidsTable(allCampKids);
+                    const allGroupKids = Object.values(groupKids).flat();
+                    html += renderKidsTable(allGroupKids);
                 }
                 
                 html += `</div>`;
@@ -4672,19 +4677,15 @@
             container.innerHTML = html;
         }
 
-        // Helper function to group kids by camp and room
+        // Helper function to group kids by property/camp and room
         function groupKidsByCampAndRoom(kids) {
             const grouped = {};
             
             kids.forEach(kid => {
-                const campName = kid.campName || 'Unknown Camp';
-                
-                if (!grouped[campName]) {
-                    grouped[campName] = {};
-                }
-                
-                // Get room information for assigned kids
+                let groupName = kid.campName || 'Unknown Camp';
                 let roomName = 'Unassigned';
+                
+                // For assigned kids, get property and room information
                 if (kid.isAssigned && kid.bedId) {
                     const assignment = window.bedAssignments.find(a => {
                         const booking = airtableBookings.find(b => b.id === a.bookingId);
@@ -4697,16 +4698,28 @@
                             const room = rooms.find(r => r.id === bed.roomId);
                             if (room) {
                                 roomName = room.name;
+                                
+                                // Get property name for assigned kids
+                                const property = properties.find(p => p.id === room.propertyId);
+                                if (property) {
+                                    groupName = property.name;
+                                }
                             }
                         }
                     }
                 }
                 
-                if (!grouped[campName][roomName]) {
-                    grouped[campName][roomName] = [];
+                // Create group if it doesn't exist
+                if (!grouped[groupName]) {
+                    grouped[groupName] = {};
                 }
                 
-                grouped[campName][roomName].push(kid);
+                // Create room group if it doesn't exist
+                if (!grouped[groupName][roomName]) {
+                    grouped[groupName][roomName] = [];
+                }
+                
+                grouped[groupName][roomName].push(kid);
             });
             
             return grouped;
