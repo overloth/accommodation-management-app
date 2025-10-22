@@ -4436,68 +4436,67 @@
                 const assignedKidIds = new Set();
                 const kidAssignmentInfo = {};
                 
-                // Try to find beds and rooms in multiple locations
-                let bedsArray, roomsArray;
+                console.log('🔍 Checking bed assignments:', window.bedAssignments ? window.bedAssignments.length : 0);
                 
-                // Check different possible locations for beds and rooms
-                if (typeof beds !== 'undefined') {
-                    bedsArray = beds;
-                    roomsArray = rooms;
-                } else if (window.beds) {
-                    bedsArray = window.beds;
-                    roomsArray = window.rooms;
-                } else if (window.currentPropertyBeds) {
-                    bedsArray = window.currentPropertyBeds;
-                    roomsArray = window.currentPropertyRooms;
-                } else {
-                    bedsArray = [];
-                    roomsArray = [];
-                }
-                
-                console.log('🔍 DEBUG: Found', bedsArray.length, 'beds and', roomsArray.length, 'rooms');
-                
-                if (window.bedAssignments && bedsArray.length > 0) {
+                if (window.bedAssignments && window.bedAssignments.length > 0) {
                     window.bedAssignments.forEach(assignment => {
+                        console.log('📋 Processing assignment:', assignment);
+                        
                         const booking = airtableBookings.find(b => b.id === assignment.bookingId);
                         if (booking && booking.kidId) {
                             assignedKidIds.add(booking.kidId);
                             
-                            // Get property and room info for this assignment
-                            const bed = bedsArray.find(b => b.id === assignment.bedId);
-                            if (bed) {
-                                const room = roomsArray.find(r => r.id === bed.roomId);
-                                if (room) {
-                                    let propertyName = 'Unknown Property';
-                                    
-                                    // Try to get property name
-                                    if (selectedProperty) {
-                                        propertyName = selectedProperty.name;
-                                    } else if (window.loadedProperties) {
-                                        const property = window.loadedProperties.find(p => p.id === room.propertyId);
-                                        if (property) {
-                                            propertyName = property.name;
-                                        }
+                            // Get room and property info directly from the assignment
+                            let roomName = 'Unknown Room';
+                            let propertyName = 'Unknown Property';
+                            
+                            // Check if assignment has room information
+                            if (assignment.rooms && assignment.rooms.length > 0) {
+                                // Get the first room (usually there's only one)
+                                const roomId = assignment.rooms[0];
+                                
+                                // Try to find room name from the rooms array if available
+                                if (typeof rooms !== 'undefined' && rooms.length > 0) {
+                                    const room = rooms.find(r => r.id === roomId);
+                                    if (room) {
+                                        roomName = room.name;
                                     }
-                                    
-                                    console.log('✅ Kid', booking.clientName, '→ Property:', propertyName, ', Room:', room.name);
-                                    
-                                    kidAssignmentInfo[booking.kidId] = {
-                                        propertyName: propertyName,
-                                        roomName: room.name,
-                                        roomId: room.id,
-                                        bedId: assignment.bedId
-                                    };
-                                } else {
-                                    console.log('⚠️ Room not found for bed:', bed.id);
+                                } else if (window.currentPropertyRooms && window.currentPropertyRooms.length > 0) {
+                                    const room = window.currentPropertyRooms.find(r => r.id === roomId);
+                                    if (room) {
+                                        roomName = room.name;
+                                    }
                                 }
-                            } else {
-                                console.log('⚠️ Bed not found:', assignment.bedId);
                             }
+                            
+                            // Check if assignment has property information
+                            if (assignment.property) {
+                                propertyName = assignment.property;
+                            } else if (assignment['Property (from Rooms)']) {
+                                // Sometimes it's stored with the full field name
+                                propertyName = assignment['Property (from Rooms)'];
+                            } else if (selectedProperty) {
+                                propertyName = selectedProperty.name;
+                            } else if (window.loadedProperties && window.loadedProperties.length > 0) {
+                                // Try to get from loaded properties
+                                const property = window.loadedProperties[0];
+                                if (property) {
+                                    propertyName = property.name;
+                                }
+                            }
+                            
+                            console.log('✅ Kid', booking.clientName, '→ Property:', propertyName, ', Room:', roomName);
+                            
+                            kidAssignmentInfo[booking.kidId] = {
+                                propertyName: propertyName,
+                                roomName: roomName,
+                                bedId: assignment.bedId
+                            };
                         }
                     });
-                } else {
-                    console.warn('⚠️ Either no bedAssignments or no beds/rooms loaded');
                 }
+                
+                console.log('📊 Total kids with assignments:', Object.keys(kidAssignmentInfo).length);
                 
                 // Map bookings to kids data
                 allKidsData = airtableBookings.map(booking => {
@@ -4523,16 +4522,18 @@
                         bedId: booking.bedId,
                         // Add property and room info
                         propertyName: assignmentInfo.propertyName,
-                        roomName: assignmentInfo.roomName,
-                        roomId: assignmentInfo.roomId,
-                        assignedBedId: assignmentInfo.bedId
+                        roomName: assignmentInfo.roomName
                     };
                 });
                 
-                console.log(`✅ Loaded ${allKidsData.length} kids`);
+                console.log(`✅ Loaded ${allKidsData.length} total kids`);
+                console.log(`✅ Assigned kids: ${allKidsData.filter(k => k.isAssigned).length}`);
+                
                 const sampleAssigned = allKidsData.find(k => k.isAssigned);
                 if (sampleAssigned) {
-                    console.log('📋 Sample assigned kid:', sampleAssigned.name, '→', sampleAssigned.propertyName, '/', sampleAssigned.roomName);
+                    console.log('📋 Sample assigned kid:', sampleAssigned);
+                } else {
+                    console.warn('⚠️ No assigned kids found!');
                 }
                 
                 // Update property name display
