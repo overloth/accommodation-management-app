@@ -4432,35 +4432,74 @@
             container.innerHTML = '<div style="text-align: center; padding: 40px;"><h3>Loading all kids...</h3></div>';
             
             try {
-                // Create set of assigned kid IDs
+                // Create set of assigned kid IDs and store assignment info
                 const assignedKidIds = new Set();
+                const kidAssignmentInfo = {};
+                
                 if (window.bedAssignments) {
                     window.bedAssignments.forEach(assignment => {
                         const booking = airtableBookings.find(b => b.id === assignment.bookingId);
                         if (booking && booking.kidId) {
                             assignedKidIds.add(booking.kidId);
+                            
+                            // Get property and room info for this assignment
+                            const bed = beds.find(b => b.id === assignment.bedId);
+                            if (bed) {
+                                const room = rooms.find(r => r.id === bed.roomId);
+                                if (room) {
+                                    let propertyName = 'Unknown Property';
+                                    
+                                    // Try to get property name
+                                    if (selectedProperty) {
+                                        propertyName = selectedProperty.name;
+                                    } else if (window.loadedProperties) {
+                                        const property = window.loadedProperties.find(p => p.id === room.propertyId);
+                                        if (property) {
+                                            propertyName = property.name;
+                                        }
+                                    }
+                                    
+                                    kidAssignmentInfo[booking.kidId] = {
+                                        propertyName: propertyName,
+                                        roomName: room.name,
+                                        roomId: room.id,
+                                        bedId: assignment.bedId
+                                    };
+                                }
+                            }
                         }
                     });
                 }
                 
                 // Map bookings to kids data
-                allKidsData = airtableBookings.map(booking => ({
-                    id: booking.kidId || booking.id,
-                    bookingId: booking.bookingId,
-                    name: booking.clientName,
-                    gender: booking.gender,
-                    phone: booking.phone || 'N/A',
-                    campName: booking.campName,
-                    checkin: booking.checkin,
-                    checkout: booking.checkout,
-                    age: booking.age,
-                    motherTongue: booking.motherTongue,
-                    languageStudying: booking.languageStudying,
-                    accommodationNotes: booking.accommodationNotes,
-                    roommateWishes: booking.roommateWishes,
-                    isAssigned: assignedKidIds.has(booking.kidId || booking.id),
-                    bedId: booking.bedId
-                }));
+                allKidsData = airtableBookings.map(booking => {
+                    const kidId = booking.kidId || booking.id;
+                    const isAssigned = assignedKidIds.has(kidId);
+                    const assignmentInfo = kidAssignmentInfo[kidId] || {};
+                    
+                    return {
+                        id: kidId,
+                        bookingId: booking.bookingId,
+                        name: booking.clientName,
+                        gender: booking.gender,
+                        phone: booking.phone || 'N/A',
+                        campName: booking.campName,
+                        checkin: booking.checkin,
+                        checkout: booking.checkout,
+                        age: booking.age,
+                        motherTongue: booking.motherTongue,
+                        languageStudying: booking.languageStudying,
+                        accommodationNotes: booking.accommodationNotes,
+                        roommateWishes: booking.roommateWishes,
+                        isAssigned: isAssigned,
+                        bedId: booking.bedId,
+                        // Add property and room info
+                        propertyName: assignmentInfo.propertyName,
+                        roomName: assignmentInfo.roomName,
+                        roomId: assignmentInfo.roomId,
+                        assignedBedId: assignmentInfo.bedId
+                    };
+                });
                 
                 console.log(`Loaded ${allKidsData.length} kids`);
                 
@@ -4682,30 +4721,18 @@
             const grouped = {};
             
             kids.forEach(kid => {
+                // For assigned kids, use property name; for unassigned, use camp name
                 let groupName = kid.campName || 'Unknown Camp';
                 let roomName = 'Unassigned';
                 
-                // For assigned kids, get property and room information
-                if (kid.isAssigned && kid.bedId) {
-                    const assignment = window.bedAssignments.find(a => {
-                        const booking = airtableBookings.find(b => b.id === a.bookingId);
-                        return booking && (booking.kidId === kid.id || booking.id === kid.id);
-                    });
-                    
-                    if (assignment) {
-                        const bed = beds.find(b => b.id === assignment.bedId);
-                        if (bed) {
-                            const room = rooms.find(r => r.id === bed.roomId);
-                            if (room) {
-                                roomName = room.name;
-                                
-                                // Get property name for assigned kids
-                                const property = properties.find(p => p.id === room.propertyId);
-                                if (property) {
-                                    groupName = property.name;
-                                }
-                            }
-                        }
+                if (kid.isAssigned) {
+                    // Use the property name if available
+                    if (kid.propertyName) {
+                        groupName = kid.propertyName;
+                    }
+                    // Use the room name if available
+                    if (kid.roomName) {
+                        roomName = kid.roomName;
                     }
                 }
                 
