@@ -4443,9 +4443,11 @@
                             assignedKidIds.add(booking.kidId);
                             
                             // Get property and room info for this assignment
-                            const bed = beds.find(b => b.id === assignment.bedId);
+                            // Use window.beds to access global beds array
+                            const bed = window.beds ? window.beds.find(b => b.id === assignment.bedId) : null;
                             if (bed) {
-                                const room = rooms.find(r => r.id === bed.roomId);
+                                // Use window.rooms to access global rooms array
+                                const room = window.rooms ? window.rooms.find(r => r.id === bed.roomId) : null;
                                 if (room) {
                                     let propertyName = 'Unknown Property';
                                     
