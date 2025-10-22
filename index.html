@@ -4440,49 +4440,43 @@
                 
                 if (window.bedAssignments && window.bedAssignments.length > 0) {
                     window.bedAssignments.forEach(assignment => {
-                        console.log('📋 Processing assignment:', assignment);
-                        
                         const booking = airtableBookings.find(b => b.id === assignment.bookingId);
                         if (booking && booking.kidId) {
                             assignedKidIds.add(booking.kidId);
                             
-                            // Get room and property info directly from the assignment
+                            // Get room and property names from the assignment
                             let roomName = 'Unknown Room';
                             let propertyName = 'Unknown Property';
                             
-                            // Check if assignment has room information
-                            if (assignment.rooms && assignment.rooms.length > 0) {
-                                // Get the first room (usually there's only one)
-                                const roomId = assignment.rooms[0];
-                                
-                                // Try to find room name from the rooms array if available
-                                if (typeof rooms !== 'undefined' && rooms.length > 0) {
-                                    const room = rooms.find(r => r.id === roomId);
-                                    if (room) {
-                                        roomName = room.name;
-                                    }
-                                } else if (window.currentPropertyRooms && window.currentPropertyRooms.length > 0) {
-                                    const room = window.currentPropertyRooms.find(r => r.id === roomId);
-                                    if (room) {
-                                        roomName = room.name;
-                                    }
+                            // Try different field names for room
+                            if (assignment['Rooms (from Beds)']) {
+                                // This is the lookup field - should be a string or array
+                                const roomField = assignment['Rooms (from Beds)'];
+                                if (Array.isArray(roomField)) {
+                                    roomName = roomField[0]; // Get first room name
+                                } else {
+                                    roomName = roomField;
                                 }
+                            } else if (assignment.roomName) {
+                                roomName = assignment.roomName;
+                            } else if (assignment['Room Name']) {
+                                roomName = assignment['Room Name'];
                             }
                             
-                            // Check if assignment has property information
-                            if (assignment.property) {
+                            // Try different field names for property
+                            if (assignment['Property (from Rooms)']) {
+                                const propField = assignment['Property (from Rooms)'];
+                                if (Array.isArray(propField)) {
+                                    propertyName = propField[0]; // Get first property name
+                                } else {
+                                    propertyName = propField;
+                                }
+                            } else if (assignment.property) {
                                 propertyName = assignment.property;
-                            } else if (assignment['Property (from Rooms)']) {
-                                // Sometimes it's stored with the full field name
-                                propertyName = assignment['Property (from Rooms)'];
+                            } else if (assignment.propertyName) {
+                                propertyName = assignment.propertyName;
                             } else if (selectedProperty) {
                                 propertyName = selectedProperty.name;
-                            } else if (window.loadedProperties && window.loadedProperties.length > 0) {
-                                // Try to get from loaded properties
-                                const property = window.loadedProperties[0];
-                                if (property) {
-                                    propertyName = property.name;
-                                }
                             }
                             
                             console.log('✅ Kid', booking.clientName, '→ Property:', propertyName, ', Room:', roomName);
