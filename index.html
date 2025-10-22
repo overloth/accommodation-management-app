@@ -2710,7 +2710,14 @@
                         clientName: fullName,
                         propertyId: propertyId,
                         propertyName: propertyName,
-                        gender: gender
+                        gender: gender,
+                        startDate: fields['Start Date'] || '',
+                        bedName: (() => {
+                          const bedId = fields['Beds'] ? fields['Beds'][0] : null;
+                          if (!bedId || !window.allBeds) return '';
+                          const bedRec = window.allBeds.find(b => b.id === bedId);
+                          return bedRec ? (bedRec.fields['Bed Name'] || bedRec.fields['Name'] || '') : '';
+                        })()
                     };
                 });
 
@@ -4919,6 +4926,8 @@
                             <th>Check-out</th>
                             <th>Age</th>
                             <th>Status</th>
+                            <th>Start Date</th>
+                            ${filter === 'assigned' ? '<th>Bed</th>' : ''}
                             <th>Notes</th>
                         </tr>
                     </thead>
@@ -4955,6 +4964,8 @@
                         <td>${checkoutDate}</td>
                         <td>${kid.age || 'N/A'}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>${kid.startDate || '-'}</td>
+                        ${filter === 'assigned' ? `<td>${kid.bedName || '-'}</td>` : ''}
                         <td>${notesHtml || '-'}</td>
                     </tr>
                 `;
@@ -5011,6 +5022,12 @@
                 container.innerHTML = originalContent;
             }, 100);
         }
+
+        // function formatShortDate(dateStr) {
+        //   if (!dateStr) return '-';
+        //   const d = new Date(dateStr);
+        //   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+        // }
     </script>
 </body>
 </html>
