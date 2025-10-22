@@ -2553,21 +2553,81 @@
             }
         }
 
+        // async function loadBedAssignmentsData(propertyId) {
+        //     if (sampleDataLoaded) return;
+            
+        //     try {
+        //         const assignmentsResponse = await makeAirtableRequest(config.tables.bedAssignments);
+                
+        //         window.bedAssignments = assignmentsResponse.records.map(record => {
+        //             const fields = record.fields;
+
+        //             let gender = fields['Gender (from Booking)'];
+        //             if (Array.isArray(gender)) {
+        //                 gender = gender[0];
+        //             }
+
+        //             // Extract given name and family name from bed assignments
+        //             const givenName = Array.isArray(fields['Given Name (from Kid) (from Booking)']) 
+        //                 ? fields['Given Name (from Kid) (from Booking)'][0] 
+        //                 : fields['Given Name (from Kid) (from Booking)'] || '';
+        //             const familyName = Array.isArray(fields['Family Name (from Kid) (from Booking)']) 
+        //                 ? fields['Family Name (from Kid) (from Booking)'][0] 
+        //                 : fields['Family Name (from Kid) (from Booking)'] || '';
+        //             const fullName = `${givenName} ${familyName}`.trim() || 'Unnamed';
+
+        //             return {
+        //                 id: record.id,
+        //                 bedId: fields['Beds'] ? fields['Beds'][0] : null,
+        //                 roomId: fields['Rooms'] ? fields['Rooms'][0] : null,
+        //                 bookingId: fields['Booking'] ? fields['Booking'][0] : null,
+        //                 checkin: fields['Start Date'],
+        //                 checkout: fields['End Date'],
+        //                 clientName: fullName,
+        //                 gender: gender
+        //             };
+        //         });
+                
+        //         console.log(`Loaded ${window.bedAssignments.length} bed assignments`);
+        //     } catch (error) {
+        //         console.error('Error loading bed assignments:', error);
+        //         window.bedAssignments = [];
+        //     }
+        // }
+
         async function loadBedAssignmentsData(propertyId) {
             if (sampleDataLoaded) return;
-            
+
             try {
+                // 1) Load Bed Assignments
                 const assignmentsResponse = await makeAirtableRequest(config.tables.bedAssignments);
-                
+
+                // 2) Also load Beds, Rooms and Properties to resolve linked records
+                const [bedsRes, roomsRes, propertiesRes] = await Promise.all([
+                    makeAirtableRequest(config.tables.beds),
+                    makeAirtableRequest(config.tables.rooms),
+                    makeAirtableRequest(config.tables.properties)
+                ]);
+
+                // Build quick lookup maps for efficiency
+                const bedsById = {};
+                bedsRes.records.forEach(r => { bedsById[r.id] = r; });
+
+                const roomsById = {};
+                roomsRes.records.forEach(r => { roomsById[r.id] = r; });
+
+                const propertiesById = {};
+                propertiesRes.records.forEach(r => { propertiesById[r.id] = r; });
+
+                // Also build lookup by bed ID -> roomId (if bed record contains Rooms links)
+                // and roomId -> propertyId (if room record contains Property links)
                 window.bedAssignments = assignmentsResponse.records.map(record => {
                     const fields = record.fields;
 
+                    // basic fields from assignment
                     let gender = fields['Gender (from Booking)'];
-                    if (Array.isArray(gender)) {
-                        gender = gender[0];
-                    }
+                    if (Array.isArray(gender)) gender = gender[0];
 
-                    // Extract given name and family name from bed assignments
                     const givenName = Array.isArray(fields['Given Name (from Kid) (from Booking)']) 
                         ? fields['Given Name (from Kid) (from Booking)'][0] 
                         : fields['Given Name (from Kid) (from Booking)'] || '';
@@ -2576,21 +2636,87 @@
                         : fields['Family Name (from Kid) (from Booking)'] || '';
                     const fullName = `${givenName} ${familyName}`.trim() || 'Unnamed';
 
+                    const bedId = fields['Beds'] ? fields['Beds'][0] : null;
+                    const bookingId = fields['Booking'] ? fields['Booking'][0] : null;
+                    const rawRoomId = fields['Rooms'] ? fields['Rooms'][0] : null; // sometimes present
+                    const checkin = fields['Start Date'];
+                    const checkout = fields['End Date'];
+
+                    // Resolve roomId: prefer explicit Rooms field on assignment, otherwise try bed -> Rooms
+                    let resolvedRoomId = rawRoomId || null;
+                    let roomName = 'Unknown Room';
+                    let propertyId = null;
+                    let propertyName = 'Unknown Property';
+
+                    if (!resolvedRoomId && bedId && bedsById[bedId]) {
+                        // Many setups have Beds -> Rooms linked on the Bed record
+                        const bedRecord = bedsById[bedId];
+                        const bedRooms = bedRecord.fields && bedRecord.fields['Rooms'];
+                        if (Array.isArray(bedRooms) && bedRooms.length > 0) {
+                            resolvedRoomId = bedRooms[0];
+                        }
+                        // Some bases also have a lookup field 'Room Name (from Rooms)'
+                        if (!roomName && bedRecord.fields && bedRecord.fields['Room Name (from Rooms)']) {
+                            const lookup = bedRecord.fields['Room Name (from Rooms)'];
+                            roomName = Array.isArray(lookup) ? lookup[0] : lookup;
+                        }
+                    }
+
+                    // If we have a room id, resolve its name and property
+                    if (resolvedRoomId && roomsById[resolvedRoomId]) {
+                        const roomRec = roomsById[resolvedRoomId];
+                        // common room name field variants:
+                        roomName = roomRec.fields['Room Name'] || roomRec.fields['Name'] || roomRec.fields['Room Number'] || roomRec.fields['Number'] || roomRec.fields['Name (from Rooms)'] || roomName;
+
+                        // Resolve property id from room
+                        const roomPropertyField = roomRec.fields['Property'] || roomRec.fields['Property (from Room)'];
+                        if (Array.isArray(roomPropertyField) && roomPropertyField.length > 0) {
+                            propertyId = roomPropertyField[0];
+                        }
+                    }
+
+                    // If property id is known, get its display name
+                    if (propertyId && propertiesById[propertyId]) {
+                        const propRec = propertiesById[propertyId];
+                        propertyName = propRec.fields['Property Name'] || propRec.fields['Name'] || propertyName;
+                    } else {
+                        // Some installs may include lookup fields directly on assignment:
+                        if (fields['Property (from Rooms)']) {
+                            const propField = fields['Property (from Rooms)'];
+                            propertyName = Array.isArray(propField) ? propField[0] : propField;
+                        } else if (fields['Rooms (from Beds)']) {
+                            // if Rooms (from Beds) contains a room *name*, we already handled roomName above
+                            // fallback to selectedProperty if provided
+                            if (selectedProperty && selectedProperty.name) {
+                                propertyName = selectedProperty.name;
+                            }
+                        } else if (selectedProperty && selectedProperty.name) {
+                            propertyName = selectedProperty.name;
+                        }
+                    }
+
+                    // Final sanity: if assignment contains a direct roomName or property name, prefer that
+                    if (fields['Room Name']) roomName = Array.isArray(fields['Room Name']) ? fields['Room Name'][0] : fields['Room Name'];
+                    if (fields['Property Name']) propertyName = Array.isArray(fields['Property Name']) ? fields['Property Name'][0] : fields['Property Name'];
+
                     return {
                         id: record.id,
-                        bedId: fields['Beds'] ? fields['Beds'][0] : null,
-                        roomId: fields['Rooms'] ? fields['Rooms'][0] : null,
-                        bookingId: fields['Booking'] ? fields['Booking'][0] : null,
-                        checkin: fields['Start Date'],
-                        checkout: fields['End Date'],
+                        bedId: bedId,
+                        roomId: resolvedRoomId,
+                        roomName: roomName,
+                        bookingId: bookingId,
+                        checkin: checkin,
+                        checkout: checkout,
                         clientName: fullName,
+                        propertyId: propertyId,
+                        propertyName: propertyName,
                         gender: gender
                     };
                 });
-                
-                console.log(`Loaded ${window.bedAssignments.length} bed assignments`);
+
+                console.log(`Loaded ${window.bedAssignments.length} bed assignments (resolved rooms/properties)`);
             } catch (error) {
-                console.error('Error loading bed assignments:', error);
+                console.error('Error loading bed assignments (with resolution):', error);
                 window.bedAssignments = [];
             }
         }
