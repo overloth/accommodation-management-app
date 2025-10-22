@@ -911,6 +911,185 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+            }
+            
+            .header {
+                background: #2c3e50 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .stats-wrapper,
+            .step-indicator,
+            .filter-buttons,
+            .search-container,
+            .print-button,
+            button {
+                display: none !important;
+            }
+            
+            .kids-table {
+                page-break-inside: auto;
+            }
+            
+            .kids-table tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            
+            .camp-group {
+                page-break-inside: avoid;
+            }
+            
+            .camp-group-header {
+                background: #3498db !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .room-group-header {
+                background: #e8f4f8 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        /* Grouping Styles */
+        .camp-group {
+            margin-bottom: 30px;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .camp-group-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .camp-group-count {
+            background: rgba(255,255,255,0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .room-group {
+            margin: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .room-group-header {
+            background: #e8f4f8;
+            padding: 12px 15px;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #bdc3c7;
+        }
+
+        .room-group-count {
+            background: #3498db;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+        }
+
+        .kids-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .kids-table thead {
+            background: #34495e;
+            color: white;
+        }
+
+        .kids-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #2c3e50;
+        }
+
+        .kids-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .kids-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-badge.assigned {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.not-assigned {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Print Button Styles */
+        .print-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(39, 174, 96, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .print-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(39, 174, 96, 0.4);
+        }
+
+        .print-button:active {
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 <body>
@@ -1122,6 +1301,11 @@
                            style="flex: 1; min-width: 200px; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 20px;" 
                            oninput="filterKids(currentKidsFilter)">
                 </div>
+
+                <button class="print-button" onclick="printKidsList()" id="printButton">
+                    <span style="font-size: 1.2rem;">🖨️</span>
+                    Print / Export PDF
+                </button>
 
                 <div id="kidsListContainer" style="margin-bottom: 20px;"></div>
                 
@@ -4297,6 +4481,110 @@
             renderKidsList();
         }
 
+        // function renderKidsList() {
+        //     const container = document.getElementById('kidsListContainer');
+        //     const searchInput = document.getElementById('searchKids');
+        //     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            
+        //     // Filter kids based on current filter and search
+        //     let filteredKids = allKidsData;
+            
+        //     // Apply status filter
+        //     if (currentKidsFilter === 'assigned') {
+        //         filteredKids = filteredKids.filter(kid => kid.isAssigned);
+        //     } else if (currentKidsFilter === 'not-assigned') {
+        //         filteredKids = filteredKids.filter(kid => !kid.isAssigned);
+        //     }
+            
+        //     // Apply search filter
+        //     if (searchTerm) {
+        //         filteredKids = filteredKids.filter(kid => 
+        //             kid.name.toLowerCase().includes(searchTerm) ||
+        //             (kid.bookingId && kid.bookingId.toLowerCase().includes(searchTerm))
+        //         );
+        //     }
+            
+        //     // Update counts
+        //     const totalCount = allKidsData.length;
+        //     const assignedCount = allKidsData.filter(k => k.isAssigned).length;
+        //     const notAssignedCount = allKidsData.filter(k => !k.isAssigned).length;
+            
+        //     document.getElementById('countAll').textContent = totalCount;
+        //     document.getElementById('countAssigned').textContent = assignedCount;
+        //     document.getElementById('countNotAssigned').textContent = notAssignedCount;
+            
+        //     // Update button styles
+        //     document.getElementById('filterAll').style.opacity = currentKidsFilter === 'all' ? '1' : '0.6';
+        //     document.getElementById('filterAssigned').style.opacity = currentKidsFilter === 'assigned' ? '1' : '0.6';
+        //     document.getElementById('filterNotAssigned').style.opacity = currentKidsFilter === 'not-assigned' ? '1' : '0.6';
+            
+        //     if (filteredKids.length === 0) {
+        //         container.innerHTML = '<div class="alert alert-info">No kids found matching the selected filter.</div>';
+        //         return;
+        //     }
+            
+        //     // Create table
+        //     let html = `
+        //         <table class="kids-table">
+        //             <thead>
+        //                 <tr>
+        //                     <th>Booking ID</th>
+        //                     <th>Name</th>
+        //                     <th>Gender</th>
+        //                     <th>Camp</th>
+        //                     <th>Check-in</th>
+        //                     <th>Check-out</th>
+        //                     <th>Age</th>
+        //                     <th>Status</th>
+        //                     <th>Notes</th>
+        //                 </tr>
+        //             </thead>
+        //             <tbody>
+        //     `;
+            
+        //     filteredKids.forEach(kid => {
+        //         const genderIcon = kid.gender === 'Male' ? '👨' : kid.gender === 'Female' ? '👩' : '👤';
+        //         const statusClass = kid.isAssigned ? 'assigned' : 'not-assigned';
+        //         const statusText = kid.isAssigned ? '✅ Assigned' : '❌ Not Assigned';
+                
+        //         const checkinDate = kid.checkin ? new Date(kid.checkin).toLocaleDateString() : 'N/A';
+        //         const checkoutDate = kid.checkout ? new Date(kid.checkout).toLocaleDateString() : 'N/A';
+                
+        //         let notesHtml = '';
+        //         if (kid.accommodationNotes || kid.roommateWishes) {
+        //             notesHtml = '<div style="font-size: 0.85rem;">';
+        //             if (kid.accommodationNotes) {
+        //                 notesHtml += `<div>📝 ${kid.accommodationNotes}</div>`;
+        //             }
+        //             if (kid.roommateWishes) {
+        //                 notesHtml += `<div>🤝 ${kid.roommateWishes}</div>`;
+        //             }
+        //             notesHtml += '</div>';
+        //         }
+                
+        //         html += `
+        //             <tr>
+        //                 <td><strong>${kid.bookingId || 'N/A'}</strong></td>
+        //                 <td>${genderIcon} ${kid.name}</td>
+        //                 <td>${kid.gender || 'N/A'}</td>
+        //                 <td>${kid.campName || 'N/A'}</td>
+        //                 <td>${checkinDate}</td>
+        //                 <td>${checkoutDate}</td>
+        //                 <td>${kid.age || 'N/A'}</td>
+        //                 <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+        //                 <td>${notesHtml || '-'}</td>
+        //             </tr>
+        //         `;
+        //     });
+            
+        //     html += `
+        //             </tbody>
+        //         </table>
+        //     `;
+            
+        //     container.innerHTML = html;
+        // }
+
         function renderKidsList() {
             const container = document.getElementById('kidsListContainer');
             const searchInput = document.getElementById('searchKids');
@@ -4339,7 +4627,93 @@
                 return;
             }
             
-            // Create table
+            // Group kids by camp and room
+            const groupedKids = groupKidsByCampAndRoom(filteredKids);
+            
+            // Render grouped view
+            let html = '';
+            
+            Object.keys(groupedKids).sort().forEach(campName => {
+                const campKids = groupedKids[campName];
+                const campKidsCount = Object.values(campKids).reduce((sum, roomKids) => sum + roomKids.length, 0);
+                
+                html += `
+                    <div class="camp-group">
+                        <div class="camp-group-header">
+                            <span>🏕️ ${campName}</span>
+                            <span class="camp-group-count">${campKidsCount} kid${campKidsCount !== 1 ? 's' : ''}</span>
+                        </div>
+                `;
+                
+                // For assigned kids, group by room
+                if (currentKidsFilter === 'assigned') {
+                    Object.keys(campKids).sort().forEach(roomName => {
+                        const roomKids = campKids[roomName];
+                        
+                        html += `
+                            <div class="room-group">
+                                <div class="room-group-header">
+                                    <span>🚪 ${roomName}</span>
+                                    <span class="room-group-count">${roomKids.length} kid${roomKids.length !== 1 ? 's' : ''}</span>
+                                </div>
+                                ${renderKidsTable(roomKids)}
+                            </div>
+                        `;
+                    });
+                } else {
+                    // For non-assigned or all kids, just show by camp
+                    const allCampKids = Object.values(campKids).flat();
+                    html += renderKidsTable(allCampKids);
+                }
+                
+                html += `</div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Helper function to group kids by camp and room
+        function groupKidsByCampAndRoom(kids) {
+            const grouped = {};
+            
+            kids.forEach(kid => {
+                const campName = kid.campName || 'Unknown Camp';
+                
+                if (!grouped[campName]) {
+                    grouped[campName] = {};
+                }
+                
+                // Get room information for assigned kids
+                let roomName = 'Unassigned';
+                if (kid.isAssigned && kid.bedId) {
+                    const assignment = window.bedAssignments.find(a => {
+                        const booking = airtableBookings.find(b => b.id === a.bookingId);
+                        return booking && (booking.kidId === kid.id || booking.id === kid.id);
+                    });
+                    
+                    if (assignment) {
+                        const bed = beds.find(b => b.id === assignment.bedId);
+                        if (bed) {
+                            const room = rooms.find(r => r.id === bed.roomId);
+                            if (room) {
+                                roomName = room.name;
+                            }
+                        }
+                    }
+                }
+                
+                if (!grouped[campName][roomName]) {
+                    grouped[campName][roomName] = [];
+                }
+                
+                grouped[campName][roomName].push(kid);
+            });
+            
+            return grouped;
+        }
+
+        // Helper function to render a table of kids
+        function renderKidsTable(kids) {
             let html = `
                 <table class="kids-table">
                     <thead>
@@ -4358,7 +4732,7 @@
                     <tbody>
             `;
             
-            filteredKids.forEach(kid => {
+            kids.forEach(kid => {
                 const genderIcon = kid.gender === 'Male' ? '👨' : kid.gender === 'Female' ? '👩' : '👤';
                 const statusClass = kid.isAssigned ? 'assigned' : 'not-assigned';
                 const statusText = kid.isAssigned ? '✅ Assigned' : '❌ Not Assigned';
@@ -4398,7 +4772,51 @@
                 </table>
             `;
             
-            container.innerHTML = html;
+            return html;
+        }
+
+        // Print function for Kids Overview
+        function printKidsList() {
+            // Get the current filter description
+            let filterDescription = '';
+            if (currentKidsFilter === 'assigned') {
+                filterDescription = 'Assigned Kids';
+            } else if (currentKidsFilter === 'not-assigned') {
+                filterDescription = 'Unassigned Kids';
+            } else {
+                filterDescription = 'All Kids';
+            }
+            
+            const propertyName = selectedProperty ? selectedProperty.name : 'All Properties';
+            const currentDate = new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            // Create a print-friendly title
+            const printTitle = `
+                <div style="text-align: center; margin-bottom: 20px; page-break-after: avoid;">
+                    <h1 style="color: #2c3e50; margin-bottom: 5px;">Kids Overview - ${filterDescription}</h1>
+                    <p style="color: #7f8c8d; font-size: 1.1rem;">${propertyName}</p>
+                    <p style="color: #95a5a6; font-size: 0.9rem;">Generated on ${currentDate}</p>
+                </div>
+            `;
+            
+            // Get the current content
+            const container = document.getElementById('kidsListContainer');
+            const originalContent = container.innerHTML;
+            
+            // Add title to content
+            container.innerHTML = printTitle + originalContent;
+            
+            // Trigger print
+            window.print();
+            
+            // Restore original content after print dialog closes
+            setTimeout(() => {
+                container.innerHTML = originalContent;
+            }, 100);
         }
     </script>
 </body>
