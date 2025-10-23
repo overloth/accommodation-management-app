@@ -2717,6 +2717,11 @@
                         gender: gender,
                         startDate: fields['Start Date'] || '',
                         bedName: (() => {
+                          // First try to get from lookup field "Bed Name" in Bed Assignment table
+                          if (fields['Bed Name']) {
+                            return Array.isArray(fields['Bed Name']) ? fields['Bed Name'][0] : fields['Bed Name'];
+                          }
+                          // Fallback: lookup from Beds table
                           const bedId = fields['Beds'] ? fields['Beds'][0] : null;
                           if (!bedId || !window.allBeds) return '';
                           const bedRec = window.allBeds.find(b => b.id === bedId);
@@ -4633,7 +4638,8 @@
                             kidAssignmentInfo[booking.kidId] = {
                                 propertyName: propertyName,
                                 roomName: roomName,
-                                bedId: assignment.bedId
+                                bedId: assignment.bedId,
+                                bedName: assignment.bedName
                             };
                         }
                     });
@@ -4665,7 +4671,8 @@
                         bedId: booking.bedId,
                         // Add property and room info
                         propertyName: assignmentInfo.propertyName,
-                        roomName: assignmentInfo.roomName
+                        roomName: assignmentInfo.roomName,
+                        bedName: assignmentInfo.bedName
                     };
                 });
                 
