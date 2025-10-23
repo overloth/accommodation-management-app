@@ -2804,6 +2804,18 @@
                     const bookingId = fields['Booking ID (From CMS)'] || record.id;
                     const campId = fields['Camp'] ? (Array.isArray(fields['Camp']) ? fields['Camp'][0] : fields['Camp']) : null;
                     const camp = fields['Camp Name (from Camp)'] ? (Array.isArray(fields['Camp Name (from Camp)']) ? fields['Camp Name (from Camp)'][0] : fields['Camp Name (from Camp)']) : 'No Camp';
+
+                    // Calculate Departure Date if not provided
+                    let departureDate = fields['Departure Date'];
+                    if (!departureDate && fields['Arrival Date'] && fields['Number of weeks']) {
+                        const arrivalDate = new Date(fields['Arrival Date']);
+                        const numberOfWeeks = parseInt(fields['Number of weeks']) || 0;
+                        if (!isNaN(arrivalDate.getTime()) && numberOfWeeks > 0) {
+                            const departure = new Date(arrivalDate);
+                            departure.setDate(departure.getDate() + (numberOfWeeks * 7));
+                            departureDate = departure.toISOString().split('T')[0];
+                        }
+                    }
                     
                     return {
                         id: record.id,
@@ -2816,7 +2828,7 @@
                             : fields['Gender'],
                         phone: fields['Phone'] || '',
                         checkin: fields['Arrival Date'],
-                        checkout: fields['Departure Date'],
+                        checkout: departureDate,
                         kidId: fields['Kids on Trip'] ? fields['Kids on Trip'][0] : null,
                         campName: camp,
                         age: age || null,
