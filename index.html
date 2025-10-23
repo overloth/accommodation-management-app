@@ -4954,8 +4954,8 @@
                 const statusClass = kid.isAssigned ? 'assigned' : 'not-assigned';
                 const statusText = kid.isAssigned ? '✅ Assigned' : '❌ Not Assigned';
                 
-                const checkinDate = kid.checkin ? new Date(kid.checkin).toLocaleDateString() : 'N/A';
-                const checkoutDate = kid.checkout ? new Date(kid.checkout).toLocaleDateString() : 'N/A';
+                const checkinDate = kid.checkin ? new Date(kid.checkin).toLocaleDateString('en-GB') : 'N/A';
+                const checkoutDate = kid.checkout ? new Date(kid.checkout).toLocaleDateString('en-GB') : 'N/A';
                 
                 let notesHtml = '';
                 if (kid.accommodationNotes || kid.roommateWishes) {
