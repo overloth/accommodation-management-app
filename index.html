@@ -4930,7 +4930,6 @@
                             <th>Check-out</th>
                             <th>Age</th>
                             <th>Status</th>
-                            <th>Start Date</th>
                             ${currentKidsFilter === 'assigned' ? '<th>Bed</th>' : ''}
                             <th>Notes</th>
                         </tr>
@@ -4968,7 +4967,6 @@
                         <td>${checkoutDate}</td>
                         <td>${kid.age || 'N/A'}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                        <td>${kid.startDate || '-'}</td>
                         ${currentKidsFilter === 'assigned' ? `<td>${kid.bedName || '-'}</td>` : ''}
                         <td>${notesHtml || '-'}</td>
                     </tr>
