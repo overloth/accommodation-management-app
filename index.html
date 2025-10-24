@@ -233,6 +233,16 @@
             background: rgba(231, 76, 60, 0.1);
         }
 
+        .bed-card.staff {
+            border-color: #f39c12;
+            background: rgba(243, 156, 18, 0.1);
+        }
+
+        .bed-card.hotel-guest {
+            border-color: #e91e63;
+            background: rgba(233, 30, 99, 0.1);
+        }
+
         .bed-info h4 {
             margin-bottom: 5px;
             color: #2c3e50;
@@ -657,11 +667,24 @@
             color: #5c1a5c;
         }
 
-       .occupancy-cell.mixed {
+        .occupancy-cell.mixed {
             background: #fde3cf;
             border-color: #e67e22;
             color: #a04000;
         }
+
+        .occupancy-cell.staff {
+            background: #fff3cd;
+            border-color: #f39c12;
+            color: #856404;
+        }
+
+        .occupancy-cell.hotel-guest {
+            background: #fce4ec;
+            border-color: #e91e63;
+            color: #880e4f;
+        }
+
 
         .legend {
             display: flex;
@@ -1254,6 +1277,14 @@
                             <span>Mixed Room</span>
                         </div>
                         <div class="legend-item">
+                            <div class="legend-color" style="background: #fff3cd; border-color: #f39c12;"></div>
+                            <span>Staff Room</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #fce4ec; border-color: #e91e63;"></div>
+                            <span>Hotel Guest Room</span>
+                        </div>
+                        <div class="legend-item">
                             <div class="legend-color" style="background: #fadbd8; border-color: #e74c3c;"></div>
                             <span>Fully Occupied</span>
                         </div>
@@ -1322,15 +1353,15 @@
             <form id="assignmentForm">
                 <div class="form-group">
                     <label for="clientSelect">Select Client:</label>
-                    <select id="clientSelect">
+                    <select id="clientSelect" onchange="handleClientSelection()">
                         <option value="">Choose a client...</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="newClientGroup">
                     <label for="newClientName">Or Add New Client:</label>
                     <input type="text" id="newClientName" placeholder="Client Name">
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="genderGroup">
                     <label for="clientGender">Gender:</label>
                     <select id="clientGender" required>
                         <option value="">Select Gender</option>
@@ -1343,7 +1374,7 @@
                     <input type="number" id="numberOfWeeks" class="weeks-input" min="1" max="52" value="1" onchange="calculateEndDate()">
                     <span>week(s)</span>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="phoneGroup">
                     <label for="clientPhone">Phone:</label>
                     <input type="tel" id="clientPhone" placeholder="Phone Number">
                 </div>
@@ -2028,6 +2059,8 @@
                 case 'boys room': return 'boys';
                 case 'girls room': return 'girls';
                 case 'mixed room': return 'mixed';
+                case 'staff room': return 'staff';
+                case 'hotel guest room': return 'hotel-guest';
                 case 'occupied': return 'occupied';
                 default: return 'empty';
             }
@@ -2628,17 +2661,30 @@
                 window.bedAssignments = assignmentsResponse.records.map(record => {
                     const fields = record.fields;
 
+                    // Check if this is a STAFF or HOTEL_GUEST assignment (no booking)
+                    const directGivenName = fields['Given Name'] || '';
+                    const isStaffOrGuest = directGivenName === 'STAFF' || directGivenName === 'HOTEL_GUEST';
+
                     // basic fields from assignment
                     let gender = fields['Gender (from Booking)'];
                     if (Array.isArray(gender)) gender = gender[0];
 
-                    const givenName = Array.isArray(fields['Given Name (from Kid) (from Booking)']) 
-                        ? fields['Given Name (from Kid) (from Booking)'][0] 
-                        : fields['Given Name (from Kid) (from Booking)'] || '';
-                    const familyName = Array.isArray(fields['Family Name (from Kid) (from Booking)']) 
-                        ? fields['Family Name (from Kid) (from Booking)'][0] 
-                        : fields['Family Name (from Kid) (from Booking)'] || '';
-                    const fullName = `${givenName} ${familyName}`.trim() || 'Unnamed';
+                    // For STAFF and HOTEL_GUEST, use their designation as both name and gender
+                    let givenName, familyName, fullName;
+                    if (isStaffOrGuest) {
+                        givenName = directGivenName;
+                        familyName = '';
+                        fullName = directGivenName;
+                        gender = directGivenName; // Use STAFF or HOTEL_GUEST as the "gender" for designation
+                    } else {
+                        givenName = Array.isArray(fields['Given Name (from Kid) (from Booking)']) 
+                            ? fields['Given Name (from Kid) (from Booking)'][0] 
+                            : fields['Given Name (from Kid) (from Booking)'] || '';
+                        familyName = Array.isArray(fields['Family Name (from Kid) (from Booking)']) 
+                            ? fields['Family Name (from Kid) (from Booking)'][0] 
+                            : fields['Family Name (from Kid) (from Booking)'] || '';
+                        fullName = `${givenName} ${familyName}`.trim() || 'Unnamed';
+                    }
 
                     const bedId = fields['Beds'] ? fields['Beds'][0] : null;
                     const bookingId = fields['Booking'] ? fields['Booking'][0] : null;
@@ -2712,6 +2758,7 @@
                         checkin: checkin,
                         checkout: checkout,
                         clientName: fullName,
+                        givenName: givenName,
                         propertyId: propertyId,
                         propertyName: propertyName,
                         gender: gender,
@@ -3504,6 +3551,18 @@
                 availableClients = availableClients.filter(client => client.gender === 'Female');
                 genderField.value = 'Female';
                 // genderField.disabled = true;
+            } else if (weekDesignation === 'Staff Room') {
+                roomInfo.innerHTML = '🟡 <strong>Staff Room</strong> - Only STAFF can be assigned to beds in this room';
+                roomInfo.style.borderLeft = '4px solid #f39c12';
+                availableClients = []; // Clear all regular clients
+                genderField.value = '';
+                genderField.disabled = true;
+            } else if (weekDesignation === 'Hotel Guest Room') {
+                roomInfo.innerHTML = '🔴 <strong>Hotel Guest Room</strong> - Only HOTEL GUEST can be assigned to beds in this room';
+                roomInfo.style.borderLeft = '4px solid #e91e63';
+                availableClients = []; // Clear all regular clients
+                genderField.value = '';
+                genderField.disabled = true;
             } else {
                 roomInfo.innerHTML = `⚪ <strong>Empty Room</strong> - Week of ${selectedWeekStart ? selectedWeekStart.toLocaleDateString() : 'current week'} (Sunday-Saturday). First client assigned determines room designation.`;
                 roomInfo.style.borderLeft = '4px solid #95a5a6';
@@ -3520,10 +3579,20 @@
             ).length;
             
             const options = ['<option value="">Choose a client...</option>'];
-            
-            if (availableClients.length === 0) {
+
+            // Add STAFF and HOTEL_GUEST options based on room designation
+            if (weekDesignation === 'Empty') {
+                options.push('<option value="STAFF">🟡 STAFF</option>');
+                options.push('<option value="HOTEL_GUEST">🔴 HOTEL GUEST</option>');
+            } else if (weekDesignation === 'Staff Room') {
+                options.push('<option value="STAFF">🟡 STAFF</option>');
+            } else if (weekDesignation === 'Hotel Guest Room') {
+                options.push('<option value="HOTEL_GUEST">🔴 HOTEL GUEST</option>');
+            }
+
+            if (availableClients.length === 0 && weekDesignation !== 'Staff Room' && weekDesignation !== 'Hotel Guest Room') {
                 options.push('<option value="" disabled>No available clients for this week</option>');
-            } else {
+            } else if (weekDesignation !== 'Staff Room' && weekDesignation !== 'Hotel Guest Room') {
                 // availableClients.forEach(client => {
                 //     const genderIcon = client.gender === 'Male' ? '👨' : '👩';
                     
@@ -3848,6 +3917,18 @@
             const checkin = document.getElementById('checkinDate').value;
             const checkout = document.getElementById('checkoutDate').value;
 
+            // Handle STAFF and HOTEL_GUEST assignments
+            if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST') {
+                if (!checkin || !checkout) {
+                    showNotification('Please select check-in and check-out dates.', 'error');
+                    return;
+                }
+                
+                // Proceed with special assignment
+                await performBedAssignment(clientId, null, null, null, checkin, checkout);
+                return;
+            }
+
             if (!clientId && (!newClientName || !clientGender)) {
                 showNotification('Please select an existing client or enter a new client name and gender.', 'error');
                 return;
@@ -4073,51 +4154,73 @@
                         });
                     }
                 } else {
-                    // Airtable mode - update the booking record
-                    if (!clientId) {
-                        showNotification('Creating new clients is not yet supported in Airtable mode. Please select an existing client.', 'error');
-                        return;
-                    }
-                    
-                    // Find the booking record for this client
-                    const booking = airtableBookings.find(b => b.kidId === clientId || b.id === clientId);
-                    
-                    if (!booking) {
-                        showNotification('Booking not found for selected client.', 'error');
-                        return;
-                    }
-                    
-                    console.log('Assigning booking:', booking.id, 'to bed:', selectedBed.id);
-                    console.log('Booking dates:', booking.checkin, 'to', booking.checkout);
-                    
-                    // Update the booking in Airtable to link it to this bed
-                    await makeAirtableRequest(config.tables.bookings, 'PATCH', {
-                        records: [{
-                            id: booking.id,
-                            fields: {
-                                'Assigned Bed': [selectedBed.id]
-                            }
-                        }]
-                    });
-
-                     // Create Bed Assignment record for date tracking
-                    await makeAirtableRequest(config.tables.bedAssignments, 'POST', {
-                        records: [{
-                            fields: {
-                                'Beds': [selectedBed.id],
-                                'Rooms': [selectedRoom.id],
-                                'Booking': [booking.id],
-                                'Start Date': checkin,
-                                'End Date': checkout
-                            }
-                        }]
-                    });
-                    
-                    // Update local cache immediately
-                    booking.bedId = selectedBed.id;
-                    
-                    console.log('Updated booking in cache:', booking);
+    // Airtable mode
+    
+    // Handle STAFF and HOTEL_GUEST assignments
+    if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST') {
+        console.log(`Assigning ${clientId} to bed:`, selectedBed.id);
+        
+        // Create Bed Assignment record with only bed name, start date, and end date
+        await makeAirtableRequest(config.tables.bedAssignments, 'POST', {
+            records: [{
+                fields: {
+                    'Beds': [selectedBed.id],
+                    'Rooms': [selectedRoom.id],
+                    'Given Name': clientId,
+                    'Start Date': checkin,
+                    'End Date': checkout
                 }
+            }]
+        });
+        
+        console.log(`${clientId} assignment created successfully`);
+    } else {
+        // Normal client assignment
+        if (!clientId) {
+            showNotification('Creating new clients is not yet supported in Airtable mode. Please select an existing client.', 'error');
+            return;
+        }
+        
+        // Find the booking record for this client
+        const booking = airtableBookings.find(b => b.kidId === clientId || b.id === clientId);
+        
+        if (!booking) {
+            showNotification('Booking not found for selected client.', 'error');
+            return;
+        }
+        
+        console.log('Assigning booking:', booking.id, 'to bed:', selectedBed.id);
+        console.log('Booking dates:', booking.checkin, 'to', booking.checkout);
+        
+        // Update the booking in Airtable to link it to this bed
+        await makeAirtableRequest(config.tables.bookings, 'PATCH', {
+            records: [{
+                id: booking.id,
+                fields: {
+                    'Assigned Bed': [selectedBed.id]
+                }
+            }]
+        });
+
+        // Create Bed Assignment record for date tracking
+        await makeAirtableRequest(config.tables.bedAssignments, 'POST', {
+            records: [{
+                fields: {
+                    'Beds': [selectedBed.id],
+                    'Rooms': [selectedRoom.id],
+                    'Booking': [booking.id],
+                    'Start Date': checkin,
+                    'End Date': checkout
+                }
+            }]
+        });
+        
+        // Update local cache immediately
+        booking.bedId = selectedBed.id;
+        
+        console.log('Updated booking in cache:', booking);
+    }
+}
                 
                 closeModal();
                 
@@ -4519,7 +4622,6 @@
                 const weekDesignation = calculateRoomDesignationForWeek(roomId, weekStart);
 
                 console.log(`Date: ${date.toISOString().split('T')[0]}, Room: ${roomId}, Designation: ${weekDesignation}, Assignments: ${assignmentsOnDate.length}`);
-
                 let cssClass = 'available';
                 if (weekDesignation === 'Boys Room') {
                     cssClass = 'boys';
@@ -4527,6 +4629,10 @@
                     cssClass = 'girls';
                 } else if (weekDesignation === 'Mixed Room') {
                     cssClass = 'mixed';
+                } else if (weekDesignation === 'Staff Room') {
+                    cssClass = 'staff';
+                } else if (weekDesignation === 'Hotel Guest Room') {
+                    cssClass = 'hotel-guest';
                 }
 
                 const roomObj = currentPropertyRooms.find(r => r.id === roomId);
@@ -5043,6 +5149,33 @@
                 container.innerHTML = originalContent;
             }, 100);
         }
+
+        function handleClientSelection() {
+            const clientId = document.getElementById('clientSelect').value;
+            const newClientGroup = document.getElementById('newClientGroup');
+            const genderGroup = document.getElementById('genderGroup');
+            const phoneGroup = document.getElementById('phoneGroup');
+            
+            // If STAFF or HOTEL_GUEST is selected, hide unnecessary fields
+            if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST') {
+                newClientGroup.style.display = 'none';
+                genderGroup.style.display = 'none';
+                phoneGroup.style.display = 'none';
+                
+                // Clear these fields
+                document.getElementById('newClientName').value = '';
+                document.getElementById('clientGender').value = '';
+                document.getElementById('clientPhone').value = '';
+            } else {
+                // Show all fields for regular clients
+                newClientGroup.style.display = 'block';
+                genderGroup.style.display = 'block';
+                phoneGroup.style.display = 'block';
+            }
+        }
+
+        // Keep the existing closeModal function below...
+        function closeModal() {
 
         // function formatShortDate(dateStr) {
         //   if (!dateStr) return '-';
