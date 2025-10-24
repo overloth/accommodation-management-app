@@ -2007,10 +2007,23 @@
                         const checkOut = new Date(assignment.checkout);
                         
                         if (checkIn <= weekEnd && checkOut > weekStart) {
-                            clientsStayingThisWeek.push({
-                                gender: assignment.gender,
-                                originalCheckin: checkIn
-                            });
+                            // Check if this is a STAFF or HOTEL_GUEST assignment
+                            if (assignment.givenName === 'STAFF') {
+                                clientsStayingThisWeek.push({
+                                    gender: 'STAFF',
+                                    originalCheckin: checkIn
+                                });
+                            } else if (assignment.givenName === 'HOTEL_GUEST') {
+                                clientsStayingThisWeek.push({
+                                    gender: 'HOTEL_GUEST',
+                                    originalCheckin: checkIn
+                                });
+                            } else {
+                                clientsStayingThisWeek.push({
+                                    gender: assignment.gender,
+                                    originalCheckin: checkIn
+                                });
+                            }
                         }
                     });
                 }
@@ -2037,6 +2050,26 @@
 
             // Check if all clients are the same gender
             const genders = new Set(clientsStayingThisWeek.map(c => c.gender));
+
+            // Check for STAFF room
+            if (genders.has('STAFF')) {
+                if (genders.size === 1) {
+                    return 'Staff Room';
+                } else {
+                    // STAFF mixed with other types - should not happen but handle it
+                    return 'Mixed Room';
+                }
+            }
+
+            // Check for HOTEL_GUEST room
+            if (genders.has('HOTEL_GUEST')) {
+                if (genders.size === 1) {
+                    return 'Hotel Guest Room';
+                } else {
+                    // HOTEL_GUEST mixed with other types
+                    return 'Mixed Room';
+                }
+            }
 
             if (genders.size === 1) {
                 // All same gender
