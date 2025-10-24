@@ -2288,7 +2288,7 @@
                                 clientName = activeBooking.clientName;
                                 
                                 // Try to get booking details from airtableBookings
-                                const booking = airtableBookings.find(b => b.id === activeBooking.bookingId);
+                                const booking = activeBooking.bookingId ? airtableBookings.find(b => b.id === activeBooking.bookingId) : null;
                                 console.log("activeBooking: ", activeBooking);
                                 console.log("Found booking: ", booking);
                                 
@@ -2326,15 +2326,16 @@
                                 }
 
                                 // Add notes section if available
-                                if (booking.accommodationNotes || booking.roommateWishes) {
-                                    clientName += '<br><div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">';
-                                    if (booking.accommodationNotes) {
-                                        clientName += `<div style="margin-bottom: 4px;"><strong>📝 Notes:</strong> ${booking.accommodationNotes}</div>`;
+                                    if (booking.accommodationNotes || booking.roommateWishes) {
+                                        clientName += '<br><div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">';
+                                        if (booking.accommodationNotes) {
+                                            clientName += `<div style="margin-bottom: 4px;"><strong>📝 Notes:</strong> ${booking.accommodationNotes}</div>`;
+                                        }
+                                        if (booking.roommateWishes) {
+                                            clientName += `<div><strong>🤝 Roommate Wishes:</strong> ${booking.roommateWishes}</div>`;
+                                        }
+                                        clientName += '</div>';
                                     }
-                                    if (booking.roommateWishes) {
-                                        clientName += `<div><strong>🤝 Roommate Wishes:</strong> ${booking.roommateWishes}</div>`;
-                                    }
-                                    clientName += '</div>';
                                 }
                             }
                             
