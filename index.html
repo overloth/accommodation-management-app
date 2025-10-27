@@ -243,6 +243,21 @@
             background: rgba(233, 30, 99, 0.1);
         }
 
+        .bed-card.staff-frilingue {
+            border-color: #f39c12;
+            background: rgba(243, 156, 18, 0.1);
+        }
+
+        .bed-card.staff-adrenalin {
+            border-color: #ff8c00;
+            background: rgba(255, 140, 0, 0.1);
+        }
+
+        .bed-card.teacher-frilingue {
+            border-color: #27ae60;
+            background: rgba(39, 174, 96, 0.1);
+        }
+
         .bed-info h4 {
             margin-bottom: 5px;
             color: #2c3e50;
@@ -2133,6 +2148,9 @@
                 case 'girls room': return 'girls';
                 case 'mixed room': return 'mixed';
                 case 'staff room': return 'staff';
+                case 'staff frilingue room': return 'staff';
+                case 'staff adrenalin room': return 'staff';
+                case 'teachers frilingue room': return 'staff';
                 case 'hotel guest room': return 'hotel-guest';
                 case 'occupied': return 'occupied';
                 default: return 'empty';
