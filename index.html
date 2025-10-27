@@ -558,7 +558,7 @@
         }
 
         .room-designation.staff {
-            background: #f39c12;
+            background: #fbc02d;
             color: white;
         }
 
@@ -702,6 +702,21 @@
             background: #fff3cd;
             border-color: #f39c12;
             color: #856404;
+        }
+
+        .occupancy-cell.staff-frilingue {
+            background: #fff9c4;
+            border-color: #fbc02d;
+        }
+
+        .occupancy-cell.staff-adrenalin {
+            background: #ffe0b2;
+            border-color: #ff8c00;
+        }
+
+        .occupancy-cell.teacher-frilingue {
+            background: #e1bee7;
+            border-color: #9c27b0;
         }
 
         .occupancy-cell.hotel-guest {
@@ -4571,22 +4586,22 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                 // Show all Braunwald Adrenalin staff types
                 legendHTML += `
                 <div class="legend-item">
-                    <div class="legend-color" style="background: #fff3cd; border-color: #f39c12;"></div>
+                    <div class="legend-color" style="background: #fff9c4; border-color: #fbc02d;"></div>
                     <span>STAFF friLingue</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background: #fff3cd; border-color: #ff8c00;"></div>
+                    <div class="legend-color" style="background: #ffe0b2; border-color: #ff8c00;"></div>
                     <span>STAFF Adrenalin</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background: #d5f4e6; border-color: #27ae60;"></div>
+                    <div class="legend-color" style="background: #e1bee7; border-color: #9c27b0;"></div>
                     <span>TEACHERS friLingue</span>
                 </div>`;
             } else {
                 // Show regular STAFF for other properties
                 legendHTML += `
                 <div class="legend-item">
-                    <div class="legend-color" style="background: #fff3cd; border-color: #f39c12;"></div>
+                    <div class="legend-color" style="background: #fff9c4; border-color: #fbc02d;"></div>
                     <span>Staff Room</span>
                 </div>`;
             }
@@ -4843,11 +4858,11 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                 } else if (weekDesignation === 'Staff Room') {
                     cssClass = 'staff';
                 } else if (weekDesignation === 'Staff friLingue Room') {
-                    cssClass = 'staff';
+                    cssClass = 'staff-frilingue';
                 } else if (weekDesignation === 'Staff Adrenalin Room') {
-                    cssClass = 'staff';
+                    cssClass = 'staff-adrenalin';
                 } else if (weekDesignation === 'Teachers friLingue Room') {
-                    cssClass = 'staff';
+                    cssClass = 'teacher-frilingue';
                 } else if (weekDesignation === 'Hotel Guest Room') {
                     cssClass = 'hotel-guest';
                 }
