@@ -2018,6 +2018,21 @@
                                     gender: 'HOTEL_GUEST',
                                     originalCheckin: checkIn
                                 });
+                            } else if (assignment.givenName === 'STAFF_FRILINGUE') {
+                                clientsStayingThisWeek.push({
+                                    gender: 'STAFF_FRILINGUE',
+                                    originalCheckin: checkIn
+                                });
+                            } else if (assignment.givenName === 'STAFF_ADRENALIN') {
+                                clientsStayingThisWeek.push({
+                                    gender: 'STAFF_ADRENALIN',
+                                    originalCheckin: checkIn
+                                });
+                            } else if (assignment.givenName === 'TEACHER_FRILINGUE') {
+                                clientsStayingThisWeek.push({
+                                    gender: 'TEACHER_FRILINGUE',
+                                    originalCheckin: checkIn
+                                });
                             } else {
                                 clientsStayingThisWeek.push({
                                     gender: assignment.gender,
@@ -2057,6 +2072,31 @@
                     return 'Staff Room';
                 } else {
                     // STAFF mixed with other types - should not happen but handle it
+                    return 'Mixed Room';
+                }
+            }
+
+            // Check for Braunwald Adrenalin staff types
+            if (genders.has('STAFF_FRILINGUE')) {
+                if (genders.size === 1) {
+                    return 'Staff friLingue Room';
+                } else {
+                    return 'Mixed Room';
+                }
+            }
+
+            if (genders.has('STAFF_ADRENALIN')) {
+                if (genders.size === 1) {
+                    return 'Staff Adrenalin Room';
+                } else {
+                    return 'Mixed Room';
+                }
+            }
+
+            if (genders.has('TEACHER_FRILINGUE')) {
+                if (genders.size === 1) {
+                    return 'Teachers friLingue Room';
+                } else {
                     return 'Mixed Room';
                 }
             }
@@ -2697,7 +2737,9 @@
 
                     // Check if this is a STAFF or HOTEL_GUEST assignment (no booking)
                     const directGivenName = fields['Given Name'] || '';
-                    const isStaffOrGuest = directGivenName === 'STAFF' || directGivenName === 'HOTEL_GUEST';
+                    const isStaffOrGuest = directGivenName === 'STAFF' || directGivenName === 'HOTEL_GUEST' ||
+                                          directGivenName === 'STAFF_FRILINGUE' || directGivenName === 'STAFF_ADRENALIN' || 
+                                          directGivenName === 'TEACHER_FRILINGUE';
 
                     // basic fields from assignment
                     let gender = fields['Gender (from Booking)'];
@@ -3591,6 +3633,24 @@
                 availableClients = []; // Clear all regular clients
                 genderField.value = '';
                 genderField.disabled = true;
+            } else if (weekDesignation === 'Staff friLingue Room') {
+                roomInfo.innerHTML = '🟡 <strong>Staff friLingue Room</strong> - Only STAFF friLingue can be assigned to beds in this room';
+                roomInfo.style.borderLeft = '4px solid #f39c12';
+                availableClients = []; // Clear all regular clients
+                genderField.value = '';
+                genderField.disabled = true;
+            } else if (weekDesignation === 'Staff Adrenalin Room') {
+                roomInfo.innerHTML = '🟠 <strong>Staff Adrenalin Room</strong> - Only STAFF Adrenalin can be assigned to beds in this room';
+                roomInfo.style.borderLeft = '4px solid #ff8c00';
+                availableClients = []; // Clear all regular clients
+                genderField.value = '';
+                genderField.disabled = true;
+            } else if (weekDesignation === 'Teachers friLingue Room') {
+                roomInfo.innerHTML = '🟢 <strong>Teachers friLingue Room</strong> - Only TEACHERS friLingue can be assigned to beds in this room';
+                roomInfo.style.borderLeft = '4px solid #27ae60';
+                availableClients = []; // Clear all regular clients
+                genderField.value = '';
+                genderField.disabled = true;
             } else if (weekDesignation === 'Hotel Guest Room') {
                 roomInfo.innerHTML = '🔴 <strong>Hotel Guest Room</strong> - Only HOTEL GUEST can be assigned to beds in this room';
                 roomInfo.style.borderLeft = '4px solid #e91e63';
@@ -3614,19 +3674,39 @@
             
             const options = ['<option value="">Choose a client...</option>'];
 
+            // Check if this is Braunwald Adrenalin property
+            const isBraunwaldAdrenalin = selectedProperty && selectedProperty.id === 'recE4zaZpt27a32KQ';
+
             // Add STAFF and HOTEL_GUEST options based on room designation
             if (weekDesignation === 'Empty') {
-                options.push('<option value="STAFF">🟡 STAFF</option>');
-                options.push('<option value="HOTEL_GUEST">🔴 HOTEL GUEST</option>');
+                if (isBraunwaldAdrenalin) {
+                    // Braunwald Adrenalin property - show all 4 staff types
+                    options.push('<option value="STAFF_FRILINGUE">🟡 STAFF friLingue</option>');
+                    options.push('<option value="STAFF_ADRENALIN">🟠 STAFF Adrenalin</option>');
+                    options.push('<option value="TEACHER_FRILINGUE">🟢 TEACHERS friLingue</option>');
+                    options.push('<option value="HOTEL_GUEST">🔴 HOTEL GUEST</option>');
+                } else {
+                    // Other properties - show only STAFF and HOTEL GUEST
+                    options.push('<option value="STAFF">🟡 STAFF</option>');
+                    options.push('<option value="HOTEL_GUEST">🔴 HOTEL GUEST</option>');
+                }
             } else if (weekDesignation === 'Staff Room') {
                 options.push('<option value="STAFF">🟡 STAFF</option>');
+            } else if (weekDesignation === 'Staff friLingue Room') {
+                options.push('<option value="STAFF_FRILINGUE">🟡 STAFF friLingue</option>');
+            } else if (weekDesignation === 'Staff Adrenalin Room') {
+                options.push('<option value="STAFF_ADRENALIN">🟠 STAFF Adrenalin</option>');
+            } else if (weekDesignation === 'Teachers friLingue Room') {
+                options.push('<option value="TEACHER_FRILINGUE">🟢 TEACHERS friLingue</option>');
             } else if (weekDesignation === 'Hotel Guest Room') {
                 options.push('<option value="HOTEL_GUEST">🔴 HOTEL GUEST</option>');
             }
 
-            if (availableClients.length === 0 && weekDesignation !== 'Staff Room' && weekDesignation !== 'Hotel Guest Room') {
+            if (availableClients.length === 0 && weekDesignation !== 'Staff Room' && weekDesignation !== 'Hotel Guest Room' &&
+                weekDesignation !== 'Staff friLingue Room' && weekDesignation !== 'Staff Adrenalin Room' && weekDesignation !== 'Teachers friLingue Room') {
                 options.push('<option value="" disabled>No available clients for this week</option>');
-            } else if (weekDesignation !== 'Staff Room' && weekDesignation !== 'Hotel Guest Room') {
+            } else if (weekDesignation !== 'Staff Room' && weekDesignation !== 'Hotel Guest Room' &&
+                       weekDesignation !== 'Staff friLingue Room' && weekDesignation !== 'Staff Adrenalin Room' && weekDesignation !== 'Teachers friLingue Room') {
                 // availableClients.forEach(client => {
                 //     const genderIcon = client.gender === 'Male' ? '👨' : '👩';
                     
@@ -3951,8 +4031,8 @@
             const checkin = document.getElementById('checkinDate').value;
             const checkout = document.getElementById('checkoutDate').value;
 
-            // Handle STAFF and HOTEL_GUEST assignments
-            if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST') {
+            // Handle STAFF, HOTEL_GUEST, and Braunwald Adrenalin staff assignments
+if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
                 if (!checkin || !checkout) {
                     showNotification('Please select check-in and check-out dates.', 'error');
                     return;
@@ -4189,9 +4269,8 @@
                     }
                 } else {
     // Airtable mode
-    
-    // Handle STAFF and HOTEL_GUEST assignments
-    if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST') {
+    // Handle STAFF, HOTEL_GUEST, and Braunwald Adrenalin staff assignments
+    if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
         console.log(`Assigning ${clientId} to bed:`, selectedBed.id);
         
         // Create Bed Assignment record with only bed name, start date, and end date
@@ -5190,8 +5269,8 @@
             const genderGroup = document.getElementById('genderGroup');
             const phoneGroup = document.getElementById('phoneGroup');
             
-            // If STAFF or HOTEL_GUEST is selected, hide unnecessary fields
-            if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST') {
+            // If STAFF, HOTEL_GUEST, or any of the Braunwald Adrenalin staff types is selected, hide unnecessary fields
+    if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
                 newClientGroup.style.display = 'none';
                 genderGroup.style.display = 'none';
                 phoneGroup.style.display = 'none';
