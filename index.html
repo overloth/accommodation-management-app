@@ -674,34 +674,24 @@
             border-color: #27ae60;
         }
 
-        .occupancy-cell.occupied {
-            background: #fadbd8;
-            border-color: #e74c3c;
-            color: #c0392b;
-        }
-
         .occupancy-cell.boys {
             background: #cce7ff;
             border-color: #0066cc;
-            color: #003d7a;
         }
 
         .occupancy-cell.girls {
             background: #f0d4f0;
             border-color: #9933cc;
-            color: #5c1a5c;
         }
 
         .occupancy-cell.mixed {
             background: #fde3cf;
             border-color: #e67e22;
-            color: #a04000;
         }
 
         .occupancy-cell.staff {
-            background: #fff3cd;
-            border-color: #f39c12;
-            color: #856404;
+            background: #fff9c4;
+            border-color: #fbc02d;
         }
 
         .occupancy-cell.staff-frilingue {
@@ -715,14 +705,18 @@
         }
 
         .occupancy-cell.teacher-frilingue {
-            background: #e1bee7;
-            border-color: #9c27b0;
+            background: #b2dfdb;
+            border-color: #00897b;
         }
 
         .occupancy-cell.hotel-guest {
             background: #fce4ec;
             border-color: #e91e63;
-            color: #880e4f;
+        }
+
+        .occupancy-cell.occupied {
+            background: #fadbd8;
+            border-color: #e74c3c;
         }
 
 
@@ -4594,9 +4588,9 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                     <span>STAFF Adrenalin</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background: #e1bee7; border-color: #9c27b0;"></div>
+                    <div class="legend-color" style="background: #b2dfdb; border-color: #00897b;"></div>
                     <span>TEACHERS friLingue</span>
-                </div>`;
+                </div>
             } else {
                 // Show regular STAFF for other properties
                 legendHTML += `
@@ -4848,6 +4842,7 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                 const weekDesignation = calculateRoomDesignationForWeek(roomId, weekStart);
 
                 console.log(`Date: ${date.toISOString().split('T')[0]}, Room: ${roomId}, Designation: ${weekDesignation}, Assignments: ${assignmentsOnDate.length}`);
+                let cssClass = 'available';
                 let cssClass = 'available';
                 if (weekDesignation === 'Boys Room') {
                     cssClass = 'boys';
