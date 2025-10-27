@@ -1284,7 +1284,7 @@
                         <strong>💡 Tip:</strong> Click on any room-date cell to manage beds for that specific week (Sunday-Saturday).
                     </div>
                     <div id="occupancyGrid"></div>
-                    <div class="legend">
+                    <!-- <div class="legend">
                         <div class="legend-item">
                             <div class="legend-color" style="background: #d5f4e6; border-color: #27ae60;"></div>
                             <span>Available</span>
@@ -1317,6 +1317,9 @@
                             <div class="legend-color" style="background: #e67e22; border-color: #d35400;"></div>
                             <span>Weekend</span>
                         </div>
+                    </div> -->
+                    <div class="legend" id="occupancyLegend">
+                        <!-- Legend will be dynamically generated -->
                     </div>
                 </div>
                 <button class="btn btn-secondary" onclick="goToStep(2)">← Back to Rooms</button>
@@ -4536,6 +4539,73 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             
             generateMonthlyOccupancyGrid(year, month, daysInMonth);
+            updateLegend(); // Update legend based on property
+        }
+
+        function updateLegend() {
+            const legendContainer = document.getElementById('occupancyLegend');
+            if (!legendContainer) return;
+            
+            // Check if this is Braunwald Adrenalin property
+            const isBraunwaldAdrenalin = selectedProperty && selectedProperty.id === 'recE4zaZpt27a32KQ';
+            
+            let legendHTML = `
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #d5f4e6; border-color: #27ae60;"></div>
+                    <span>Available</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #cce7ff; border-color: #0066cc;"></div>
+                    <span>Boys Room</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f0d4f0; border-color: #9933cc;"></div>
+                    <span>Girls Room</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fde3cf; border-color: #e67e22;"></div>
+                    <span>Mixed Room</span>
+                </div>`;
+            
+            if (isBraunwaldAdrenalin) {
+                // Show all Braunwald Adrenalin staff types
+                legendHTML += `
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fff3cd; border-color: #f39c12;"></div>
+                    <span>STAFF friLingue</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fff3cd; border-color: #ff8c00;"></div>
+                    <span>STAFF Adrenalin</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #d5f4e6; border-color: #27ae60;"></div>
+                    <span>TEACHERS friLingue</span>
+                </div>`;
+            } else {
+                // Show regular STAFF for other properties
+                legendHTML += `
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fff3cd; border-color: #f39c12;"></div>
+                    <span>Staff Room</span>
+                </div>`;
+            }
+            
+            legendHTML += `
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fce4ec; border-color: #e91e63;"></div>
+                    <span>Hotel Guest Room</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fadbd8; border-color: #e74c3c;"></div>
+                    <span>Fully Occupied</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e67e22; border-color: #d35400;"></div>
+                    <span>Weekend</span>
+                </div>`;
+            
+            legendContainer.innerHTML = legendHTML;
         }
 
         function generateMonthlyOccupancyGrid(year, month, daysInMonth) {
@@ -4771,6 +4841,12 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                 } else if (weekDesignation === 'Mixed Room') {
                     cssClass = 'mixed';
                 } else if (weekDesignation === 'Staff Room') {
+                    cssClass = 'staff';
+                } else if (weekDesignation === 'Staff friLingue Room') {
+                    cssClass = 'staff';
+                } else if (weekDesignation === 'Staff Adrenalin Room') {
+                    cssClass = 'staff';
+                } else if (weekDesignation === 'Teachers friLingue Room') {
                     cssClass = 'staff';
                 } else if (weekDesignation === 'Hotel Guest Room') {
                     cssClass = 'hotel-guest';
