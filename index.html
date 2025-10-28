@@ -854,118 +854,182 @@
         }
 
         .login-container {
-                    min-height: 100vh;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    padding: 20px;
-                }
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
 
-                .login-card {
-                    background: white;
-                    border-radius: 20px;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                    padding: 50px 40px;
-                    width: 100%;
-                    max-width: 450px;
-                    animation: slideUp 0.5s ease-out;
-                }
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 450px;
+            animation: slideUp 0.5s ease-out;
+        }
 
-                @keyframes slideUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(30px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-                .login-header {
-                    text-align: center;
-                    margin-bottom: 40px;
-                }
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
 
-                .login-header h1 {
-                    color: #2c3e50;
-                    font-size: 2rem;
-                    margin-bottom: 10px;
-                }
+        .login-header h1 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
 
-                .login-header p {
-                    color: #7f8c8d;
-                    font-size: 1rem;
-                }
+        .login-header p {
+            color: #7f8c8d;
+            font-size: 1rem;
+        }
 
-                .login-logo {
-                    font-size: 4rem;
-                    margin-bottom: 20px;
-                }
+        .login-logo {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
 
-                .login-form {
-                    margin-top: 30px;
-                }
+        .login-form {
+            margin-top: 30px;
+        }
 
-                .login-form .form-group {
-                    margin-bottom: 25px;
-                }
+        .login-form .form-group {
+            margin-bottom: 25px;
+        }
 
-                .login-form .form-group label {
-                    font-size: 0.95rem;
-                    color: #2c3e50;
-                    margin-bottom: 8px;
-                }
+        .login-form .form-group label {
+            font-size: 0.95rem;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
 
-                .login-form input {
-                    padding: 12px 15px;
-                    font-size: 1rem;
-                }
+        .login-form input {
+            padding: 12px 15px;
+            font-size: 1rem;
+        }
 
-                .login-btn {
-                    width: 100%;
-                    padding: 14px;
-                    font-size: 1.1rem;
-                    margin-top: 10px;
-                }
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
 
-                .login-error {
-                    background: #fadbd8;
-                    border: 1px solid #e74c3c;
-                    color: #c0392b;
-                    padding: 12px;
-                    border-radius: 8px;
-                    margin-bottom: 20px;
-                    display: none;
-                    text-align: center;
-                    font-size: 0.9rem;
-                }
+        .login-error {
+            background: #fadbd8;
+            border: 1px solid #e74c3c;
+            color: #c0392b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+            font-size: 0.9rem;
+        }
 
-                .login-error.show {
-                    display: block;
-                }
+        .login-error.show {
+            display: block;
+        }
 
-                .logout-btn {
-                    position: absolute;
-                    top: 20px;
-                    right: 20px;
-                    background: rgba(255,255,255,0.2);
-                    color: white;
-                    border: 2px solid rgba(255,255,255,0.3);
-                    padding: 8px 20px;
-                    border-radius: 20px;
-                    cursor: pointer;
-                    font-size: 0.9rem;
-                    font-weight: bold;
-                    transition: all 0.3s ease;
-                    backdrop-filter: blur(10px);
-                }
-                
-                .logout-btn:hover {
-                    background: rgba(255,255,255,0.3);
-                    border-color: rgba(255,255,255,0.5);
-                }
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .notes-display {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .notes-display p {
+            margin: 5px 0;
+        }
+
+        .notes-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .notes-actions button {
+            padding: 5px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit-note {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-edit-note:hover {
+            background: #2980b9;
+        }
+
+        .btn-delete-note {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete-note:hover {
+            background: #c0392b;
+        }
+
+        .btn-add-note {
+            background: #27ae60;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-add-note:hover {
+            background: #229954;
+        }
+
+
 
 
         @media (max-width: 768px) {
@@ -1446,6 +1510,27 @@
         </div>
     </div>
 
+    <!-- Notes Modal -->
+    <div class="modal" id="notesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="notesModalTitle">Add/Edit Notes</h3>
+                <button class="close-modal" onclick="closeNotesModal()">&times;</button>
+            </div>
+            <div id="notesForm">
+                <div class="form-group">
+                    <label>Notes:</label>
+                    <textarea id="notesTextarea" rows="5" placeholder="Enter notes here..."></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-success" onclick="saveNotes()">Save Notes</button>
+                    <button class="btn btn-secondary" onclick="closeNotesModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Confirmation Modal -->
     <div class="modal" id="confirmationModal">
         <div class="modal-content" style="max-width: 500px;">
@@ -1510,6 +1595,7 @@
         let allClientsGlobal = [];
         let currentKidsFilter = 'all';
         let allKidsData = [];
+        let currentNotesAssignment = null;
 
         // Enhanced sample data
         const sampleData = {
@@ -2464,6 +2550,24 @@
                                         }
                                         clientName += '</div>';
                                     }
+                                } else {
+                                    // For non-kid assignments (STAFF, HOTEL_GUEST, etc.)
+                                    // Show notes from Bed_Assignments with edit/delete/add functionality
+                                    if (activeBooking.notes) {
+                                        clientName += `
+                                            <br><div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">
+                                                <div style="margin-bottom: 4px;"><strong>📝 Notes:</strong> ${activeBooking.notes}</div>
+                                                <div style="margin-top: 8px; display: flex; gap: 8px;">
+                                                    <button class="btn-edit-note" onclick="event.stopPropagation(); editAssignmentNotes('${activeBooking.id}', event)">Edit</button>
+                                                    <button class="btn-delete-note" onclick="event.stopPropagation(); deleteAssignmentNotes('${activeBooking.id}', event)">Delete</button>
+                                                </div>
+                                            </div>
+                                        `;
+                                    } else {
+                                        clientName += `
+                                            <br><button class="btn-add-note" onclick="event.stopPropagation(); addAssignmentNotes('${activeBooking.id}', event)">Add Notes</button>
+                                        `;
+                                    }
                                 }
                             }
                             
@@ -2894,6 +2998,7 @@
                         propertyName: propertyName,
                         gender: gender,
                         startDate: fields['Start Date'] || '',
+                        notes: fields['Notes'] || '',
                         bedName: (() => {
                           // First try to get from lookup field "Bed Name" in Bed Assignment table
                           if (fields['Bed Name']) {
@@ -5413,6 +5518,142 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                 genderGroup.style.display = 'block';
                 phoneGroup.style.display = 'block';
             }
+        }
+
+        // ============== NOTES MANAGEMENT FUNCTIONS ==============
+                
+        function addAssignmentNotes(assignmentId, event) {
+            if (event) event.stopPropagation();
+            currentNotesAssignment = assignmentId;
+            document.getElementById('notesModalTitle').textContent = 'Add Notes';
+            document.getElementById('notesTextarea').value = '';
+            document.getElementById('notesModal').classList.add('active');
+        }
+
+        function editAssignmentNotes(assignmentId, event) {
+            if (event) event.stopPropagation();
+            currentNotesAssignment = assignmentId;
+            
+            // Find the assignment in bedAssignments (Airtable mode)
+            const assignment = window.bedAssignments ? 
+                window.bedAssignments.find(a => a.id === assignmentId) : null;
+            
+            document.getElementById('notesModalTitle').textContent = 'Edit Notes';
+            document.getElementById('notesTextarea').value = assignment && assignment.notes ? assignment.notes : '';
+            document.getElementById('notesModal').classList.add('active');
+        }
+
+        async function deleteAssignmentNotes(assignmentId, event) {
+            if (event) event.stopPropagation();
+            
+            if (!confirm('Are you sure you want to delete these notes?')) {
+                return;
+            }
+
+            try {
+                // For Airtable mode
+                if (!sampleDataLoaded) {
+                    const url = `https://api.airtable.com/v0/${config.baseId}/${config.tables.bedAssignments}/${assignmentId}`;
+                    
+                    // Update the record to remove notes field
+                    const response = await fetch(url, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${config.token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fields: {
+                                'Notes': '' // Clear the notes field
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to delete notes from Airtable');
+                    }
+
+                    // Update local data
+                    if (window.bedAssignments) {
+                        const assignment = window.bedAssignments.find(a => a.id === assignmentId);
+                        if (assignment) {
+                            delete assignment.notes;
+                        }
+                    }
+
+                    showNotification('Notes deleted successfully!', 'success');
+                    
+                    // Reload beds to reflect changes
+                    if (selectedRoom) {
+                        await loadBeds(selectedRoom.id);
+                    }
+                } else {
+                    showNotification('Notes deletion is only available in Airtable mode', 'info');
+                }
+            } catch (error) {
+                console.error('Error deleting notes:', error);
+                showNotification('Failed to delete notes. Please try again.', 'error');
+            }
+        }
+
+        async function saveNotes() {
+            const notes = document.getElementById('notesTextarea').value.trim();
+            
+            if (!notes) {
+                showNotification('Please enter some notes.', 'error');
+                return;
+            }
+
+            try {
+                // For Airtable mode
+                if (!sampleDataLoaded) {
+                    const url = `https://api.airtable.com/v0/${config.baseId}/${config.tables.bedAssignments}/${currentNotesAssignment}`;
+                    
+                    const response = await fetch(url, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${config.token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fields: {
+                                'Notes': notes
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to save notes to Airtable');
+                    }
+
+                    // Update local data
+                    if (window.bedAssignments) {
+                        const assignment = window.bedAssignments.find(a => a.id === currentNotesAssignment);
+                        if (assignment) {
+                            assignment.notes = notes;
+                        }
+                    }
+
+                    closeNotesModal();
+                    showNotification('Notes saved successfully!', 'success');
+                    
+                    // Reload beds to reflect changes
+                    if (selectedRoom) {
+                        await loadBeds(selectedRoom.id);
+                    }
+                } else {
+                    showNotification('Notes saving is only available in Airtable mode', 'info');
+                    closeNotesModal();
+                }
+            } catch (error) {
+                console.error('Error saving notes:', error);
+                showNotification('Failed to save notes. Please try again.', 'error');
+            }
+        }
+
+        function closeNotesModal() {
+            document.getElementById('notesModal').classList.remove('active');
+            currentNotesAssignment = null;
         }
 
         // function formatShortDate(dateStr) {
