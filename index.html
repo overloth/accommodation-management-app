@@ -2540,33 +2540,37 @@
                                 
 
                                 // Add notes section if available
-                                    if (booking.accommodationNotes || booking.roommateWishes) {
-                                        clientName += '<br><div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">';
-                                        if (booking.accommodationNotes) {
-                                            clientName += `<div style="margin-bottom: 4px;"><strong>📝 Notes:</strong> ${booking.accommodationNotes}</div>`;
+                                    // Check if this is a kid (has booking) or staff/guest
+                                    if (booking) {
+                                        // This is a KID - show read-only notes from Bookings table
+                                        if (booking.accommodationNotes || booking.roommateWishes) {
+                                            clientName += '<br><div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">';
+                                            if (booking.accommodationNotes) {
+                                                clientName += `<div style="margin-bottom: 4px;"><strong>📝 Notes:</strong> ${booking.accommodationNotes}</div>`;
+                                            }
+                                            if (booking.roommateWishes) {
+                                                clientName += `<div><strong>🤝 Roommate Wishes:</strong> ${booking.roommateWishes}</div>`;
+                                            }
+                                            clientName += '</div>';
                                         }
-                                        if (booking.roommateWishes) {
-                                            clientName += `<div><strong>🤝 Roommate Wishes:</strong> ${booking.roommateWishes}</div>`;
-                                        }
-                                        clientName += '</div>';
-                                    }
-                                } else {
-                                    // For non-kid assignments (STAFF, HOTEL_GUEST, etc.)
-                                    // Show notes from Bed_Assignments with edit/delete/add functionality
-                                    if (activeBooking.notes) {
-                                        clientName += `
-                                            <br><div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">
-                                                <div style="margin-bottom: 4px;"><strong>📝 Notes:</strong> ${activeBooking.notes}</div>
-                                                <div style="margin-top: 8px; display: flex; gap: 8px;">
-                                                    <button class="btn-edit-note" onclick="event.stopPropagation(); editAssignmentNotes('${activeBooking.id}', event)">Edit</button>
-                                                    <button class="btn-delete-note" onclick="event.stopPropagation(); deleteAssignmentNotes('${activeBooking.id}', event)">Delete</button>
-                                                </div>
-                                            </div>
-                                        `;
                                     } else {
-                                        clientName += `
-                                            <br><button class="btn-add-note" onclick="event.stopPropagation(); addAssignmentNotes('${activeBooking.id}', event)">Add Notes</button>
-                                        `;
+                                        // This is NOT a kid (STAFF, HOTEL_GUEST, etc.)
+                                        // Show notes from Bed_Assignments with edit/delete/add functionality
+                                        if (activeBooking.notes) {
+                                            clientName += `
+                                                <br><div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">
+                                                    <div style="margin-bottom: 4px;"><strong>📝 Notes:</strong> ${activeBooking.notes}</div>
+                                                    <div style="margin-top: 8px; display: flex; gap: 8px;">
+                                                        <button class="btn-edit-note" onclick="editAssignmentNotes('${activeBooking.id}', event)">Edit</button>
+                                                        <button class="btn-delete-note" onclick="deleteAssignmentNotes('${activeBooking.id}', event)">Delete</button>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        } else {
+                                            clientName += `
+                                                <br><button class="btn-add-note" onclick="addAssignmentNotes('${activeBooking.id}', event)">Add Notes</button>
+                                            `;
+                                        }
                                     }
                                 }
                             }
