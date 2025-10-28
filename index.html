@@ -2538,16 +2538,15 @@
                                         }
                                     }
                                 
-                                    // Add notes section - handle both kids and non-kids
+                                    // Add notes section - moved OUTSIDE if(booking) block
                                     // Check if this is a kid (has bookingId) or staff/guest
                                     const isKid = activeBooking.bookingId ? true : false;
-
+                                    
                                     console.log('=== NOTES DEBUG ===');
                                     console.log('activeBooking:', activeBooking);
                                     console.log('isKid:', isKid);
                                     console.log('activeBooking.notes:', activeBooking.notes);
-                                    console.log('Type of notes:', typeof activeBooking.notes);
-                                    console.log('booking:', booking);
+                                    console.log('booking exists?:', booking ? 'yes' : 'no');
                                     
                                     if (isKid && booking) {
                                         // This is a KID - show read-only notes from Bookings table
@@ -2561,10 +2560,12 @@
                                             }
                                             clientName += '</div>';
                                         }
-                                    } else {
+                                    } else if (!isKid) {
                                         // This is NOT a kid (STAFF, HOTEL_GUEST, etc.)
                                         // Show notes from Bed_Assignments with edit/delete/add functionality
-                                        if (activeBooking.notes) {
+                                        console.log('Staff/Guest - checking for notes...');
+                                        if (activeBooking.notes && activeBooking.notes.trim() !== '') {
+                                            console.log('Has notes, showing edit/delete buttons');
                                             clientName += `
                                                 <br><div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">
                                                     <div style="margin-bottom: 4px;"><strong>📝 Notes:</strong> ${activeBooking.notes}</div>
@@ -2575,6 +2576,7 @@
                                                 </div>
                                             `;
                                         } else {
+                                            console.log('No notes, showing Add Notes button');
                                             clientName += `
                                                 <br><button class="btn-add-note" onclick="addAssignmentNotes('${activeBooking.id}', event)">Add Notes</button>
                                             `;
