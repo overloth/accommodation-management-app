@@ -2538,9 +2538,11 @@
                                         }
                                     }
                                 
-                                    // Add notes section if available
-                                    // Check if this is a kid (has booking) or staff/guest
-                                    if (booking) {
+                                    // Add notes section - handle both kids and non-kids
+                                    // Check if this is a kid (has bookingId) or staff/guest
+                                    const isKid = activeBooking.bookingId ? true : false;
+                                    
+                                    if (isKid && booking) {
                                         // This is a KID - show read-only notes from Bookings table
                                         if (booking.accommodationNotes || booking.roommateWishes) {
                                             clientName += '<br><div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">';
