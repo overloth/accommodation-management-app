@@ -2541,6 +2541,13 @@
                                     // Add notes section - handle both kids and non-kids
                                     // Check if this is a kid (has bookingId) or staff/guest
                                     const isKid = activeBooking.bookingId ? true : false;
+
+                                    console.log('=== NOTES DEBUG ===');
+                                    console.log('activeBooking:', activeBooking);
+                                    console.log('isKid:', isKid);
+                                    console.log('activeBooking.notes:', activeBooking.notes);
+                                    console.log('Type of notes:', typeof activeBooking.notes);
+                                    console.log('booking:', booking);
                                     
                                     if (isKid && booking) {
                                         // This is a KID - show read-only notes from Bookings table
