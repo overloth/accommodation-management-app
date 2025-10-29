@@ -5814,16 +5814,26 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                         throw new Error('Failed to delete notes from Airtable');
                     }
 
-                    if (window.allKids) {
-                        const kid = window.allKids.find(k => k.id === kidId);
+                    // Update local data
+                    if (allKidsData) {
+                        const kid = allKidsData.find(k => k.id === kidId);
                         if (kid) {
                             kid.accommodationNotes = '';
                             kid.roommateWishes = '';
                         }
                     }
+                    
+                    // Also update the original booking data
+                    if (airtableBookings) {
+                        const booking = airtableBookings.find(b => b.kidId === kidId || b.id === kidId);
+                        if (booking) {
+                            booking.accommodationNotes = '';
+                            booking.roommateWishes = '';
+                        }
+                    }
 
                     showNotification('Notes deleted successfully!', 'success');
-                    loadKidsOverview()
+                    renderKidsList(); // Refresh the display
                 } else {
                     showNotification('Notes deletion is only available in Airtable mode', 'info');
                 }
@@ -5862,16 +5872,25 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                         throw new Error('Failed to save notes to Airtable');
                     }
 
-                    if (window.allKids) {
-                        const kid = window.allKids.find(k => k.id === currentNotesKidId);
+                    // Update local data
+                    if (allKidsData) {
+                        const kid = allKidsData.find(k => k.id === currentNotesKidId);
                         if (kid) {
                             kid.accommodationNotes = accommodationNotes;
+                        }
+                    }
+                    
+                    // Also update the original booking data
+                    if (airtableBookings) {
+                        const booking = airtableBookings.find(b => b.kidId === currentNotesKidId || b.id === currentNotesKidId);
+                        if (booking) {
+                            booking.accommodationNotes = accommodationNotes;
                         }
                     }
 
                     closeKidNotesModal();
                     showNotification('Notes saved successfully!', 'success');
-                    loadKidsOverview()
+                    renderKidsList(); // Refresh the display
                 } else {
                     showNotification('Notes saving is only available in Airtable mode', 'info');
                     closeKidNotesModal();
