@@ -5823,7 +5823,7 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                     }
 
                     showNotification('Notes deleted successfully!', 'success');
-                    displayKidsOverview();
+                    loadKidsOverview()
                 } else {
                     showNotification('Notes deletion is only available in Airtable mode', 'info');
                 }
@@ -5871,7 +5871,7 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
 
                     closeKidNotesModal();
                     showNotification('Notes saved successfully!', 'success');
-                    displayKidsOverview();
+                    loadKidsOverview()
                 } else {
                     showNotification('Notes saving is only available in Airtable mode', 'info');
                     closeKidNotesModal();
