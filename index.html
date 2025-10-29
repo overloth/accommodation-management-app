@@ -5785,7 +5785,7 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
             if (event) event.stopPropagation();
             currentNotesKidId = kidId;
             
-            const kid = window.allKids ? window.allKids.find(k => k.id === kidId) : null;
+            const kid = allKidsData ? allKidsData.find(k => k.id === kidId) : null;
             
             document.getElementById('kidNotesModalTitle').textContent = 'Edit Notes';
             document.getElementById('accommodationNotesTextarea').value = kid && kid.accommodationNotes ? kid.accommodationNotes : '';
@@ -5831,7 +5831,7 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                     }
 
                     showNotification('Notes deleted successfully!', 'success');
-                    displayKidsList();
+                    displayKidsOverview();
                 } else {
                     showNotification('Notes deletion is only available in Airtable mode', 'info');
                 }
@@ -5882,7 +5882,7 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
 
                     closeKidNotesModal();
                     showNotification('Notes saved successfully!', 'success');
-                    displayKidsList();
+                    displayKidsOverview();
                 } else {
                     showNotification('Notes saving is only available in Airtable mode', 'info');
                     closeKidNotesModal();
