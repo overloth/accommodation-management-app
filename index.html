@@ -5814,22 +5814,20 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                         throw new Error('Failed to delete notes from Airtable');
                     }
 
-                    // Update local data
-                    if (allKidsData) {
-                        const kid = allKidsData.find(k => k.id === kidId);
-                        if (kid) {
-                            kid.accommodationNotes = '';
-                            kid.roommateWishes = '';
-                        }
+                    // Update the original booking data in airtableBookings array
+                    const booking = airtableBookings.find(b => b.id === kidId);
+                    if (booking) {
+                        booking.accommodationNotes = '';
+                        booking.roommateWishes = '';
+                        console.log('Updated booking in airtableBookings:', booking);
                     }
                     
-                    // Also update the original booking data
-                    if (airtableBookings) {
-                        const booking = airtableBookings.find(b => b.kidId === kidId || b.id === kidId);
-                        if (booking) {
-                            booking.accommodationNotes = '';
-                            booking.roommateWishes = '';
-                        }
+                    // Update the kid in allKidsData array  
+                    const kid = allKidsData.find(k => k.id === kidId);
+                    if (kid) {
+                        kid.accommodationNotes = '';
+                        kid.roommateWishes = '';
+                        console.log('Updated kid in allKidsData:', kid);
                     }
 
                     showNotification('Notes deleted successfully!', 'success');
@@ -5872,20 +5870,18 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                         throw new Error('Failed to save notes to Airtable');
                     }
 
-                    // Update local data
-                    if (allKidsData) {
-                        const kid = allKidsData.find(k => k.id === currentNotesKidId);
-                        if (kid) {
-                            kid.accommodationNotes = accommodationNotes;
-                        }
+                   // Update the original booking data in airtableBookings array
+                    const booking = airtableBookings.find(b => b.id === currentNotesKidId);
+                    if (booking) {
+                        booking.accommodationNotes = accommodationNotes;
+                        console.log('Updated booking in airtableBookings:', booking);
                     }
                     
-                    // Also update the original booking data
-                    if (airtableBookings) {
-                        const booking = airtableBookings.find(b => b.kidId === currentNotesKidId || b.id === currentNotesKidId);
-                        if (booking) {
-                            booking.accommodationNotes = accommodationNotes;
-                        }
+                    // Update the kid in allKidsData array
+                    const kid = allKidsData.find(k => k.id === currentNotesKidId);
+                    if (kid) {
+                        kid.accommodationNotes = accommodationNotes;
+                        console.log('Updated kid in allKidsData:', kid);
                     }
 
                     closeKidNotesModal();
