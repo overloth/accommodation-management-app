@@ -1551,12 +1551,6 @@
                     <label>📝 Accommodation Notes:</label>
                     <textarea id="accommodationNotesTextarea" rows="4" placeholder="Enter accommodation notes here..."></textarea>
                 </div>
-                
-                <div class="form-group">
-                    <label>🤝 Roommate Wishes:</label>
-                    <textarea id="roommateWishesTextarea" rows="4" placeholder="Enter roommate wishes here..."></textarea>
-                </div>
-
                 <div class="actions">
                     <button class="btn btn-success" onclick="saveKidNotes()">Save Notes</button>
                     <button class="btn btn-secondary" onclick="closeKidNotesModal()">Cancel</button>
@@ -5777,7 +5771,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
             currentNotesKidId = kidId;
             document.getElementById('kidNotesModalTitle').textContent = 'Add Notes';
             document.getElementById('accommodationNotesTextarea').value = '';
-            document.getElementById('roommateWishesTextarea').value = '';
             document.getElementById('kidNotesModal').classList.add('active');
         }
 
@@ -5789,7 +5782,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
             
             document.getElementById('kidNotesModalTitle').textContent = 'Edit Notes';
             document.getElementById('accommodationNotesTextarea').value = kid && kid.accommodationNotes ? kid.accommodationNotes : '';
-            document.getElementById('roommateWishesTextarea').value = kid && kid.roommateWishes ? kid.roommateWishes : '';
             document.getElementById('kidNotesModal').classList.add('active');
         }
 
@@ -5843,9 +5835,8 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
 
         async function saveKidNotes() {
             const accommodationNotes = document.getElementById('accommodationNotesTextarea').value.trim();
-            const roommateWishes = document.getElementById('roommateWishesTextarea').value.trim();
             
-            if (!accommodationNotes && !roommateWishes) {
+            if (!accommodationNotes) {
                 showNotification('Please enter at least one type of note.', 'error');
                 return;
             }
@@ -5862,8 +5853,7 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                         },
                         body: JSON.stringify({
                             fields: {
-                                'Accommodation Notes': accommodationNotes,
-                                'Roommate Wishes': roommateWishes
+                                'Accommodation Notes': accommodationNotes
                             }
                         })
                     });
@@ -5876,7 +5866,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                         const kid = window.allKids.find(k => k.id === currentNotesKidId);
                         if (kid) {
                             kid.accommodationNotes = accommodationNotes;
-                            kid.roommateWishes = roommateWishes;
                         }
                     }
 
