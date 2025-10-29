@@ -394,6 +394,10 @@
             background: linear-gradient(135deg, #e74c3c, #c0392b);
         }
 
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
         .btn-small {
             padding: 6px 12px;
             font-size: 0.85rem;
@@ -1535,6 +1539,32 @@
         </div>
     </div>
 
+    <!-- Kid Notes Modal -->
+    <div class="modal" id="kidNotesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="kidNotesModalTitle">Add/Edit Kid Notes</h3>
+                <button class="close-modal" onclick="closeKidNotesModal()">&times;</button>
+            </div>
+            <div id="kidNotesForm">
+                <div class="form-group">
+                    <label>📝 Accommodation Notes:</label>
+                    <textarea id="accommodationNotesTextarea" rows="4" placeholder="Enter accommodation notes here..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>🤝 Roommate Wishes:</label>
+                    <textarea id="roommateWishesTextarea" rows="4" placeholder="Enter roommate wishes here..."></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-success" onclick="saveKidNotes()">Save Notes</button>
+                    <button class="btn btn-secondary" onclick="closeKidNotesModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Confirmation Modal -->
     <div class="modal" id="confirmationModal">
         <div class="modal-content" style="max-width: 500px;">
@@ -2565,16 +2595,41 @@
                                 
                                 // Display notes based on assignment type
                                 if (isKid && booking) {
-                                    // This is a KID - show read-only notes from Bookings table
-                                    if (booking.accommodationNotes || booking.roommateWishes) {
-                                        clientName += '<br><div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">';
+                                    // This is a KID - show editable notes from Bookings table
+                                    console.log('=== KID NOTES ===');
+                                    console.log('Booking ID:', booking.id);
+                                    console.log('Accommodation Notes:', booking.accommodationNotes);
+                                    console.log('Roommate Wishes:', booking.roommateWishes);
+                                    
+                                    const hasNotes = (booking.accommodationNotes && booking.accommodationNotes.trim() !== '') || 
+                                                     (booking.roommateWishes && booking.roommateWishes.trim() !== '');
+                                    
+                                    if (hasNotes) {
+                                        // Has notes - show with edit/delete buttons
+                                        let notesDisplay = '';
                                         if (booking.accommodationNotes) {
-                                            clientName += `<div style="margin-bottom: 4px;"><strong>📝 Notes:</strong> ${booking.accommodationNotes}</div>`;
+                                            const escapedNotes = (booking.accommodationNotes || '').replace(/'/g, "\\'").replace(/\n/g, '<br>');
+                                            notesDisplay += `<div style="margin-bottom: 4px;"><strong>📝 Notes:</strong> ${escapedNotes}</div>`;
                                         }
                                         if (booking.roommateWishes) {
-                                            clientName += `<div><strong>🤝 Roommate Wishes:</strong> ${booking.roommateWishes}</div>`;
+                                            const escapedWishes = (booking.roommateWishes || '').replace(/'/g, "\\'").replace(/\n/g, '<br>');
+                                            notesDisplay += `<div><strong>🤝 Roommate Wishes:</strong> ${escapedWishes}</div>`;
                                         }
-                                        clientName += '</div>';
+                                        
+                                        clientName += `
+                                            <br><div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">
+                                                ${notesDisplay}
+                                                <div style="margin-top: 8px; display: flex; gap: 8px;">
+                                                    <button class="btn-edit-note" onclick="editKidNotes('${booking.id}', event)" style="padding: 4px 8px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">✏️ Edit</button>
+                                                    <button class="btn-delete-note" onclick="deleteKidNotes('${booking.id}', event)" style="padding: 4px 8px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">🗑️ Delete</button>
+                                                </div>
+                                            </div>
+                                        `;
+                                    } else {
+                                        // No notes - show add button
+                                        clientName += `
+                                            <br><button class="btn-add-note" onclick="addKidNotes('${booking.id}', event)" style="margin-top: 8px; padding: 6px 12px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">➕ Add Notes</button>
+                                        `;
                                     }
                                 } else if (isStaffOrGuest) {
                                     // This is STAFF/GUEST - show editable notes from Bed Assignments table
@@ -5458,15 +5513,33 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                 const checkoutDate = kid.checkout ? new Date(kid.checkout).toLocaleDateString('en-GB') : 'N/A';
                 
                 let notesHtml = '';
-                if (kid.accommodationNotes || kid.roommateWishes) {
-                    notesHtml = '<div style="font-size: 0.85rem;">';
+                const hasNotes = (kid.accommodationNotes && kid.accommodationNotes.trim()) || 
+                                (kid.roommateWishes && kid.roommateWishes.trim());
+                
+                if (hasNotes) {
+                    let notesDisplay = '';
                     if (kid.accommodationNotes) {
-                        notesHtml += `<div>📝 ${kid.accommodationNotes}</div>`;
+                        const escapedNotes = (kid.accommodationNotes || '').replace(/'/g, "\\'").replace(/\n/g, '<br>');
+                        notesDisplay += `<div style="margin-bottom: 4px;"><strong>📝 Notes:</strong> ${escapedNotes}</div>`;
                     }
                     if (kid.roommateWishes) {
-                        notesHtml += `<div>🤝 ${kid.roommateWishes}</div>`;
+                        const escapedWishes = (kid.roommateWishes || '').replace(/'/g, "\\'").replace(/\n/g, '<br>');
+                        notesDisplay += `<div><strong>🤝 Roommate Wishes:</strong> ${escapedWishes}</div>`;
                     }
-                    notesHtml += '</div>';
+                    
+                    notesHtml = `
+                        <div style="padding: 8px; background: #fff3cd; border-left: 3px solid #e67e22; border-radius: 4px; font-size: 0.85rem;">
+                            ${notesDisplay}
+                            <div style="margin-top: 8px; display: flex; gap: 8px;">
+                                <button class="btn-edit-note" onclick="editKidNotes('${kid.id}', event)" style="padding: 4px 8px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">✏️ Edit</button>
+                                <button class="btn-delete-note" onclick="deleteKidNotes('${kid.id}', event)" style="padding: 4px 8px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    notesHtml = `
+                        <button class="btn-add-note" onclick="addKidNotes('${kid.id}', event)" style="margin-top: 8px; padding: 6px 12px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">➕ Add Notes</button>
+                    `;
                 }
                 
                 html += `
@@ -5480,7 +5553,7 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                         <td>${kid.age || 'N/A'}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                         ${currentKidsFilter === 'assigned' ? `<td>${kid.bedName || '-'}</td>` : ''}
-                        <td>${notesHtml || '-'}</td>
+                        <td style="min-width: 200px;">${notesHtml}</td>
                     </tr>
                 `;
             });
@@ -5695,6 +5768,134 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
         function closeNotesModal() {
             document.getElementById('notesModal').classList.remove('active');
             currentNotesAssignment = null;
+        }
+
+        let currentNotesKidId = null;
+
+        function addKidNotes(kidId, event) {
+            if (event) event.stopPropagation();
+            currentNotesKidId = kidId;
+            document.getElementById('kidNotesModalTitle').textContent = 'Add Notes';
+            document.getElementById('accommodationNotesTextarea').value = '';
+            document.getElementById('roommateWishesTextarea').value = '';
+            document.getElementById('kidNotesModal').classList.add('active');
+        }
+
+        function editKidNotes(kidId, event) {
+            if (event) event.stopPropagation();
+            currentNotesKidId = kidId;
+            
+            const kid = window.allKids ? window.allKids.find(k => k.id === kidId) : null;
+            
+            document.getElementById('kidNotesModalTitle').textContent = 'Edit Notes';
+            document.getElementById('accommodationNotesTextarea').value = kid && kid.accommodationNotes ? kid.accommodationNotes : '';
+            document.getElementById('roommateWishesTextarea').value = kid && kid.roommateWishes ? kid.roommateWishes : '';
+            document.getElementById('kidNotesModal').classList.add('active');
+        }
+
+        async function deleteKidNotes(kidId, event) {
+            if (event) event.stopPropagation();
+            
+            if (!confirm('Are you sure you want to delete these notes?')) {
+                return;
+            }
+
+            try {
+                if (!sampleDataLoaded) {
+                    const url = `https://api.airtable.com/v0/${config.baseId}/${config.tables.bookings}/${kidId}`;
+                    
+                    const response = await fetch(url, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${config.token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fields: {
+                                'Accommodation Notes': '',
+                                'Roommate Wishes': ''
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to delete notes from Airtable');
+                    }
+
+                    if (window.allKids) {
+                        const kid = window.allKids.find(k => k.id === kidId);
+                        if (kid) {
+                            kid.accommodationNotes = '';
+                            kid.roommateWishes = '';
+                        }
+                    }
+
+                    showNotification('Notes deleted successfully!', 'success');
+                    displayKidsList();
+                } else {
+                    showNotification('Notes deletion is only available in Airtable mode', 'info');
+                }
+            } catch (error) {
+                console.error('Error deleting kid notes:', error);
+                showNotification('Failed to delete notes. Please try again.', 'error');
+            }
+        }
+
+        async function saveKidNotes() {
+            const accommodationNotes = document.getElementById('accommodationNotesTextarea').value.trim();
+            const roommateWishes = document.getElementById('roommateWishesTextarea').value.trim();
+            
+            if (!accommodationNotes && !roommateWishes) {
+                showNotification('Please enter at least one type of note.', 'error');
+                return;
+            }
+
+            try {
+                if (!sampleDataLoaded) {
+                    const url = `https://api.airtable.com/v0/${config.baseId}/${config.tables.bookings}/${currentNotesKidId}`;
+                    
+                    const response = await fetch(url, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${config.token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fields: {
+                                'Accommodation Notes': accommodationNotes,
+                                'Roommate Wishes': roommateWishes
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to save notes to Airtable');
+                    }
+
+                    if (window.allKids) {
+                        const kid = window.allKids.find(k => k.id === currentNotesKidId);
+                        if (kid) {
+                            kid.accommodationNotes = accommodationNotes;
+                            kid.roommateWishes = roommateWishes;
+                        }
+                    }
+
+                    closeKidNotesModal();
+                    showNotification('Notes saved successfully!', 'success');
+                    displayKidsList();
+                } else {
+                    showNotification('Notes saving is only available in Airtable mode', 'info');
+                    closeKidNotesModal();
+                }
+            } catch (error) {
+                console.error('Error saving kid notes:', error);
+                showNotification('Failed to save notes. Please try again.', 'error');
+            }
+        }
+
+        function closeKidNotesModal() {
+            document.getElementById('kidNotesModal').classList.remove('active');
+            currentNotesKidId = null;
         }
 
         // function formatShortDate(dateStr) {
