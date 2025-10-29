@@ -2493,6 +2493,11 @@
                         if (bookings.length > 0) {
                             const activeBooking = bookings[0];
                             
+                            // CRITICAL DEBUG: Log the complete activeBooking object
+                            console.log('🔍 FULL activeBooking object for bed', bed.number, ':', JSON.stringify(activeBooking, null, 2));
+                            console.log('🔍 activeBooking.notes value:', activeBooking.notes);
+                            console.log('🔍 activeBooking.clientName:', activeBooking.clientName);
+                            
                             // Get client name - different structure for sample vs Airtable
                             if (sampleDataLoaded) {
                                 const client = sampleData.clients.find(c => c.id === activeBooking.clientId);
@@ -3033,6 +3038,14 @@
                           return bedRec ? (bedRec.fields['Bed Name'] || bedRec.fields['Name'] || '') : '';
                         })()
                     };
+                });
+                
+                // CRITICAL DEBUG: Log assignments with notes
+                console.log('🔍 LOADED BED ASSIGNMENTS - Total:', window.bedAssignments.length);
+                const assignmentsWithNotes = window.bedAssignments.filter(a => a.notes && a.notes.trim() !== '');
+                console.log('🔍 Assignments WITH notes:', assignmentsWithNotes.length);
+                assignmentsWithNotes.forEach(a => {
+                    console.log(`  📝 ${a.clientName} (${a.id}): "${a.notes}"`);
                 });
 
                 console.log(`Loaded ${window.bedAssignments.length} bed assignments (resolved rooms/properties)`);
