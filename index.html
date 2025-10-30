@@ -739,7 +739,7 @@
 
         .occupancy-cell.prereserved {
             background: #e1d5f7;
-            border-color: #7b1fa2;
+            border-color: #546e7a;
         }
 
         .occupancy-cell.occupied {
@@ -3928,7 +3928,7 @@
                 genderField.value = '';
                 genderField.disabled = true;
             } else if (weekDesignation === 'Prereserved Room') {
-                roomInfo.innerHTML = '🟣 <strong>Prereserved Room</strong> - Only PRERESERVED can be assigned to beds in this room';
+                roomInfo.innerHTML = '⬛ <strong>Prereserved Room</strong> - Only PRERESERVED can be assigned to beds in this room';
                 roomInfo.style.borderLeft = '4px solid #7b1fa2';
                 availableClients = []; // Clear all regular clients
                 genderField.value = '';
@@ -3961,13 +3961,12 @@
                     options.push('<option value="STAFF_ADRENALIN">🟠 STAFF Adrenalin</option>');
                     options.push('<option value="TEACHER_FRILINGUE">🟢 TEACHERS friLingue</option>');
                     options.push('<option value="HOTEL_GUEST">🔴 HOTEL GUEST</option>');
-                    options.push('<option value="PRERESERVED">🟣 PRERESERVED</option>');
+                    options.push('<option value="PRERESERVED">⬛ PRERESERVED</option>');
                 } else {
                     // Other properties - show only STAFF, HOTEL GUEST, and PRERESERVED
                     options.push('<option value="STAFF">🟡 STAFF</option>');
                     options.push('<option value="HOTEL_GUEST">🔴 HOTEL GUEST</option>');
-                    options.push('<option value="PRERESERVED">🟣 PRERESERVED</option>');
-                }
+                    options.push('<option value="PRERESERVED">⬛ PRERESERVED</option>');
             } else if (weekDesignation === 'Staff Room') {
                 options.push('<option value="STAFF">🟡 STAFF</option>');
             } else if (weekDesignation === 'Staff friLingue Room') {
@@ -3979,7 +3978,7 @@
             } else if (weekDesignation === 'Hotel Guest Room') {
                 options.push('<option value="HOTEL_GUEST">🔴 HOTEL GUEST</option>');
             } else if (weekDesignation === 'Prereserved Room') {
-                options.push('<option value="PRERESERVED">🟣 PRERESERVED</option>');
+                options.push('<option value="PRERESERVED">⬛ PRERESERVED</option>');
             }
 
             if (availableClients.length === 0 && weekDesignation !== 'Staff Room' && weekDesignation !== 'Hotel Guest Room' &&
@@ -4848,7 +4847,7 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                     <span>Hotel Guest Room</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background: #e1d5f7; border-color: #7b1fa2;"></div>
+                    <div class="legend-color" style="background: #e1d5f7; border-color: #546e7a;"></div>
                     <span>Prereserved Room</span>
                 </div>
                 <div class="legend-item">
