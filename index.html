@@ -4718,6 +4718,9 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                             const assignmentStart = new Date(assignment.checkin);
                             const assignmentEnd = new Date(assignment.checkout);
                             
+                            // Check if this is HOTEL_GUEST or PRERESERVED - they should be fully released
+                            const isHotelGuestOrPrereserved = assignment.givenName === 'HOTEL_GUEST' || assignment.givenName === 'PRERESERVED';
+                            
                             // Calculate assignment duration in weeks
                             const durationDays = Math.ceil((assignmentEnd - assignmentStart) / (1000 * 60 * 60 * 24)) + 1;
                             const durationWeeks = Math.ceil(durationDays / 7);
@@ -4725,8 +4728,8 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                             console.log(`Assignment: ${assignment.checkin} to ${assignment.checkout} (${durationWeeks} weeks)`);
                             console.log(`Releasing week: ${selectedWeekStart.toISOString().split('T')[0]} to ${weekEnd.toISOString().split('T')[0]}`);
                             
-                            if (durationWeeks === 1) {
-                                // Delete the assignment entirely
+                            if (durationWeeks === 1 || isHotelGuestOrPrereserved) {
+                                // Delete the assignment entirely (for single week OR for HOTEL_GUEST/PRERESERVED)
                                 await makeAirtableRequest(`${config.tables.bedAssignments}/${assignment.id}`, 'DELETE');
                                 console.log('Deleted assignment:', assignment.id);
                                 showNotification('Bed assignment deleted', 'success');
