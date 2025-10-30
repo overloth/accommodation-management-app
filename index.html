@@ -5778,7 +5778,12 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
             if (event) event.stopPropagation();
             currentNotesKidId = kidId;
             
-            const kid = allKidsData ? allKidsData.find(k => k.id === kidId) : null;
+            // Try to find in allKidsData first, then in airtableBookings
+            let kid = allKidsData ? allKidsData.find(k => k.id === kidId) : null;
+            if (!kid) {
+                // If not found in allKidsData, try airtableBookings
+                kid = airtableBookings ? airtableBookings.find(b => b.id === kidId) : null;
+            }
             
             document.getElementById('kidNotesModalTitle').textContent = 'Edit Notes';
             document.getElementById('accommodationNotesTextarea').value = kid && kid.accommodationNotes ? kid.accommodationNotes : '';
