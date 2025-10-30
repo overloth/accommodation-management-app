@@ -5661,9 +5661,13 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
             const newClientGroup = document.getElementById('newClientGroup');
             const genderGroup = document.getElementById('genderGroup');
             const phoneGroup = document.getElementById('phoneGroup');
+            const checkoutDateField = document.getElementById('checkoutDate');
+            
+            console.log('handleClientSelection called, clientId:', clientId);
+            console.log('checkoutDateField:', checkoutDateField);
             
             // If STAFF, HOTEL_GUEST, PRERESERVED, or any of the Braunwald Adrenalin staff types is selected, hide unnecessary fields
-    if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESERVED' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
+            if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESERVED' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
                 newClientGroup.style.display = 'none';
                 genderGroup.style.display = 'none';
                 phoneGroup.style.display = 'none';
@@ -5672,6 +5676,20 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                 document.getElementById('newClientName').value = '';
                 document.getElementById('clientGender').value = '';
                 document.getElementById('clientPhone').value = '';
+                
+                // Make checkout date editable for HOTEL_GUEST and PRERESERVED
+                if (clientId === 'HOTEL_GUEST' || clientId === 'PRERESERVED') {
+                    console.log('Unlocking checkout field for:', clientId);
+                    checkoutDateField.removeAttribute('readonly');
+                    checkoutDateField.style.background = 'white';
+                    checkoutDateField.style.cursor = 'text';
+                } else {
+                    console.log('Keeping checkout field locked for:', clientId);
+                    // Keep it readonly for other staff types
+                    checkoutDateField.setAttribute('readonly', 'readonly');
+                    checkoutDateField.style.background = '#f8f9fa';
+                    checkoutDateField.style.cursor = 'not-allowed';
+                }
             } else {
                 // Show all fields for regular clients
                 newClientGroup.style.display = 'block';
