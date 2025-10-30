@@ -737,6 +737,11 @@
             border-color: #e91e63;
         }
 
+        .occupancy-cell.prereserved {
+            background: #e1d5f7;
+            border-color: #7b1fa2;
+        }
+
         .occupancy-cell.occupied {
             background: #fadbd8;
             border-color: #e74c3c;
@@ -2184,6 +2189,11 @@
                                     gender: 'HOTEL_GUEST',
                                     originalCheckin: checkIn
                                 });
+                            } else if (assignment.givenName === 'PRERESERVED') {
+                                clientsStayingThisWeek.push({
+                                    gender: 'PRERESERVED',
+                                    originalCheckin: checkIn
+                                });
                             } else if (assignment.givenName === 'STAFF_FRILINGUE') {
                                 clientsStayingThisWeek.push({
                                     gender: 'STAFF_FRILINGUE',
@@ -2262,6 +2272,15 @@
             if (genders.has('TEACHER_FRILINGUE')) {
                 if (genders.size === 1) {
                     return 'Teachers friLingue Room';
+                } else {
+                    return 'Mixed Room';
+                }
+            }
+
+            // Check for PRERESERVED room
+            if (genders.has('PRERESERVED')) {
+                if (genders.size === 1) {
+                    return 'Prereserved Room';
                 } else {
                     return 'Mixed Room';
                 }
@@ -2577,7 +2596,7 @@
                                 // Add notes section - moved OUTSIDE if(booking) block
                                 // Check if this is a kid (has bookingId) or staff/guest
                                 // Better detection: Check if the clientName is one of the special types
-                                const staffTypes = ['STAFF', 'HOTEL_GUEST', 'STAFF_FRILINGUE', 'STAFF_ADRENALIN', 'TEACHER_FRILINGUE'];
+                                const staffTypes = ['STAFF', 'HOTEL_GUEST', 'PRERESERVED', 'STAFF_FRILINGUE', 'STAFF_ADRENALIN', 'TEACHER_FRILINGUE'];
                                 const isStaffOrGuest = staffTypes.includes(activeBooking.clientName);
                                 const isKid = activeBooking.bookingId && !isStaffOrGuest;
                                 
@@ -2979,6 +2998,7 @@
                     // Check if this is a STAFF or HOTEL_GUEST assignment (no booking)
                     const directGivenName = fields['Given Name'] || '';
                     const isStaffOrGuest = directGivenName === 'STAFF' || directGivenName === 'HOTEL_GUEST' ||
+                                          directGivenName === 'PRERESERVED' ||
                                           directGivenName === 'STAFF_FRILINGUE' || directGivenName === 'STAFF_ADRENALIN' || 
                                           directGivenName === 'TEACHER_FRILINGUE';
 
@@ -3907,6 +3927,12 @@
                 availableClients = []; // Clear all regular clients
                 genderField.value = '';
                 genderField.disabled = true;
+            } else if (weekDesignation === 'Prereserved Room') {
+                roomInfo.innerHTML = '🟣 <strong>Prereserved Room</strong> - Only PRERESERVED can be assigned to beds in this room';
+                roomInfo.style.borderLeft = '4px solid #7b1fa2';
+                availableClients = []; // Clear all regular clients
+                genderField.value = '';
+                genderField.disabled = true;
             } else {
                 roomInfo.innerHTML = `⚪ <strong>Empty Room</strong> - Week of ${selectedWeekStart ? selectedWeekStart.toLocaleDateString() : 'current week'} (Sunday-Saturday). First client assigned determines room designation.`;
                 roomInfo.style.borderLeft = '4px solid #95a5a6';
@@ -3930,15 +3956,17 @@
             // Add STAFF and HOTEL_GUEST options based on room designation
             if (weekDesignation === 'Empty') {
                 if (isBraunwaldAdrenalin) {
-                    // Braunwald Adrenalin property - show all 4 staff types
+                    // Braunwald Adrenalin property - show all staff types
                     options.push('<option value="STAFF_FRILINGUE">🟡 STAFF friLingue</option>');
                     options.push('<option value="STAFF_ADRENALIN">🟠 STAFF Adrenalin</option>');
                     options.push('<option value="TEACHER_FRILINGUE">🟢 TEACHERS friLingue</option>');
                     options.push('<option value="HOTEL_GUEST">🔴 HOTEL GUEST</option>');
+                    options.push('<option value="PRERESERVED">🟣 PRERESERVED</option>');
                 } else {
-                    // Other properties - show only STAFF and HOTEL GUEST
+                    // Other properties - show only STAFF, HOTEL GUEST, and PRERESERVED
                     options.push('<option value="STAFF">🟡 STAFF</option>');
                     options.push('<option value="HOTEL_GUEST">🔴 HOTEL GUEST</option>');
+                    options.push('<option value="PRERESERVED">🟣 PRERESERVED</option>');
                 }
             } else if (weekDesignation === 'Staff Room') {
                 options.push('<option value="STAFF">🟡 STAFF</option>');
@@ -3950,12 +3978,16 @@
                 options.push('<option value="TEACHER_FRILINGUE">🟢 TEACHERS friLingue</option>');
             } else if (weekDesignation === 'Hotel Guest Room') {
                 options.push('<option value="HOTEL_GUEST">🔴 HOTEL GUEST</option>');
+            } else if (weekDesignation === 'Prereserved Room') {
+                options.push('<option value="PRERESERVED">🟣 PRERESERVED</option>');
             }
 
             if (availableClients.length === 0 && weekDesignation !== 'Staff Room' && weekDesignation !== 'Hotel Guest Room' &&
+                weekDesignation !== 'Prereserved Room' &&
                 weekDesignation !== 'Staff friLingue Room' && weekDesignation !== 'Staff Adrenalin Room' && weekDesignation !== 'Teachers friLingue Room') {
                 options.push('<option value="" disabled>No available clients for this week</option>');
             } else if (weekDesignation !== 'Staff Room' && weekDesignation !== 'Hotel Guest Room' &&
+                       weekDesignation !== 'Prereserved Room' &&
                        weekDesignation !== 'Staff friLingue Room' && weekDesignation !== 'Staff Adrenalin Room' && weekDesignation !== 'Teachers friLingue Room') {
                 // availableClients.forEach(client => {
                 //     const genderIcon = client.gender === 'Male' ? '👨' : '👩';
@@ -4281,8 +4313,8 @@
             const checkin = document.getElementById('checkinDate').value;
             const checkout = document.getElementById('checkoutDate').value;
 
-            // Handle STAFF, HOTEL_GUEST, and Braunwald Adrenalin staff assignments
-if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
+           // Handle STAFF, HOTEL_GUEST, PRERESERVED, and Braunwald Adrenalin staff assignments
+if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESERVED' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
                 if (!checkin || !checkout) {
                     showNotification('Please select check-in and check-out dates.', 'error');
                     return;
@@ -4519,8 +4551,8 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                     }
                 } else {
     // Airtable mode
-    // Handle STAFF, HOTEL_GUEST, and Braunwald Adrenalin staff assignments
-    if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
+    // Handle STAFF, HOTEL_GUEST, PRERESERVED, and Braunwald Adrenalin staff assignments
+    if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESERVED' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
         console.log(`Assigning ${clientId} to bed:`, selectedBed.id);
         
         // Create Bed Assignment record with only bed name, start date, and end date
@@ -4816,6 +4848,10 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                     <span>Hotel Guest Room</span>
                 </div>
                 <div class="legend-item">
+                    <div class="legend-color" style="background: #e1d5f7; border-color: #7b1fa2;"></div>
+                    <span>Prereserved Room</span>
+                </div>
+                <div class="legend-item">
                     <div class="legend-color" style="background: #fadbd8; border-color: #e74c3c;"></div>
                     <span>Fully Occupied</span>
                 </div>
@@ -5069,6 +5105,8 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
                     cssClass = 'teacher-frilingue';
                 } else if (weekDesignation === 'Hotel Guest Room') {
                     cssClass = 'hotel-guest';
+                 } else if (weekDesignation === 'Prereserved Room') {
+                    cssClass = 'prereserved';
                 }
 
                 const roomObj = currentPropertyRooms.find(r => r.id === roomId);
@@ -5610,8 +5648,8 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FR
             const genderGroup = document.getElementById('genderGroup');
             const phoneGroup = document.getElementById('phoneGroup');
             
-            // If STAFF, HOTEL_GUEST, or any of the Braunwald Adrenalin staff types is selected, hide unnecessary fields
-    if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
+            // If STAFF, HOTEL_GUEST, PRERESERVED, or any of the Braunwald Adrenalin staff types is selected, hide unnecessary fields
+    if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESERVED' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
                 newClientGroup.style.display = 'none';
                 genderGroup.style.display = 'none';
                 phoneGroup.style.display = 'none';
