@@ -3776,6 +3776,13 @@
             
             const genderField = document.getElementById('clientGender');
             const select = document.getElementById('clientSelect');
+            const checkoutDateField = document.getElementById('checkoutDate');
+            
+            // Reset checkout field to readonly state when modal opens
+            checkoutDateField.setAttribute('readonly', 'readonly');
+            checkoutDateField.style.background = '#f8f9fa';
+            checkoutDateField.style.cursor = 'not-allowed';
+            checkoutDateField.value = ''; // Clear the value
             
             const existingInfo = document.querySelector('.room-designation-info');
             if (existingInfo) existingInfo.remove();
@@ -4229,6 +4236,13 @@
             document.getElementById('assignmentModal').style.display = 'none';
             document.getElementById('assignmentForm').reset();
             document.getElementById('clientGender').disabled = false;
+            
+            // Reset checkout field to readonly state
+            const checkoutDateField = document.getElementById('checkoutDate');
+            checkoutDateField.setAttribute('readonly', 'readonly');
+            checkoutDateField.style.background = '#f8f9fa';
+            checkoutDateField.style.cursor = 'not-allowed';
+            
             const roomInfo = document.querySelector('.room-designation-info');
             if (roomInfo) roomInfo.remove();
         }
