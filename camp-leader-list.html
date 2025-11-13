@@ -257,18 +257,21 @@
         // Property icons (random selection)
         const propertyIcons = ['🏔️', '⛰️', '🏞️', '🏖️', '🏕️', '🌲', '⛺'];
 
-        // Load configuration from Firebase
+        // Load configuration from Firebase (same path as main app)
         async function loadConfigFromFirebase() {
             try {
                 console.log('📡 Loading Airtable config from Firebase...');
-                const configRef = database.ref('airtableConfig');
+                const configRef = database.ref('config/airtable');  // Same path as main app
                 const snapshot = await configRef.once('value');
                 const configData = snapshot.val();
 
                 if (configData && configData.token && configData.baseId) {
                     config.token = configData.token;
                     config.baseId = configData.baseId;
-                    console.log('✅ Config loaded from Firebase');
+                    console.log('✅ Config loaded from Firebase:', {
+                        hasToken: !!config.token,
+                        hasBaseId: !!config.baseId
+                    });
                     return true;
                 } else {
                     console.log('⚠️ No config in Firebase, trying localStorage...');
