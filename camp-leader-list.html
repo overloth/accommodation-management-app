@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Camp Leader List - friLingue</title>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -86,6 +90,114 @@
             color: #666;
             font-size: 1.2rem;
         }
+
+        .properties-section {
+            display: none;
+            width: 100%;
+        }
+
+        .properties-section.active {
+            display: block;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .section-subtitle {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .property-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            text-align: center;
+        }
+
+        .property-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #3498db;
+        }
+
+        .property-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .property-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .property-location {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .property-location::before {
+            content: "📍";
+        }
+
+        .view-list-btn {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .view-list-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .view-list-btn:active {
+            transform: scale(0.98);
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #c33;
+        }
+
+        .empty-state {
+            color: #999;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
@@ -97,11 +209,217 @@
         </div>
 
         <div class="content">
-            <div class="loading">
+            <div class="loading" id="loadingState">
                 <div class="spinner"></div>
-                <div class="loading-text">Loading properties...</div>
+                <div class="loading-text">Loading properties from Airtable...</div>
             </div>
+
+            <div class="properties-section" id="propertiesSection">
+                <h2 class="section-title">Our Properties in Switzerland</h2>
+                <p class="section-subtitle">Click on a property to generate the camp leader link</p>
+                
+                <div class="properties-grid" id="propertiesGrid">
+                    <!-- Properties will be loaded here dynamically -->
+                </div>
+            </div>
+
+            <div id="errorState" style="display: none;"></div>
         </div>
     </div>
+
+    <script>
+        console.log('🏕️ Camp Leader List - Starting...');
+
+        // Firebase configuration (same as main app)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCaOMtd-Tl9bvTdMmLtDm0ALH9FctuVBoY",
+            authDomain: "accommodation-management-57373.firebaseapp.com",
+            projectId: "accommodation-management-57373",
+            storageBucket: "accommodation-management-57373.firebasestorage.app",
+            messagingSenderId: "905096938169",
+            appId: "1:905096938169:web:715d8c7cb73d5c3aa61168",
+            databaseURL: "https://accommodation-management-57373-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Configuration (load from Firebase)
+        let config = {
+            token: '',
+            baseId: '',
+            tables: {
+                properties: 'Properties'
+            }
+        };
+
+        // Property icons (random selection)
+        const propertyIcons = ['🏔️', '⛰️', '🏞️', '🏖️', '🏕️', '🌲', '⛺'];
+
+        // Load configuration from Firebase
+        async function loadConfigFromFirebase() {
+            try {
+                console.log('📡 Loading Airtable config from Firebase...');
+                const configRef = database.ref('airtableConfig');
+                const snapshot = await configRef.once('value');
+                const configData = snapshot.val();
+
+                if (configData && configData.token && configData.baseId) {
+                    config.token = configData.token;
+                    config.baseId = configData.baseId;
+                    console.log('✅ Config loaded from Firebase');
+                    return true;
+                } else {
+                    console.log('⚠️ No config in Firebase, trying localStorage...');
+                    // Try localStorage as fallback
+                    const token = localStorage.getItem('airtableToken');
+                    const baseId = localStorage.getItem('airtableBaseId');
+                    
+                    if (token && baseId) {
+                        config.token = token;
+                        config.baseId = baseId;
+                        console.log('✅ Config loaded from localStorage');
+                        return true;
+                    }
+                }
+
+                console.log('❌ No Airtable configuration found');
+                return false;
+            } catch (error) {
+                console.error('❌ Error loading config:', error);
+                return false;
+            }
+        }
+
+        // Make Airtable request
+        async function makeAirtableRequest(table) {
+            if (!config.token || !config.baseId) {
+                throw new Error('Airtable configuration missing');
+            }
+            
+            const url = `https://api.airtable.com/v0/${config.baseId}/${table}`;
+            console.log('📡 Fetching from Airtable:', url);
+            
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${config.token}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                throw new Error(`Airtable API error: ${response.status} ${response.statusText}`);
+            }
+            
+            return await response.json();
+        }
+
+        // Load properties from Airtable
+        async function loadProperties() {
+            const propertiesGrid = document.getElementById('propertiesGrid');
+            const loadingState = document.getElementById('loadingState');
+            const propertiesSection = document.getElementById('propertiesSection');
+            const errorState = document.getElementById('errorState');
+
+            try {
+                console.log('🏢 Loading properties...');
+                
+                // Make the Airtable request
+                const response = await makeAirtableRequest(config.tables.properties);
+                console.log('📦 Received', response.records.length, 'properties from Airtable');
+
+                // Filter for Switzerland only (same logic as main app)
+                const properties = response.records
+                    .filter(record => {
+                        const countryName = record.fields['Country Name (from Property Country)'];
+                        const isSwiss = countryName === 'Switzerland' || 
+                                       (Array.isArray(countryName) && countryName.includes('Switzerland'));
+                        console.log('Property:', record.fields['Property Name'], 'Country:', countryName, 'Is Swiss:', isSwiss);
+                        return isSwiss;
+                    })
+                    .map((record, index) => ({
+                        id: record.id,
+                        name: record.fields['Property Name'],
+                        address: record.fields['Property Street Address'] || 'Switzerland',
+                        icon: propertyIcons[index % propertyIcons.length]
+                    }));
+
+                console.log('✅ Found', properties.length, 'properties in Switzerland');
+
+                if (properties.length === 0) {
+                    propertiesGrid.innerHTML = '<div class="empty-state">No properties found in Switzerland</div>';
+                } else {
+                    // Render property cards
+                    propertiesGrid.innerHTML = properties.map(property => `
+                        <div class="property-card" onclick="selectProperty('${property.id}', '${property.name.replace(/'/g, "\\'")}')">
+                            <div class="property-icon">${property.icon}</div>
+                            <div class="property-name">${property.name}</div>
+                            <div class="property-location">${property.address}</div>
+                            <button class="view-list-btn">Generate Link</button>
+                        </div>
+                    `).join('');
+                }
+
+                // Hide loading, show properties
+                loadingState.style.display = 'none';
+                propertiesSection.classList.add('active');
+
+            } catch (error) {
+                console.error('❌ Error loading properties:', error);
+                loadingState.style.display = 'none';
+                errorState.innerHTML = `
+                    <div class="error-message">
+                        <strong>Error loading properties:</strong><br>
+                        ${error.message}<br><br>
+                        <small>Make sure your Airtable configuration is set up in the main app.</small>
+                    </div>
+                `;
+                errorState.style.display = 'block';
+            }
+        }
+
+        // Select property (temporary alert, will be replaced with link generation)
+        function selectProperty(propertyId, propertyName) {
+            console.log('🎯 Selected property:', propertyId, propertyName);
+            alert(`Selected: ${propertyName}\n\nProperty ID: ${propertyId}\n\nNext step: Generate link for specific week`);
+            // This will be connected to week selection modal later
+        }
+
+        // Initialize on page load
+        async function initialize() {
+            console.log('🚀 Initializing Camp Leader List...');
+            
+            // Load config from Firebase
+            const configLoaded = await loadConfigFromFirebase();
+            
+            if (configLoaded) {
+                // Load properties from Airtable
+                await loadProperties();
+            } else {
+                // Show error
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').innerHTML = `
+                    <div class="error-message">
+                        <strong>Airtable Configuration Missing</strong><br><br>
+                        Please configure Airtable in your main accommodation app first:
+                        <ol style="text-align: left; margin: 10px 0; padding-left: 20px;">
+                            <li>Go to the main app</li>
+                            <li>Login</li>
+                            <li>Enter your Airtable token and base ID</li>
+                            <li>Click "Save Configuration"</li>
+                            <li>Then come back here and refresh</li>
+                        </ol>
+                    </div>
+                `;
+                document.getElementById('errorState').style.display = 'block';
+            }
+        }
+
+        // Start when page loads
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
 </body>
 </html>
