@@ -40,6 +40,25 @@
             position: relative;
         }
 
+        .back-button {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
         .header-icon {
             font-size: 3rem;
             margin-bottom: 10px;
@@ -91,12 +110,14 @@
             font-size: 1.2rem;
         }
 
-        .properties-section {
+        .properties-section,
+        .calendar-section {
             display: none;
             width: 100%;
         }
 
-        .properties-section.active {
+        .properties-section.active,
+        .calendar-section.active {
             display: block;
         }
 
@@ -185,6 +206,140 @@
             transform: scale(0.98);
         }
 
+        /* Calendar Styles */
+        .calendar-container {
+            margin-top: 30px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar-nav button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-nav button:hover {
+            background: #2980b9;
+        }
+
+        .calendar-nav button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .calendar-month-year {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-weight: 600;
+            padding: 15px;
+            background: #2c3e50;
+            color: white;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .calendar-day {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            min-height: 80px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .calendar-day.empty {
+            background: transparent;
+            cursor: default;
+        }
+
+        .calendar-day.has-bookings {
+            background: linear-gradient(135deg, #3498db20, #2c3e5020);
+            border-color: #3498db;
+        }
+
+        .calendar-day:not(.empty):hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .calendar-day-number {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .calendar-day-bookings {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .week-indicator {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .selected-property-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .selected-property-info h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .selected-property-info p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
         .error-message {
             background: #fee;
             color: #c33;
@@ -198,14 +353,87 @@
             color: #999;
             font-size: 1.2rem;
         }
+
+        .week-summary {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .week-summary h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .week-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .week-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #3498db;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .week-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .week-card-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .week-card-dates {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .week-card-count {
+            color: #3498db;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .generate-link-btn {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .generate-link-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            <button class="back-button" id="backButton" style="display: none;" onclick="goBackToProperties()">← Back</button>
             <div class="header-icon">🏕️</div>
             <h1>Camp Leader List</h1>
-            <p>Select a friLingue property to view participant information</p>
+            <p id="headerSubtitle">Select a friLingue property to view participant information</p>
         </div>
 
         <div class="content">
@@ -216,10 +444,41 @@
 
             <div class="properties-section" id="propertiesSection">
                 <h2 class="section-title">Our Properties in Switzerland</h2>
-                <p class="section-subtitle">Click on a property to generate the camp leader link</p>
+                <p class="section-subtitle">Click on a property to view weeks and generate links</p>
                 
                 <div class="properties-grid" id="propertiesGrid">
                     <!-- Properties will be loaded here dynamically -->
+                </div>
+            </div>
+
+            <div class="calendar-section" id="calendarSection">
+                <div class="selected-property-info" id="selectedPropertyInfo">
+                    <!-- Property info will be displayed here -->
+                </div>
+
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <div class="calendar-nav">
+                            <button onclick="previousMonth()">← Previous</button>
+                            <button onclick="nextMonth()">Next →</button>
+                        </div>
+                        <div class="calendar-month-year" id="calendarMonthYear"></div>
+                        <div class="calendar-nav">
+                            <button onclick="goToToday()">Today</button>
+                        </div>
+                    </div>
+
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar will be rendered here -->
+                    </div>
+                </div>
+
+                <div class="week-summary" id="weekSummary">
+                    <h3>Available Weeks</h3>
+                    <p class="section-subtitle">Click on a week to generate the camp leader link</p>
+                    <div class="week-cards" id="weekCards">
+                        <!-- Week cards will be displayed here -->
+                    </div>
                 </div>
             </div>
 
@@ -250,18 +509,26 @@
             token: '',
             baseId: '',
             tables: {
-                properties: 'Properties'
+                properties: 'Properties',
+                bookings: 'Bookings'
             }
         };
 
         // Property icons (random selection)
         const propertyIcons = ['🏔️', '⛰️', '🏞️', '🏖️', '🏕️', '🌲', '⛺'];
 
+        // State variables
+        let selectedProperty = null;
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let allBookings = [];
+        let weeksByStartDate = {};
+
         // Load configuration from Firebase (same path as main app)
         async function loadConfigFromFirebase() {
             try {
                 console.log('📡 Loading Airtable config from Firebase...');
-                const configRef = database.ref('config/airtable');  // Same path as main app
+                const configRef = database.ref('config/airtable');
                 const snapshot = await configRef.once('value');
                 const configData = snapshot.val();
 
@@ -275,7 +542,6 @@
                     return true;
                 } else {
                     console.log('⚠️ No config in Firebase, trying localStorage...');
-                    // Try localStorage as fallback
                     const token = localStorage.getItem('airtableToken');
                     const baseId = localStorage.getItem('airtableBaseId');
                     
@@ -296,12 +562,15 @@
         }
 
         // Make Airtable request
-        async function makeAirtableRequest(table) {
+        async function makeAirtableRequest(table, filterFormula = '') {
             if (!config.token || !config.baseId) {
                 throw new Error('Airtable configuration missing');
             }
             
-            const url = `https://api.airtable.com/v0/${config.baseId}/${table}`;
+            let url = `https://api.airtable.com/v0/${config.baseId}/${table}`;
+            if (filterFormula) {
+                url += `?filterByFormula=${encodeURIComponent(filterFormula)}`;
+            }
             console.log('📡 Fetching from Airtable:', url);
             
             const options = {
@@ -330,11 +599,9 @@
             try {
                 console.log('🏢 Loading properties...');
                 
-                // Make the Airtable request
                 const response = await makeAirtableRequest(config.tables.properties);
                 console.log('📦 Received', response.records.length, 'properties from Airtable');
 
-                // Filter for Switzerland only (same logic as main app)
                 const properties = response.records
                     .filter(record => {
                         const countryName = record.fields['Country Name (from Property Country)'];
@@ -355,18 +622,16 @@
                 if (properties.length === 0) {
                     propertiesGrid.innerHTML = '<div class="empty-state">No properties found in Switzerland</div>';
                 } else {
-                    // Render property cards
                     propertiesGrid.innerHTML = properties.map(property => `
-                        <div class="property-card" onclick="selectProperty('${property.id}', '${property.name.replace(/'/g, "\\'")}')">
+                        <div class="property-card" onclick='selectProperty(${JSON.stringify(property)})'>
                             <div class="property-icon">${property.icon}</div>
                             <div class="property-name">${property.name}</div>
                             <div class="property-location">${property.address}</div>
-                            <button class="view-list-btn">Generate Link</button>
+                            <button class="view-list-btn">View Calendar</button>
                         </div>
                     `).join('');
                 }
 
-                // Hide loading, show properties
                 loadingState.style.display = 'none';
                 propertiesSection.classList.add('active');
 
@@ -384,25 +649,319 @@
             }
         }
 
-        // Select property (temporary alert, will be replaced with link generation)
-        function selectProperty(propertyId, propertyName) {
-            console.log('🎯 Selected property:', propertyId, propertyName);
-            alert(`Selected: ${propertyName}\n\nProperty ID: ${propertyId}\n\nNext step: Generate link for specific week`);
-            // This will be connected to week selection modal later
+        // Select property and show calendar
+        async function selectProperty(property) {
+            console.log('🎯 Selected property:', property);
+            
+            selectedProperty = property;
+            
+            // Update UI
+            document.getElementById('propertiesSection').classList.remove('active');
+            document.getElementById('loadingState').style.display = 'flex';
+            document.querySelector('.loading-text').textContent = 'Loading bookings for ' + property.name + '...';
+            document.getElementById('backButton').style.display = 'block';
+            document.getElementById('headerSubtitle').textContent = property.name;
+
+            // Load bookings for this property
+            await loadBookingsForProperty(property.id);
+
+            // Show calendar section
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('calendarSection').classList.add('active');
+            
+            // Display selected property info
+            document.getElementById('selectedPropertyInfo').innerHTML = `
+                <h3>${property.icon} ${property.name}</h3>
+                <p>${property.address}</p>
+            `;
+
+            // Render calendar
+            renderCalendar();
+            renderWeekSummary();
+        }
+
+        // Load bookings for selected property
+        async function loadBookingsForProperty(propertyId) {
+            try {
+                console.log('📚 Loading bookings for property:', propertyId);
+                
+                // Filter bookings by property
+                const filterFormula = `{Property ID (from Property)}='${propertyId}'`;
+                const response = await makeAirtableRequest(config.tables.bookings, filterFormula);
+                
+                console.log('📦 Received', response.records.length, 'bookings');
+                
+                allBookings = response.records.map(record => ({
+                    id: record.id,
+                    kidName: record.fields['Kid Name (from Kid)'] ? 
+                        (Array.isArray(record.fields['Kid Name (from Kid)']) ? 
+                            record.fields['Kid Name (from Kid)'][0] : 
+                            record.fields['Kid Name (from Kid)']) : 'Unknown',
+                    startDate: record.fields['Start date'],
+                    endDate: record.fields['End date'],
+                    weekName: record.fields['Week Name (from Week)'] ? 
+                        (Array.isArray(record.fields['Week Name (from Week)']) ? 
+                            record.fields['Week Name (from Week)'][0] : 
+                            record.fields['Week Name (from Week)']) : null
+                }));
+
+                // Group by week start date
+                weeksByStartDate = {};
+                allBookings.forEach(booking => {
+                    if (booking.startDate) {
+                        if (!weeksByStartDate[booking.startDate]) {
+                            weeksByStartDate[booking.startDate] = {
+                                startDate: booking.startDate,
+                                endDate: booking.endDate,
+                                weekName: booking.weekName,
+                                bookings: []
+                            };
+                        }
+                        weeksByStartDate[booking.startDate].bookings.push(booking);
+                    }
+                });
+
+                console.log('✅ Loaded bookings, found', Object.keys(weeksByStartDate).length, 'weeks');
+                
+            } catch (error) {
+                console.error('❌ Error loading bookings:', error);
+                showError('Failed to load bookings: ' + error.message);
+            }
+        }
+
+        // Go back to properties list
+        function goBackToProperties() {
+            document.getElementById('calendarSection').classList.remove('active');
+            document.getElementById('propertiesSection').classList.add('active');
+            document.getElementById('backButton').style.display = 'none';
+            document.getElementById('headerSubtitle').textContent = 'Select a friLingue property to view participant information';
+            selectedProperty = null;
+            allBookings = [];
+            weeksByStartDate = {};
+        }
+
+        // Calendar navigation
+        function previousMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        function goToToday() {
+            const today = new Date();
+            currentMonth = today.getMonth();
+            currentYear = today.getFullYear();
+            renderCalendar();
+        }
+
+        // Render calendar
+        function renderCalendar() {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            document.getElementById('calendarMonthYear').textContent = 
+                `${monthNames[currentMonth]} ${currentYear}`;
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
+
+            const calendarGrid = document.getElementById('calendarGrid');
+            calendarGrid.innerHTML = '';
+
+            // Add day headers
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayNames.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'calendar-day-header';
+                dayHeader.textContent = day;
+                calendarGrid.appendChild(dayHeader);
+            });
+
+            // Add empty cells for days before month starts
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day empty';
+                calendarGrid.appendChild(emptyDay);
+            }
+
+            // Add days of month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(currentYear, currentMonth, day);
+                const dateStr = formatDate(date);
+                
+                const dayCell = document.createElement('div');
+                dayCell.className = 'calendar-day';
+                
+                // Check if there are bookings on this date
+                const hasBookings = Object.keys(weeksByStartDate).some(startDate => {
+                    const week = weeksByStartDate[startDate];
+                    const weekStart = new Date(startDate);
+                    const weekEnd = week.endDate ? new Date(week.endDate) : null;
+                    return weekEnd && date >= weekStart && date <= weekEnd;
+                });
+
+                if (hasBookings) {
+                    dayCell.classList.add('has-bookings');
+                    
+                    // Find which week this belongs to
+                    const weekData = Object.values(weeksByStartDate).find(week => {
+                        const weekStart = new Date(week.startDate);
+                        const weekEnd = week.endDate ? new Date(week.endDate) : null;
+                        return weekEnd && date >= weekStart && date <= weekEnd;
+                    });
+
+                    if (weekData && date.toDateString() === new Date(weekData.startDate).toDateString()) {
+                        const weekIndicator = document.createElement('div');
+                        weekIndicator.className = 'week-indicator';
+                        weekIndicator.textContent = 'Week';
+                        dayCell.appendChild(weekIndicator);
+                    }
+
+                    dayCell.onclick = () => showWeekDetails(dateStr);
+                }
+
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'calendar-day-number';
+                dayNumber.textContent = day;
+                dayCell.appendChild(dayNumber);
+
+                if (hasBookings) {
+                    const weekData = Object.values(weeksByStartDate).find(week => {
+                        const weekStart = new Date(week.startDate);
+                        const weekEnd = week.endDate ? new Date(week.endDate) : null;
+                        return weekEnd && date >= weekStart && date <= weekEnd;
+                    });
+                    
+                    if (weekData) {
+                        const bookingInfo = document.createElement('div');
+                        bookingInfo.className = 'calendar-day-bookings';
+                        bookingInfo.textContent = `${weekData.bookings.length} participants`;
+                        dayCell.appendChild(bookingInfo);
+                    }
+                }
+
+                calendarGrid.appendChild(dayCell);
+            }
+        }
+
+        // Render week summary
+        function renderWeekSummary() {
+            const weekCards = document.getElementById('weekCards');
+            
+            if (Object.keys(weeksByStartDate).length === 0) {
+                weekCards.innerHTML = '<div class="empty-state">No bookings found for this property</div>';
+                return;
+            }
+
+            // Sort weeks by start date
+            const sortedWeeks = Object.values(weeksByStartDate).sort((a, b) => 
+                new Date(a.startDate) - new Date(b.startDate)
+            );
+
+            weekCards.innerHTML = sortedWeeks.map(week => `
+                <div class="week-card" onclick='generateLinkForWeek(${JSON.stringify(week)})'>
+                    <div class="week-card-title">${week.weekName || 'Week'}</div>
+                    <div class="week-card-dates">
+                        ${formatDateShort(week.startDate)} - ${formatDateShort(week.endDate)}
+                    </div>
+                    <div class="week-card-count">
+                        ${week.bookings.length} participant${week.bookings.length !== 1 ? 's' : ''}
+                    </div>
+                    <button class="generate-link-btn">Generate Link</button>
+                </div>
+            `).join('');
+        }
+
+        // Show week details when clicking on calendar
+        function showWeekDetails(dateStr) {
+            const week = weeksByStartDate[dateStr];
+            if (week) {
+                generateLinkForWeek(week);
+            }
+        }
+
+        // Generate link for a specific week
+        function generateLinkForWeek(week) {
+            console.log('🔗 Generating link for week:', week);
+            
+            // Create a shareable link with property and week parameters
+            const baseUrl = window.location.origin + window.location.pathname.replace('camp-leader-list.html', 'camp-leader-view.html');
+            const params = new URLSearchParams({
+                property: selectedProperty.id,
+                propertyName: selectedProperty.name,
+                week: week.startDate,
+                weekName: week.weekName || 'Week'
+            });
+            
+            const shareableLink = `${baseUrl}?${params.toString()}`;
+            
+            // Show the link to the user
+            alert(`Camp Leader Link Generated!\n\nProperty: ${selectedProperty.name}\nWeek: ${week.weekName || 'Week'}\nDates: ${formatDateShort(week.startDate)} - ${formatDateShort(week.endDate)}\nParticipants: ${week.bookings.length}\n\nLink:\n${shareableLink}\n\nCopy this link and share it with your camp leaders!`);
+            
+            // Optionally copy to clipboard
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareableLink).then(() => {
+                    console.log('✅ Link copied to clipboard');
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                });
+            }
+        }
+
+        // Format date as YYYY-MM-DD
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Format date for display (e.g., "Jan 15, 2025")
+        function formatDateShort(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorState = document.getElementById('errorState');
+            errorState.innerHTML = `
+                <div class="error-message">
+                    <strong>Error:</strong><br>
+                    ${message}
+                </div>
+            `;
+            errorState.style.display = 'block';
+            
+            setTimeout(() => {
+                errorState.style.display = 'none';
+            }, 5000);
         }
 
         // Initialize on page load
         async function initialize() {
             console.log('🚀 Initializing Camp Leader List...');
             
-            // Load config from Firebase
             const configLoaded = await loadConfigFromFirebase();
             
             if (configLoaded) {
-                // Load properties from Airtable
                 await loadProperties();
             } else {
-                // Show error
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('errorState').innerHTML = `
                     <div class="error-message">
