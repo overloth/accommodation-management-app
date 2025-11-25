@@ -24,7 +24,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -53,6 +53,7 @@
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
 
         .back-button:hover {
@@ -75,13 +76,7 @@
         }
 
         .content {
-            padding: 60px 40px;
-            text-align: center;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            padding: 40px;
         }
 
         .loading {
@@ -89,6 +84,8 @@
             flex-direction: column;
             align-items: center;
             gap: 20px;
+            min-height: 400px;
+            justify-content: center;
         }
 
         .spinner {
@@ -113,7 +110,6 @@
         .properties-section,
         .calendar-section {
             display: none;
-            width: 100%;
         }
 
         .properties-section.active,
@@ -126,12 +122,14 @@
             font-size: 1.8rem;
             margin-bottom: 10px;
             font-weight: 600;
+            text-align: center;
         }
 
         .section-subtitle {
             color: #666;
             font-size: 1rem;
             margin-bottom: 30px;
+            text-align: center;
         }
 
         .properties-grid {
@@ -206,119 +204,176 @@
             transform: scale(0.98);
         }
 
-        /* Calendar Styles */
-        .calendar-container {
-            margin-top: 30px;
+        /* Occupancy Calendar Styles - from accommodation manager */
+        .occupancy-overview {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
         }
 
-        .calendar-header {
+        .occupancy-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
-        .calendar-nav {
+        .month-navigation {
             display: flex;
+            align-items: center;
             gap: 10px;
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .calendar-nav button {
-            background: #3498db;
+        .month-navigation select {
+            border: none;
+            background: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #2c3e50;
+            min-width: 140px;
+            padding: 4px 8px;
+        }
+
+        .month-navigation select:focus {
+            outline: none;
+        }
+
+        .month-navigation .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.85rem;
+            font-weight: bold;
             transition: all 0.3s ease;
         }
 
-        .calendar-nav button:hover {
-            background: #2980b9;
+        .month-navigation .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
         }
 
-        .calendar-nav button:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-        }
-
-        .calendar-month-year {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .calendar-grid {
+        .occupancy-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            margin-bottom: 40px;
+            gap: 2px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            max-width: 100%;
         }
 
-        .calendar-day-header {
-            text-align: center;
-            font-weight: 600;
-            padding: 15px;
-            background: #2c3e50;
+        .day-header {
+            background: #3498db;
             color: white;
-            border-radius: 8px;
+            padding: 4px 2px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.55rem;
+            border-radius: 3px;
+            line-height: 1.1;
+        }
+
+        .day-header.weekend {
+            background: #e67e22;
+            color: white;
+        }
+
+        .room-cell {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 8px 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+            font-size: 0.7rem;
+            text-align: center;
+        }
+
+        .occupancy-cell {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 1px;
+            border-radius: 3px;
+            min-height: 25px;
+            min-width: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: bold;
+        }
+
+        .occupancy-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .occupancy-cell.available {
+            background: #d5f4e6;
+            border-color: #27ae60;
+        }
+
+        .occupancy-cell.boys {
+            background: #cce7ff;
+            border-color: #0066cc;
+        }
+
+        .occupancy-cell.girls {
+            background: #f0d4f0;
+            border-color: #9933cc;
+        }
+
+        .occupancy-cell.mixed {
+            background: #fde3cf;
+            border-color: #e67e22;
+        }
+
+        .occupancy-cell.staff {
+            background: #fff9c4;
+            border-color: #fbc02d;
+        }
+
+        .occupancy-cell.occupied {
+            background: #fadbd8;
+            border-color: #e74c3c;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 0.9rem;
         }
 
-        .calendar-day {
-            text-align: center;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            min-height: 80px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            position: relative;
-        }
-
-        .calendar-day.empty {
-            background: transparent;
-            cursor: default;
-        }
-
-        .calendar-day.has-bookings {
-            background: linear-gradient(135deg, #3498db20, #2c3e5020);
-            border-color: #3498db;
-        }
-
-        .calendar-day:not(.empty):hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-
-        .calendar-day-number {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-
-        .calendar-day-bookings {
-            font-size: 0.8rem;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .week-indicator {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #3498db;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid;
         }
 
         .selected-property-info {
@@ -352,78 +407,48 @@
         .empty-state {
             color: #999;
             font-size: 1.2rem;
+            text-align: center;
+            padding: 40px;
         }
 
-        .week-summary {
-            margin-top: 40px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
 
-        .week-summary h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
         }
 
-        .week-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .week-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            border: 2px solid #3498db;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .week-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-
-        .week-card-title {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-        }
-
-        .week-card-dates {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-        }
-
-        .week-card-count {
-            color: #3498db;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .generate-link-btn {
-            background: linear-gradient(135deg, #27ae60, #229954);
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 12px 30px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 1rem;
-            font-weight: 600;
-            width: 100%;
-            margin-top: 15px;
+            font-weight: bold;
             transition: all 0.3s ease;
+            margin: 10px 5px;
         }
 
-        .generate-link-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            margin: 0 5px;
         }
     </style>
 </head>
@@ -444,7 +469,7 @@
 
             <div class="properties-section" id="propertiesSection">
                 <h2 class="section-title">Our Properties in Switzerland</h2>
-                <p class="section-subtitle">Click on a property to view weeks and generate links</p>
+                <p class="section-subtitle">Click on a property to view the calendar</p>
                 
                 <div class="properties-grid" id="propertiesGrid">
                     <!-- Properties will be loaded here dynamically -->
@@ -456,30 +481,25 @@
                     <!-- Property info will be displayed here -->
                 </div>
 
-                <div class="calendar-container">
-                    <div class="calendar-header">
-                        <div class="calendar-nav">
-                            <button onclick="previousMonth()">← Previous</button>
-                            <button onclick="nextMonth()">Next →</button>
-                        </div>
-                        <div class="calendar-month-year" id="calendarMonthYear"></div>
-                        <div class="calendar-nav">
-                            <button onclick="goToToday()">Today</button>
+                <div class="occupancy-overview">
+                    <div class="occupancy-header">
+                        <h3 id="propertyTitle">Property Occupancy Calendar</h3>
+                        <div class="month-navigation">
+                            <button class="btn btn-small btn-secondary" onclick="changeMonth(-1)">‹</button>
+                            <select id="monthSelect" onchange="updateOccupancyView()"></select>
+                            <button class="btn btn-small btn-secondary" onclick="changeMonth(1)">›</button>
                         </div>
                     </div>
-
-                    <div class="calendar-grid" id="calendarGrid">
-                        <!-- Calendar will be rendered here -->
+                    <div class="alert alert-info" style="margin-bottom: 20px;">
+                        <strong>💡 Tip:</strong> Click on any room-date cell to generate a camp leader link for that week (Sunday-Saturday).
+                    </div>
+                    <div id="occupancyGrid"></div>
+                    <div class="legend" id="occupancyLegend">
+                        <!-- Legend will be dynamically generated -->
                     </div>
                 </div>
 
-                <div class="week-summary" id="weekSummary">
-                    <h3>Available Weeks</h3>
-                    <p class="section-subtitle">Click on a week to generate the camp leader link</p>
-                    <div class="week-cards" id="weekCards">
-                        <!-- Week cards will be displayed here -->
-                    </div>
-                </div>
+                <button class="btn btn-secondary" onclick="goBackToProperties()">← Back to Properties</button>
             </div>
 
             <div id="errorState" style="display: none;"></div>
@@ -489,7 +509,7 @@
     <script>
         console.log('🏕️ Camp Leader List - Starting...');
 
-        // Firebase configuration (same as main app)
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCaOMtd-Tl9bvTdMmLtDm0ALH9FctuVBoY",
             authDomain: "accommodation-management-57373.firebaseapp.com",
@@ -500,31 +520,30 @@
             databaseURL: "https://accommodation-management-57373-default-rtdb.europe-west1.firebasedatabase.app"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Configuration (load from Firebase)
+        // Configuration
         let config = {
             token: '',
             baseId: '',
             tables: {
                 properties: 'Properties',
-                bookings: 'Bookings'
+                rooms: 'Rooms',
+                beds: 'Beds',
+                bedAssignments: 'Bed Assignments'
             }
         };
 
-        // Property icons (random selection)
+        // Property icons
         const propertyIcons = ['🏔️', '⛰️', '🏞️', '🏖️', '🏕️', '🌲', '⛺'];
 
         // State variables
         let selectedProperty = null;
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-        let allBookings = [];
-        let weeksByStartDate = {};
+        let currentPropertyRooms = [];
+        window.bedAssignments = [];
 
-        // Load configuration from Firebase (same path as main app)
+        // Load configuration from Firebase
         async function loadConfigFromFirebase() {
             try {
                 console.log('📡 Loading Airtable config from Firebase...');
@@ -535,13 +554,9 @@
                 if (configData && configData.token && configData.baseId) {
                     config.token = configData.token;
                     config.baseId = configData.baseId;
-                    console.log('✅ Config loaded from Firebase:', {
-                        hasToken: !!config.token,
-                        hasBaseId: !!config.baseId
-                    });
+                    console.log('✅ Config loaded from Firebase');
                     return true;
                 } else {
-                    console.log('⚠️ No config in Firebase, trying localStorage...');
                     const token = localStorage.getItem('airtableToken');
                     const baseId = localStorage.getItem('airtableBaseId');
                     
@@ -607,7 +622,6 @@
                         const countryName = record.fields['Country Name (from Property Country)'];
                         const isSwiss = countryName === 'Switzerland' || 
                                        (Array.isArray(countryName) && countryName.includes('Switzerland'));
-                        console.log('Property:', record.fields['Property Name'], 'Country:', countryName, 'Is Swiss:', isSwiss);
                         return isSwiss;
                     })
                     .map((record, index) => ({
@@ -658,12 +672,13 @@
             // Update UI
             document.getElementById('propertiesSection').classList.remove('active');
             document.getElementById('loadingState').style.display = 'flex';
-            document.querySelector('.loading-text').textContent = 'Loading bookings for ' + property.name + '...';
+            document.querySelector('.loading-text').textContent = 'Loading rooms and bookings for ' + property.name + '...';
             document.getElementById('backButton').style.display = 'block';
             document.getElementById('headerSubtitle').textContent = property.name;
 
-            // Load bookings for this property
-            await loadBookingsForProperty(property.id);
+            // Load rooms and bed assignments
+            await loadRoomsForProperty(property.id);
+            await loadBedAssignmentsData(property.id);
 
             // Show calendar section
             document.getElementById('loadingState').style.display = 'none';
@@ -675,57 +690,67 @@
                 <p>${property.address}</p>
             `;
 
-            // Render calendar
-            renderCalendar();
-            renderWeekSummary();
+            document.getElementById('propertyTitle').textContent = `${property.name} - Occupancy Calendar`;
+            
+            populateMonthSelector();
+            updateOccupancyView();
         }
 
-        // Load bookings for selected property
-        async function loadBookingsForProperty(propertyId) {
+        // Load rooms for property
+        async function loadRoomsForProperty(propertyId) {
             try {
-                console.log('📚 Loading bookings for property:', propertyId);
+                console.log('🚪 Loading rooms for property:', propertyId);
+                const filterFormula = `{Property ID}='${propertyId}'`;
+                const response = await makeAirtableRequest(config.tables.rooms, filterFormula);
                 
-                // Filter bookings by property
-                const filterFormula = `{Property ID (from Property)}='${propertyId}'`;
-                const response = await makeAirtableRequest(config.tables.bookings, filterFormula);
-                
-                console.log('📦 Received', response.records.length, 'bookings');
-                
-                allBookings = response.records.map(record => ({
+                currentPropertyRooms = response.records.map(record => ({
                     id: record.id,
-                    kidName: record.fields['Kid Name (from Kid)'] ? 
-                        (Array.isArray(record.fields['Kid Name (from Kid)']) ? 
-                            record.fields['Kid Name (from Kid)'][0] : 
-                            record.fields['Kid Name (from Kid)']) : 'Unknown',
-                    startDate: record.fields['Start date'],
-                    endDate: record.fields['End date'],
-                    weekName: record.fields['Week Name (from Week)'] ? 
-                        (Array.isArray(record.fields['Week Name (from Week)']) ? 
-                            record.fields['Week Name (from Week)'][0] : 
-                            record.fields['Week Name (from Week)']) : null
+                    number: record.fields['Room Number'] || 'N/A',
+                    capacity: record.fields['Bed Capacity'] || 0,
+                    propertyId: record.fields['Property ID'] ? record.fields['Property ID'][0] : null
                 }));
 
-                // Group by week start date
-                weeksByStartDate = {};
-                allBookings.forEach(booking => {
-                    if (booking.startDate) {
-                        if (!weeksByStartDate[booking.startDate]) {
-                            weeksByStartDate[booking.startDate] = {
-                                startDate: booking.startDate,
-                                endDate: booking.endDate,
-                                weekName: booking.weekName,
-                                bookings: []
-                            };
-                        }
-                        weeksByStartDate[booking.startDate].bookings.push(booking);
-                    }
+                console.log('✅ Loaded', currentPropertyRooms.length, 'rooms');
+            } catch (error) {
+                console.error('❌ Error loading rooms:', error);
+                currentPropertyRooms = [];
+            }
+        }
+
+        // Load bed assignments
+        async function loadBedAssignmentsData(propertyId) {
+            try {
+                console.log('🛏️ Loading bed assignments for property:', propertyId);
+                
+                const filterFormula = `{Property ID (from Accommodation)}='${propertyId}'`;
+                const response = await makeAirtableRequest(config.tables.bedAssignments, filterFormula);
+                
+                window.bedAssignments = response.records.map(record => {
+                    const fields = record.fields;
+                    return {
+                        id: record.id,
+                        bedId: fields['Bed'] ? fields['Bed'][0] : null,
+                        roomId: fields['Room ID (from Accommodation)'] ? 
+                                (Array.isArray(fields['Room ID (from Accommodation)']) ? 
+                                    fields['Room ID (from Accommodation)'][0] : 
+                                    fields['Room ID (from Accommodation)']) : null,
+                        clientName: fields['Participant Name (from Participant)'] ? 
+                                   (Array.isArray(fields['Participant Name (from Participant)']) ? 
+                                       fields['Participant Name (from Participant)'][0] : 
+                                       fields['Participant Name (from Participant)']) : 'Unknown',
+                        gender: fields['Gender (from Participant)'] ? 
+                               (Array.isArray(fields['Gender (from Participant)']) ? 
+                                   fields['Gender (from Participant)'][0] : 
+                                   fields['Gender (from Participant)']) : null,
+                        checkin: fields['Start date'],
+                        checkout: fields['End date']
+                    };
                 });
 
-                console.log('✅ Loaded bookings, found', Object.keys(weeksByStartDate).length, 'weeks');
-                
+                console.log('✅ Loaded', window.bedAssignments.length, 'bed assignments');
             } catch (error) {
-                console.error('❌ Error loading bookings:', error);
-                showError('Failed to load bookings: ' + error.message);
+                console.error('❌ Error loading bed assignments:', error);
+                window.bedAssignments = [];
             }
         }
 
@@ -736,183 +761,348 @@
             document.getElementById('backButton').style.display = 'none';
             document.getElementById('headerSubtitle').textContent = 'Select a friLingue property to view participant information';
             selectedProperty = null;
-            allBookings = [];
-            weeksByStartDate = {};
+            currentPropertyRooms = [];
+            window.bedAssignments = [];
         }
 
-        // Calendar navigation
-        function previousMonth() {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            renderCalendar();
-        }
-
-        function nextMonth() {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            renderCalendar();
-        }
-
-        function goToToday() {
-            const today = new Date();
-            currentMonth = today.getMonth();
-            currentYear = today.getFullYear();
-            renderCalendar();
-        }
-
-        // Render calendar
-        function renderCalendar() {
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'];
+        // Populate month selector
+        function populateMonthSelector() {
+            const monthSelect = document.getElementById('monthSelect');
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
             
-            document.getElementById('calendarMonthYear').textContent = 
-                `${monthNames[currentMonth]} ${currentYear}`;
+            const months = [];
+            for (let year = currentYear; year <= currentYear + 1; year++) {
+                for (let month = 0; month < 12; month++) {
+                    const date = new Date(year, month, 1);
+                    const value = `${year}-${String(month + 1).padStart(2, '0')}`;
+                    const text = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    months.push({ value, text });
+                }
+            }
+            
+            monthSelect.innerHTML = months.map(m => 
+                `<option value="${m.value}">${m.text}</option>`
+            ).join('');
+            
+            const currentMonth = `${currentYear}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+            monthSelect.value = currentMonth;
+        }
 
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            const daysInMonth = lastDay.getDate();
-            const startingDayOfWeek = firstDay.getDay();
+        // Change month
+        function changeMonth(direction) {
+            const monthSelect = document.getElementById('monthSelect');
+            const currentIndex = monthSelect.selectedIndex;
+            const newIndex = currentIndex + direction;
+            
+            if (newIndex >= 0 && newIndex < monthSelect.options.length) {
+                monthSelect.selectedIndex = newIndex;
+                updateOccupancyView();
+            }
+        }
 
-            const calendarGrid = document.getElementById('calendarGrid');
-            calendarGrid.innerHTML = '';
+        // Update occupancy view
+        function updateOccupancyView() {
+            if (!selectedProperty) {
+                document.getElementById('occupancyGrid').innerHTML = '<div class="alert alert-info">Please select a property first.</div>';
+                return;
+            }
+            
+            const monthSelect = document.getElementById('monthSelect');
+            const selectedMonth = monthSelect.value;
+            if (!selectedMonth) {
+                document.getElementById('occupancyGrid').innerHTML = '<div class="alert alert-info">Please select a month to view.</div>';
+                return;
+            }
+            
+            const year = parseInt(selectedMonth.split('-')[0]);
+            const month = parseInt(selectedMonth.split('-')[1]) - 1;
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            generateMonthlyOccupancyGrid(year, month, daysInMonth);
+            updateLegend();
+        }
 
-            // Add day headers
-            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            dayNames.forEach(day => {
-                const dayHeader = document.createElement('div');
-                dayHeader.className = 'calendar-day-header';
-                dayHeader.textContent = day;
-                calendarGrid.appendChild(dayHeader);
+        // Update legend
+        function updateLegend() {
+            const legendContainer = document.getElementById('occupancyLegend');
+            if (!legendContainer) return;
+            
+            let legendHTML = `
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #d5f4e6; border-color: #27ae60;"></div>
+                    <span>Available</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #cce7ff; border-color: #0066cc;"></div>
+                    <span>Boys Room</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f0d4f0; border-color: #9933cc;"></div>
+                    <span>Girls Room</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fde3cf; border-color: #e67e22;"></div>
+                    <span>Mixed Room</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fff9c4; border-color: #fbc02d;"></div>
+                    <span>Staff Room</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fadbd8; border-color: #e74c3c;"></div>
+                    <span>Fully Occupied</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e67e22; border-color: #d35400;"></div>
+                    <span>Weekend</span>
+                </div>`;
+            
+            legendContainer.innerHTML = legendHTML;
+        }
+
+        // Generate monthly occupancy grid - EXACTLY like accommodation manager
+        function generateMonthlyOccupancyGrid(year, month, daysInMonth) {
+            const container = document.getElementById('occupancyGrid');
+            
+            // Get the first day of the month and calculate the calendar grid
+            const firstDayOfMonth = new Date(year, month, 1);
+            const firstDayWeekday = firstDayOfMonth.getDay();
+            
+            // Get the last day of the month
+            const lastDayOfMonth = new Date(year, month, daysInMonth);
+            const lastDayWeekday = lastDayOfMonth.getDay();
+            
+            // Calculate days from previous month
+            const daysFromPrevMonth = firstDayWeekday;
+            
+            // Calculate days from next month
+            const daysFromNextMonth = 6 - lastDayWeekday;
+            
+            // Build complete calendar grid
+            const calendarDays = [];
+            
+            // Add days from previous month
+            if (daysFromPrevMonth > 0) {
+                const prevMonth = month === 0 ? 11 : month - 1;
+                const prevYear = month === 0 ? year - 1 : year;
+                const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
+                
+                for (let i = daysFromPrevMonth - 1; i >= 0; i--) {
+                    const day = daysInPrevMonth - i;
+                    calendarDays.push({
+                        day: day,
+                        month: prevMonth,
+                        year: prevYear,
+                        isCurrentMonth: false,
+                        isPrevMonth: true
+                    });
+                }
+            }
+            
+            // Add days from current month
+            for (let day = 1; day <= daysInMonth; day++) {
+                calendarDays.push({
+                    day: day,
+                    month: month,
+                    year: year,
+                    isCurrentMonth: true,
+                    isPrevMonth: false
+                });
+            }
+            
+            // Add days from next month
+            if (daysFromNextMonth > 0) {
+                const nextMonth = month === 11 ? 0 : month + 1;
+                const nextYear = month === 11 ? year + 1 : year;
+                
+                for (let day = 1; day <= daysFromNextMonth; day++) {
+                    calendarDays.push({
+                        day: day,
+                        month: nextMonth,
+                        year: nextYear,
+                        isCurrentMonth: false,
+                        isPrevMonth: false
+                    });
+                }
+            }
+            
+            const totalDays = calendarDays.length;
+            let html = `<div class="occupancy-grid" style="grid-template-columns: 120px repeat(${totalDays}, 1fr);">`;
+            
+            html += '<div class="room-cell" style="background: #34495e; color: white; font-size: 0.6rem;">Room<br>(Beds)</div>';
+            
+            calendarDays.forEach(dayInfo => {
+                const date = new Date(dayInfo.year, dayInfo.month, dayInfo.day);
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                const weekendClass = isWeekend ? ' weekend' : '';
+                const dimmedStyle = !dayInfo.isCurrentMonth ? ' style="opacity: 0.4; background: #95a5a6;"' : '';
+                
+                html += `<div class="day-header${weekendClass}"${dimmedStyle}>${dayName}<br>${dayInfo.day}</div>`;
+            });
+            
+            // Add rows for each room
+            currentPropertyRooms.forEach(room => {
+                html += `<div class="room-cell">${room.number}<br>(${room.capacity})</div>`;
+                
+                calendarDays.forEach(dayInfo => {
+                    const date = new Date(dayInfo.year, dayInfo.month, dayInfo.day);
+                    const cellData = getRoomOccupancyForDate(room.id, date);
+                    const dateString = `${dayInfo.year}-${String(dayInfo.month + 1).padStart(2, '0')}-${String(dayInfo.day).padStart(2, '0')}`;
+                    
+                    const dimmedStyle = !dayInfo.isCurrentMonth ? ' style="opacity: 0.3; pointer-events: none;"' : '';
+                    const cellContent = !dayInfo.isCurrentMonth ? '' : cellData.content;
+                    const cellTooltip = !dayInfo.isCurrentMonth ? `${date.toLocaleDateString()} (different month)` : (cellData.tooltip || '');
+
+                    const cellClass = cellData.class || 'available';
+                    html += `<div class="occupancy-cell ${cellClass}" 
+                             title="${cellTooltip}"
+                             onclick="${dayInfo.isCurrentMonth ? `selectRoomDate('${room.id}', '${room.number}', '${dateString}')` : ''}"${dimmedStyle}>
+                        ${cellContent}
+                    </div>`;
+                });
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Get room occupancy for date
+        function getRoomOccupancyForDate(roomId, date) {
+            if (!window.bedAssignments || window.bedAssignments.length === 0) {
+                const roomObj = currentPropertyRooms.find(r => r.id === roomId);
+                const bedCount = roomObj ? (roomObj.capacity || 0) : 0;
+                return { 
+                    class: 'available', 
+                    content: bedCount > 0 ? bedCount.toString() : '', 
+                    tooltip: `${bedCount} bed(s) available` 
+                };
+            }
+            
+            // Check assignments for this room and date
+            const assignmentsOnDate = window.bedAssignments.filter(assignment => {
+                if (assignment.roomId !== roomId) return false;
+                
+                const checkIn = new Date(assignment.checkin + 'T00:00:00');
+                const checkOut = new Date(assignment.checkout + 'T23:59:59');
+                const currentDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                
+                return currentDate >= checkIn && currentDate <= checkOut;
+            });
+            
+            if (assignmentsOnDate.length === 0) {
+                const roomObj = currentPropertyRooms.find(r => r.id === roomId);
+                const bedCount = roomObj ? (roomObj.capacity || 0) : 0;
+                return { 
+                    class: 'available', 
+                    content: bedCount > 0 ? bedCount.toString() : '', 
+                    tooltip: `${bedCount} bed(s) available` 
+                };
+            }
+            
+            // Calculate week designation
+            const dayOfWeek = date.getDay();
+            const weekStart = new Date(date);
+            weekStart.setDate(date.getDate() - dayOfWeek);
+            const weekDesignation = calculateRoomDesignationForWeek(roomId, weekStart);
+
+            let cssClass = 'available';
+            if (weekDesignation === 'Boys Room') {
+                cssClass = 'boys';
+            } else if (weekDesignation === 'Girls Room') {
+                cssClass = 'girls';
+            } else if (weekDesignation === 'Mixed Room') {
+                cssClass = 'mixed';
+            } else if (weekDesignation === 'Staff Room') {
+                cssClass = 'staff';
+            }
+
+            const roomObj = currentPropertyRooms.find(r => r.id === roomId);
+            const totalBeds = roomObj ? (roomObj.capacity || 0) : 0;
+
+            if (assignmentsOnDate.length >= totalBeds) {
+                cssClass = 'occupied';
+            }
+            
+            const clientNames = assignmentsOnDate.map(a => a.clientName).join(', ');
+            const tooltip = `${weekDesignation}: ${clientNames}`;
+            
+            return { 
+                class: cssClass, 
+                content: assignmentsOnDate.length.toString(),
+                tooltip: tooltip
+            };
+        }
+
+        // Calculate room designation for week
+        function calculateRoomDesignationForWeek(roomId, weekStart) {
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+
+            const assignmentsInWeek = window.bedAssignments.filter(assignment => {
+                if (assignment.roomId !== roomId) return false;
+                
+                const checkIn = new Date(assignment.checkin + 'T00:00:00');
+                const checkOut = new Date(assignment.checkout + 'T23:59:59');
+                
+                return checkIn <= weekEnd && checkOut >= weekStart;
             });
 
-            // Add empty cells for days before month starts
-            for (let i = 0; i < startingDayOfWeek; i++) {
-                const emptyDay = document.createElement('div');
-                emptyDay.className = 'calendar-day empty';
-                calendarGrid.appendChild(emptyDay);
+            if (assignmentsInWeek.length === 0) {
+                return 'Available';
             }
 
-            // Add days of month
-            for (let day = 1; day <= daysInMonth; day++) {
-                const date = new Date(currentYear, currentMonth, day);
-                const dateStr = formatDate(date);
-                
-                const dayCell = document.createElement('div');
-                dayCell.className = 'calendar-day';
-                
-                // Check if there are bookings on this date
-                const hasBookings = Object.keys(weeksByStartDate).some(startDate => {
-                    const week = weeksByStartDate[startDate];
-                    const weekStart = new Date(startDate);
-                    const weekEnd = week.endDate ? new Date(week.endDate) : null;
-                    return weekEnd && date >= weekStart && date <= weekEnd;
-                });
-
-                if (hasBookings) {
-                    dayCell.classList.add('has-bookings');
-                    
-                    // Find which week this belongs to
-                    const weekData = Object.values(weeksByStartDate).find(week => {
-                        const weekStart = new Date(week.startDate);
-                        const weekEnd = week.endDate ? new Date(week.endDate) : null;
-                        return weekEnd && date >= weekStart && date <= weekEnd;
-                    });
-
-                    if (weekData && date.toDateString() === new Date(weekData.startDate).toDateString()) {
-                        const weekIndicator = document.createElement('div');
-                        weekIndicator.className = 'week-indicator';
-                        weekIndicator.textContent = 'Week';
-                        dayCell.appendChild(weekIndicator);
-                    }
-
-                    dayCell.onclick = () => showWeekDetails(dateStr);
-                }
-
-                const dayNumber = document.createElement('div');
-                dayNumber.className = 'calendar-day-number';
-                dayNumber.textContent = day;
-                dayCell.appendChild(dayNumber);
-
-                if (hasBookings) {
-                    const weekData = Object.values(weeksByStartDate).find(week => {
-                        const weekStart = new Date(week.startDate);
-                        const weekEnd = week.endDate ? new Date(week.endDate) : null;
-                        return weekEnd && date >= weekStart && date <= weekEnd;
-                    });
-                    
-                    if (weekData) {
-                        const bookingInfo = document.createElement('div');
-                        bookingInfo.className = 'calendar-day-bookings';
-                        bookingInfo.textContent = `${weekData.bookings.length} participants`;
-                        dayCell.appendChild(bookingInfo);
-                    }
-                }
-
-                calendarGrid.appendChild(dayCell);
+            const genders = [...new Set(assignmentsInWeek.map(a => a.gender).filter(g => g))];
+            
+            if (genders.length === 0) return 'Mixed Room';
+            if (genders.length === 1) {
+                return genders[0] === 'male' || genders[0] === 'Male' ? 'Boys Room' : 
+                       genders[0] === 'female' || genders[0] === 'Female' ? 'Girls Room' : 'Mixed Room';
             }
+            return 'Mixed Room';
         }
 
-        // Render week summary
-        function renderWeekSummary() {
-            const weekCards = document.getElementById('weekCards');
+        // Select room date to generate link
+        function selectRoomDate(roomId, roomNumber, date) {
+            const [year, month, day] = date.split('-').map(num => parseInt(num));
+            const selectedDate = new Date(year, month - 1, day, 12, 0, 0);
             
-            if (Object.keys(weeksByStartDate).length === 0) {
-                weekCards.innerHTML = '<div class="empty-state">No bookings found for this property</div>';
+            const dayOfWeek = selectedDate.getDay();
+            const weekStart = new Date(year, month - 1, day - dayOfWeek, 0, 0, 0);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+
+            // Get all assignments for this room in this week
+            const weekAssignments = window.bedAssignments.filter(assignment => {
+                if (assignment.roomId !== roomId) return false;
+                
+                const checkIn = new Date(assignment.checkin + 'T00:00:00');
+                const checkOut = new Date(assignment.checkout + 'T23:59:59');
+                
+                return checkIn <= weekEnd && checkOut >= weekStart;
+            });
+
+            if (weekAssignments.length === 0) {
+                alert('No participants found for this week in room ' + roomNumber);
                 return;
             }
 
-            // Sort weeks by start date
-            const sortedWeeks = Object.values(weeksByStartDate).sort((a, b) => 
-                new Date(a.startDate) - new Date(b.startDate)
-            );
-
-            weekCards.innerHTML = sortedWeeks.map(week => `
-                <div class="week-card" onclick='generateLinkForWeek(${JSON.stringify(week)})'>
-                    <div class="week-card-title">${week.weekName || 'Week'}</div>
-                    <div class="week-card-dates">
-                        ${formatDateShort(week.startDate)} - ${formatDateShort(week.endDate)}
-                    </div>
-                    <div class="week-card-count">
-                        ${week.bookings.length} participant${week.bookings.length !== 1 ? 's' : ''}
-                    </div>
-                    <button class="generate-link-btn">Generate Link</button>
-                </div>
-            `).join('');
-        }
-
-        // Show week details when clicking on calendar
-        function showWeekDetails(dateStr) {
-            const week = weeksByStartDate[dateStr];
-            if (week) {
-                generateLinkForWeek(week);
-            }
-        }
-
-        // Generate link for a specific week
-        function generateLinkForWeek(week) {
-            console.log('🔗 Generating link for week:', week);
-            
-            // Create a shareable link with property and week parameters
+            // Generate link
             const baseUrl = window.location.origin + window.location.pathname.replace('camp-leader-list.html', 'camp-leader-view.html');
             const params = new URLSearchParams({
                 property: selectedProperty.id,
                 propertyName: selectedProperty.name,
-                week: week.startDate,
-                weekName: week.weekName || 'Week'
+                room: roomId,
+                roomNumber: roomNumber,
+                weekStart: formatDate(weekStart),
+                weekEnd: formatDate(weekEnd)
             });
             
             const shareableLink = `${baseUrl}?${params.toString()}`;
             
-            // Show the link to the user
-            alert(`Camp Leader Link Generated!\n\nProperty: ${selectedProperty.name}\nWeek: ${week.weekName || 'Week'}\nDates: ${formatDateShort(week.startDate)} - ${formatDateShort(week.endDate)}\nParticipants: ${week.bookings.length}\n\nLink:\n${shareableLink}\n\nCopy this link and share it with your camp leaders!`);
+            alert(`Camp Leader Link Generated!\n\nProperty: ${selectedProperty.name}\nRoom: ${roomNumber}\nWeek: ${formatDateShort(weekStart)} - ${formatDateShort(weekEnd)}\nParticipants: ${weekAssignments.length}\n\nLink:\n${shareableLink}\n\nCopy this link and share it with your camp leaders!`);
             
-            // Optionally copy to clipboard
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(shareableLink).then(() => {
                     console.log('✅ Link copied to clipboard');
@@ -930,27 +1120,12 @@
             return `${year}-${month}-${day}`;
         }
 
-        // Format date for display (e.g., "Jan 15, 2025")
-        function formatDateShort(dateStr) {
-            if (!dateStr) return '';
-            const date = new Date(dateStr);
+        // Format date for display
+        function formatDateShort(date) {
+            if (typeof date === 'string') {
+                date = new Date(date);
+            }
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        }
-
-        // Show error message
-        function showError(message) {
-            const errorState = document.getElementById('errorState');
-            errorState.innerHTML = `
-                <div class="error-message">
-                    <strong>Error:</strong><br>
-                    ${message}
-                </div>
-            `;
-            errorState.style.display = 'block';
-            
-            setTimeout(() => {
-                errorState.style.display = 'none';
-            }, 5000);
         }
 
         // Initialize on page load
