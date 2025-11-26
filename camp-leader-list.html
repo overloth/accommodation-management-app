@@ -700,17 +700,26 @@
         async function loadRoomsForProperty(propertyId) {
             try {
                 console.log('🚪 Loading rooms for property:', propertyId);
-                const filterFormula = `{Property ID}='${propertyId}'`;
-                const response = await makeAirtableRequest(config.tables.rooms, filterFormula);
+                // Load all rooms (can't filter by linked field in Airtable API)
+                const response = await makeAirtableRequest(config.tables.rooms);
                 
-                currentPropertyRooms = response.records.map(record => ({
-                    id: record.id,
-                    number: record.fields['Room Number'] || 'N/A',
-                    capacity: record.fields['Bed Capacity'] || 0,
-                    propertyId: record.fields['Property ID'] ? record.fields['Property ID'][0] : null
-                }));
+                // Filter in memory by matching Property linked field
+                currentPropertyRooms = response.records
+                    .filter(record => {
+                        const propertyField = record.fields['Property'] || record.fields['Property (from Room)'];
+                        if (Array.isArray(propertyField)) {
+                            return propertyField[0] === propertyId;
+                        }
+                        return propertyField === propertyId;
+                    })
+                    .map(record => ({
+                        id: record.id,
+                        number: record.fields['Room Name'] || record.fields['Room Number'] || 'N/A',
+                        capacity: record.fields['Number of Beds'] || record.fields['Bed Capacity'] || 0,
+                        propertyId: propertyId
+                    }));
 
-                console.log('✅ Loaded', currentPropertyRooms.length, 'rooms');
+                console.log('✅ Loaded', currentPropertyRooms.length, 'rooms for property', propertyId);
             } catch (error) {
                 console.error('❌ Error loading rooms:', error);
                 currentPropertyRooms = [];
