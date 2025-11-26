@@ -1180,23 +1180,11 @@
             const weekEnd = new Date(weekStart);
             weekEnd.setDate(weekStart.getDate() + 6);
 
-            // Get all assignments for this room in this week
-            const weekAssignments = window.bedAssignments.filter(assignment => {
-                if (assignment.roomId !== roomId) return false;
-                
-                const checkIn = new Date(assignment.checkin + 'T00:00:00');
-                const checkOut = new Date(assignment.checkout + 'T23:59:59');
-                
-                return checkIn <= weekEnd && checkOut >= weekStart;
-            });
-
-            // Generate link
+            // Generate link for the entire property, not just this room
             const baseUrl = window.location.origin + window.location.pathname.replace('camp-leader-list.html', 'camp-leader-view.html');
             const params = new URLSearchParams({
                 property: selectedProperty.id,
                 propertyName: selectedProperty.name,
-                room: roomId,
-                roomNumber: roomNumber,
                 weekStart: formatDate(weekStart),
                 weekEnd: formatDate(weekEnd)
             });
