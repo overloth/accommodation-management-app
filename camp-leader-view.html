@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camp Leader View - friLingue</title>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px 40px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .header-info {
+            opacity: 0.9;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .actions-bar {
+            background: #f8f9fa;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            min-height: 400px;
+            justify-content: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        .week-overview {
+            display: none;
+        }
+
+        .week-overview.active {
+            display: block;
+        }
+
+        .overview-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .overview-header h2 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .overview-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .info-value {
+            color: #2c3e50;
+        }
+
+        .beds-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .bed-card {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .bed-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .bed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .bed-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .bed-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .bed-status.occupied {
+            background: #e8f5e9;
+            color: #27ae60;
+        }
+
+        .bed-status.available {
+            background: #f5f5f5;
+            color: #95a5a6;
+        }
+
+        .participant-info {
+            margin-top: 10px;
+        }
+
+        .participant-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .participant-detail {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .participant-detail-label {
+            font-weight: 600;
+            min-width: 80px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #856404;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            .header {
+                background: #2c3e50 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .actions-bar {
+                display: none;
+            }
+
+            .bed-card {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            .btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏕️ Camp Leader View</h1>
+            <div class="header-info" id="headerInfo">Loading information...</div>
+        </div>
+
+        <div class="actions-bar">
+            <a href="camp-leader-list.html" class="btn btn-secondary">← Back to List</a>
+            <button onclick="window.print()" class="btn btn-print">🖨️ Print View</button>
+        </div>
+
+        <div class="content">
+            <div id="loadingState" class="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">Loading participant information...</div>
+            </div>
+
+            <div id="errorState" style="display: none;"></div>
+
+            <div id="weekOverview" class="week-overview">
+                <div class="overview-header">
+                    <h2 id="overviewTitle">Room Overview</h2>
+                    <div class="overview-info">
+                        <div class="info-item">
+                            <span class="info-label">🏢 Property:</span>
+                            <span class="info-value" id="infoProperty">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">🚪 Room:</span>
+                            <span class="info-value" id="infoRoom">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">📅 Week:</span>
+                            <span class="info-value" id="infoWeek">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">👥 Participants:</span>
+                            <span class="info-value" id="infoParticipants">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="bedsGrid" class="beds-grid">
+                    <!-- Beds will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBHGyt3DG7T_u8cN6TYE3G66p_O7_b6z5s",
+            authDomain: "accommodation-management-57373.firebaseapp.com",
+            projectId: "accommodation-management-57373",
+            storageBucket: "accommodation-management-57373.firebasestorage.app",
+            messagingSenderId: "426628363856",
+            appId: "1:426628363856:web:2c7f4a78a75e7ac51b79f8",
+            databaseURL: "https://accommodation-management-57373-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Configuration
+        let config = {
+            token: '',
+            baseId: '',
+            tables: {
+                properties: 'Properties',
+                rooms: 'Rooms',
+                beds: 'Beds',
+                bedAssignments: 'Bed Assignments'
+            }
+        };
+
+        // State
+        let viewData = {
+            property: null,
+            propertyName: '',
+            room: null,
+            roomNumber: '',
+            weekStart: null,
+            weekEnd: null
+        };
+
+        // Load configuration from Firebase
+        async function loadConfigFromFirebase() {
+            try {
+                console.log('📡 Loading Airtable config from Firebase...');
+                const configRef = database.ref('config/airtable');
+                const snapshot = await configRef.once('value');
+                const configData = snapshot.val();
+
+                if (configData && configData.token && configData.baseId) {
+                    config.token = configData.token;
+                    config.baseId = configData.baseId;
+                    console.log('✅ Config loaded from Firebase');
+                    return true;
+                } else {
+                    const token = localStorage.getItem('airtableToken');
+                    const baseId = localStorage.getItem('airtableBaseId');
+                    
+                    if (token && baseId) {
+                        config.token = token;
+                        config.baseId = baseId;
+                        console.log('✅ Config loaded from localStorage');
+                        return true;
+                    }
+                }
+
+                console.log('❌ No Airtable configuration found');
+                return false;
+            } catch (error) {
+                console.error('❌ Error loading config:', error);
+                return false;
+            }
+        }
+
+        // Make Airtable request
+        async function makeAirtableRequest(table) {
+            if (!config.token || !config.baseId) {
+                throw new Error('Airtable configuration missing');
+            }
+            
+            const url = `https://api.airtable.com/v0/${config.baseId}/${table}`;
+            console.log('📡 Fetching from Airtable:', url);
+            
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${config.token}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                throw new Error(`Airtable API error: ${response.status} ${response.statusText}`);
+            }
+            
+            return await response.json();
+        }
+
+        // Parse URL parameters
+        function parseURLParameters() {
+            const params = new URLSearchParams(window.location.search);
+            
+            viewData.property = params.get('property');
+            viewData.propertyName = params.get('propertyName') || 'Unknown Property';
+            viewData.room = params.get('room');
+            viewData.roomNumber = params.get('roomNumber') || 'Unknown Room';
+            viewData.weekStart = params.get('weekStart');
+            viewData.weekEnd = params.get('weekEnd');
+
+            console.log('📋 Parsed URL parameters:', viewData);
+
+            if (!viewData.property || !viewData.room || !viewData.weekStart || !viewData.weekEnd) {
+                throw new Error('Missing required URL parameters');
+            }
+
+            return true;
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'short',
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+        }
+
+        // Load and display data
+        async function loadViewData() {
+            try {
+                console.log('🔄 Loading view data...');
+
+                // Update header
+                document.getElementById('headerInfo').textContent = 
+                    `${viewData.propertyName} - Room ${viewData.roomNumber} - Week of ${formatDate(viewData.weekStart)}`;
+
+                // Load all data
+                const [bedsRes, assignmentsRes, roomsRes, propertiesRes] = await Promise.all([
+                    makeAirtableRequest(config.tables.beds),
+                    makeAirtableRequest(config.tables.bedAssignments),
+                    makeAirtableRequest(config.tables.rooms),
+                    makeAirtableRequest(config.tables.properties)
+                ]);
+
+                console.log('✅ Data loaded:', {
+                    beds: bedsRes.records.length,
+                    assignments: assignmentsRes.records.length,
+                    rooms: roomsRes.records.length,
+                    properties: propertiesRes.records.length
+                });
+
+                // Build lookup maps
+                const bedsById = {};
+                bedsRes.records.forEach(r => { bedsById[r.id] = r; });
+
+                const roomsById = {};
+                roomsRes.records.forEach(r => { roomsById[r.id] = r; });
+
+                const propertiesById = {};
+                propertiesRes.records.forEach(r => { propertiesById[r.id] = r; });
+
+                // Process assignments
+                const weekStart = new Date(viewData.weekStart + 'T00:00:00');
+                const weekEnd = new Date(viewData.weekEnd + 'T23:59:59');
+
+                const allAssignments = assignmentsRes.records.map(record => {
+                    const fields = record.fields;
+
+                    // Check if this is a STAFF or HOTEL_GUEST assignment
+                    const directGivenName = fields['Given Name'] || '';
+                    const isStaffOrGuest = directGivenName === 'STAFF' || directGivenName === 'HOTEL_GUEST' ||
+                                          directGivenName === 'PRERESERVED' ||
+                                          directGivenName === 'STAFF_FRILINGUE' || directGivenName === 'STAFF_ADRENALIN' || 
+                                          directGivenName === 'TEACHER_FRILINGUE';
+
+                    // Get gender
+                    let gender = fields['Gender (from Booking)'];
+                    if (Array.isArray(gender)) gender = gender[0];
+
+                    // Build name
+                    let givenName, familyName, fullName;
+                    if (isStaffOrGuest) {
+                        givenName = directGivenName;
+                        familyName = '';
+                        fullName = directGivenName;
+                        gender = directGivenName;
+                    } else {
+                        givenName = Array.isArray(fields['Given Name (from Kid) (from Booking)']) 
+                            ? fields['Given Name (from Kid) (from Booking)'][0] 
+                            : fields['Given Name (from Kid) (from Booking)'] || '';
+                        familyName = Array.isArray(fields['Family Name (from Kid) (from Booking)']) 
+                            ? fields['Family Name (from Kid) (from Booking)'][0] 
+                            : fields['Family Name (from Kid) (from Booking)'] || '';
+                        fullName = `${givenName} ${familyName}`.trim() || 'Unnamed';
+                    }
+
+                    const bedId = fields['Beds'] ? fields['Beds'][0] : null;
+                    const rawRoomId = fields['Rooms'] ? fields['Rooms'][0] : null;
+                    const checkin = fields['Start Date'];
+                    const checkout = fields['End Date'];
+
+                    // Resolve roomId
+                    let resolvedRoomId = rawRoomId || null;
+                    if (!resolvedRoomId && bedId && bedsById[bedId]) {
+                        const bedRecord = bedsById[bedId];
+                        const bedRooms = bedRecord.fields && bedRecord.fields['Rooms'];
+                        if (Array.isArray(bedRooms) && bedRooms.length > 0) {
+                            resolvedRoomId = bedRooms[0];
+                        }
+                    }
+
+                    return {
+                        id: record.id,
+                        bedId: bedId,
+                        roomId: resolvedRoomId,
+                        checkin: checkin,
+                        checkout: checkout,
+                        clientName: fullName,
+                        givenName: givenName,
+                        familyName: familyName,
+                        gender: gender
+                    };
+                });
+
+                // Filter assignments for this room and week
+                const weekAssignments = allAssignments.filter(assignment => {
+                    if (assignment.roomId !== viewData.room) return false;
+                    
+                    const checkIn = new Date(assignment.checkin + 'T00:00:00');
+                    const checkOut = new Date(assignment.checkout + 'T23:59:59');
+                    
+                    return checkIn <= weekEnd && checkOut >= weekStart;
+                });
+
+                console.log('🎯 Filtered assignments for week:', weekAssignments.length);
+
+                // Get beds for this room
+                const roomBeds = bedsRes.records.filter(bedRecord => {
+                    const bedRooms = bedRecord.fields && bedRecord.fields['Rooms'];
+                    if (Array.isArray(bedRooms) && bedRooms.includes(viewData.room)) {
+                        return true;
+                    }
+                    return false;
+                });
+
+                console.log('🛏️ Beds in room:', roomBeds.length);
+
+                // Update overview info
+                document.getElementById('infoProperty').textContent = viewData.propertyName;
+                document.getElementById('infoRoom').textContent = viewData.roomNumber;
+                document.getElementById('infoWeek').textContent = 
+                    `${formatDate(viewData.weekStart)} - ${formatDate(viewData.weekEnd)}`;
+                document.getElementById('infoParticipants').textContent = weekAssignments.length;
+
+                // Display beds
+                displayBeds(roomBeds, weekAssignments);
+
+                // Show view
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('weekOverview').classList.add('active');
+
+            } catch (error) {
+                console.error('❌ Error loading view data:', error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').innerHTML = `
+                    <div class="error-message">
+                        <strong>Error loading data:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+                document.getElementById('errorState').style.display = 'block';
+            }
+        }
+
+        // Display beds
+        function displayBeds(beds, assignments) {
+            const bedsGrid = document.getElementById('bedsGrid');
+
+            if (beds.length === 0) {
+                bedsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🛏️</div>
+                        <h3>No beds found in this room</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort beds by name
+            beds.sort((a, b) => {
+                const nameA = a.fields['Bed Name'] || a.fields['Name'] || '';
+                const nameB = b.fields['Bed Name'] || b.fields['Name'] || '';
+                return nameA.localeCompare(nameB);
+            });
+
+            bedsGrid.innerHTML = beds.map(bed => {
+                const bedName = bed.fields['Bed Name'] || bed.fields['Name'] || 'Unnamed Bed';
+                const assignment = assignments.find(a => a.bedId === bed.id);
+
+                if (assignment) {
+                    return `
+                        <div class="bed-card">
+                            <div class="bed-header">
+                                <div class="bed-name">🛏️ ${bedName}</div>
+                                <div class="bed-status occupied">Occupied</div>
+                            </div>
+                            <div class="participant-info">
+                                <div class="participant-name">${assignment.clientName}</div>
+                                <div class="participant-detail">
+                                    <span class="participant-detail-label">Gender:</span>
+                                    <span>${assignment.gender || 'Not specified'}</span>
+                                </div>
+                                <div class="participant-detail">
+                                    <span class="participant-detail-label">Check-in:</span>
+                                    <span>${formatDate(assignment.checkin)}</span>
+                                </div>
+                                <div class="participant-detail">
+                                    <span class="participant-detail-label">Check-out:</span>
+                                    <span>${formatDate(assignment.checkout)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="bed-card">
+                            <div class="bed-header">
+                                <div class="bed-name">🛏️ ${bedName}</div>
+                                <div class="bed-status available">Available</div>
+                            </div>
+                            <div class="participant-info">
+                                <p style="color: #999; font-style: italic;">No participant assigned</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        // Initialize
+        async function initialize() {
+            console.log('🚀 Initializing Camp Leader View...');
+
+            try {
+                // Parse URL parameters
+                parseURLParameters();
+
+                // Load config
+                const configLoaded = await loadConfigFromFirebase();
+                if (!configLoaded) {
+                    throw new Error('Airtable configuration not found. Please configure it in the main app first.');
+                }
+
+                // Load data
+                await loadViewData();
+
+            } catch (error) {
+                console.error('❌ Initialization error:', error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').innerHTML = `
+                    <div class="error-message">
+                        <strong>Initialization Error:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+                document.getElementById('errorState').style.display = 'block';
+            }
+        }
+
+        // Start when page loads
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>

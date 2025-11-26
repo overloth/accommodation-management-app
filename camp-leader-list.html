@@ -491,7 +491,7 @@
                         </div>
                     </div>
                     <div class="alert alert-info" style="margin-bottom: 20px;">
-                        <strong>💡 Tip:</strong> Click on any room-date cell to generate a camp leader link for that week (Sunday-Saturday).
+                        <strong>💡 Tip:</strong> Click on any room-date cell to view the participant list for that week (Sunday-Saturday).
                     </div>
                     <div id="occupancyGrid"></div>
                     <div class="legend" id="occupancyLegend">
@@ -1170,7 +1170,7 @@
             return 'Mixed Room';
         }
 
-        // Select room date to generate link
+        // Select room date to navigate to camp leader view
         function selectRoomDate(roomId, roomNumber, date) {
             const [year, month, day] = date.split('-').map(num => parseInt(num));
             const selectedDate = new Date(year, month - 1, day, 12, 0, 0);
@@ -1190,11 +1190,6 @@
                 return checkIn <= weekEnd && checkOut >= weekStart;
             });
 
-            if (weekAssignments.length === 0) {
-                alert('No participants found for this week in room ' + roomNumber);
-                return;
-            }
-
             // Generate link
             const baseUrl = window.location.origin + window.location.pathname.replace('camp-leader-list.html', 'camp-leader-view.html');
             const params = new URLSearchParams({
@@ -1208,15 +1203,9 @@
             
             const shareableLink = `${baseUrl}?${params.toString()}`;
             
-            alert(`Camp Leader Link Generated!\n\nProperty: ${selectedProperty.name}\nRoom: ${roomNumber}\nWeek: ${formatDateShort(weekStart)} - ${formatDateShort(weekEnd)}\nParticipants: ${weekAssignments.length}\n\nLink:\n${shareableLink}\n\nCopy this link and share it with your camp leaders!`);
-            
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(shareableLink).then(() => {
-                    console.log('✅ Link copied to clipboard');
-                }).catch(err => {
-                    console.error('Failed to copy:', err);
-                });
-            }
+            // Navigate to the view page
+            console.log('🔗 Navigating to camp leader view:', shareableLink);
+            window.location.href = shareableLink;
         }
 
         // Format date as YYYY-MM-DD
