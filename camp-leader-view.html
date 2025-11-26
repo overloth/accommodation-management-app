@@ -418,7 +418,8 @@
                 properties: 'Properties',
                 rooms: 'Rooms',
                 beds: 'Beds',
-                bedAssignments: 'Bed Assignments'
+                bedAssignments: 'Bed Assignments',
+                bookings: 'Bookings'
             }
         };
 
@@ -526,19 +527,21 @@
                 document.getElementById('headerInfo').textContent = 
                     `${viewData.propertyName} - Week of ${formatDate(viewData.weekStart)}`;
 
-                // Load all data
-                const [bedsRes, assignmentsRes, roomsRes, propertiesRes] = await Promise.all([
+                // Load all data - including Bookings table for order numbers and notes
+                const [bedsRes, assignmentsRes, roomsRes, propertiesRes, bookingsRes] = await Promise.all([
                     makeAirtableRequest(config.tables.beds),
                     makeAirtableRequest(config.tables.bedAssignments),
                     makeAirtableRequest(config.tables.rooms),
-                    makeAirtableRequest(config.tables.properties)
+                    makeAirtableRequest(config.tables.properties),
+                    makeAirtableRequest(config.tables.bookings)
                 ]);
 
                 console.log('✅ Data loaded:', {
                     beds: bedsRes.records.length,
                     assignments: assignmentsRes.records.length,
                     rooms: roomsRes.records.length,
-                    properties: propertiesRes.records.length
+                    properties: propertiesRes.records.length,
+                    bookings: bookingsRes.records.length
                 });
 
                 // Build lookup maps
@@ -550,6 +553,24 @@
 
                 const propertiesById = {};
                 propertiesRes.records.forEach(r => { propertiesById[r.id] = r; });
+
+                // Build bookings lookup map
+                const bookingsById = {};
+                bookingsRes.records.forEach(r => { 
+                    const bookingId = r.fields['Booking ID (From CMS)'] || r.id;
+                    bookingsById[r.id] = {
+                        id: r.id,
+                        bookingId: bookingId,
+                        accommodationNotes: r.fields['Accommodation Notes'] || '',
+                        roommateWishes: r.fields['Roommate Wishes'] || '',
+                        age: Array.isArray(r.fields['Age (from Kids on Trip)']) 
+                            ? r.fields['Age (from Kids on Trip)'][0] 
+                            : r.fields['Age (from Kids on Trip)'],
+                        campName: Array.isArray(r.fields['Camp Name (from Camp)']) 
+                            ? r.fields['Camp Name (from Camp)'][0] 
+                            : r.fields['Camp Name (from Camp)']
+                    };
+                });
 
                 // Process assignments
                 const weekStart = new Date(viewData.weekStart + 'T00:00:00');
@@ -590,22 +611,32 @@
                     const rawRoomId = fields['Rooms'] ? fields['Rooms'][0] : null;
                     const checkin = fields['Start Date'];
                     const checkout = fields['End Date'];
+                    const bookingId = fields['Booking'] ? fields['Booking'][0] : null;
 
-                    // Get order number - try multiple field name variations
+                    // Get order number, notes and wishes from Bookings table
                     let orderNumber = '';
-                    if (fields['Order Number (from Booking)']) {
-                        orderNumber = Array.isArray(fields['Order Number (from Booking)']) 
-                            ? fields['Order Number (from Booking)'][0] 
-                            : fields['Order Number (from Booking)'];
-                    } else if (fields['Order Number']) {
-                        orderNumber = Array.isArray(fields['Order Number']) 
-                            ? fields['Order Number'][0] 
-                            : fields['Order Number'];
+                    let notes = '';
+                    let roommateWishes = '';
+                    
+                    if (bookingId && bookingsById[bookingId]) {
+                        const booking = bookingsById[bookingId];
+                        orderNumber = booking.bookingId || '';
+                        notes = booking.accommodationNotes || '';
+                        roommateWishes = booking.roommateWishes || '';
+                        
+                        // Build order display with age and camp if available
+                        if (orderNumber) {
+                            const details = [orderNumber];
+                            if (booking.age) details.push(`${booking.age}y`);
+                            if (booking.campName) details.push(booking.campName);
+                            orderNumber = details.join(' / ');
+                        }
                     }
-
-                    // Get notes and roommate wishes
-                    const notes = fields['Notes'] || '';
-                    const roommateWishes = fields['Roommate Wishes'] || '';
+                    
+                    // For staff/guests, get notes from assignment itself
+                    if (isStaffOrGuest && fields['Notes']) {
+                        notes = fields['Notes'];
+                    }
 
                     // Resolve roomId
                     let resolvedRoomId = rawRoomId || null;
