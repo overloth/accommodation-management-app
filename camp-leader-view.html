@@ -174,14 +174,13 @@
         }
 
         .room-section-header {
-            background: linear-gradient(135deg, #3498db, #2c3e50);
-            color: white;
             padding: 15px 20px;
             border-radius: 10px;
             margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-weight: 700;
         }
 
         .room-section-title {
@@ -762,9 +761,41 @@
                 return;
             }
 
+            // Calculate room designation for the week
+            function getRoomDesignation(roomId, roomAssignments) {
+                if (roomAssignments.length === 0) {
+                    return { type: 'Available', color: '#27ae60', bgColor: '#d5f4e6' };
+                }
+
+                // Collect unique genders (excluding staff types)
+                const staffTypes = ['STAFF', 'HOTEL_GUEST', 'PRERESERVED', 'STAFF_FRILINGUE', 'STAFF_ADRENALIN', 'TEACHER_FRILINGUE'];
+                const regularAssignments = roomAssignments.filter(a => !staffTypes.includes(a.gender));
+                
+                if (regularAssignments.length === 0) {
+                    return { type: 'Staff Room', color: '#fbc02d', bgColor: '#fff9c4' };
+                }
+
+                const genders = [...new Set(regularAssignments.map(a => a.gender).filter(g => g))];
+                
+                if (genders.length === 0) {
+                    return { type: 'Mixed Room', color: '#e67e22', bgColor: '#fde3cf' };
+                }
+                
+                if (genders.length === 1) {
+                    if (genders[0] === 'male' || genders[0] === 'Male') {
+                        return { type: 'Boys Room', color: '#0066cc', bgColor: '#cce7ff' };
+                    } else if (genders[0] === 'female' || genders[0] === 'Female') {
+                        return { type: 'Girls Room', color: '#9933cc', bgColor: '#f0d4f0' };
+                    }
+                }
+                
+                return { type: 'Mixed Room', color: '#e67e22', bgColor: '#fde3cf' };
+            }
+
             container.innerHTML = rooms.map(room => {
                 // Filter assignments for this room
                 const roomAssignments = assignments.filter(a => a.roomId === room.id);
+                const designation = getRoomDesignation(room.id, roomAssignments);
 
                 const bedsHTML = room.beds.map(bed => {
                     const bedName = bed.fields['Bed Name'] || bed.fields['Name'] || 'Unnamed Bed';
@@ -835,8 +866,8 @@
 
                 return `
                     <div class="room-section">
-                        <div class="room-section-header">
-                            <div class="room-section-title">🚪 ${room.name}</div>
+                        <div class="room-section-header" style="background: ${designation.bgColor}; border: 2px solid ${designation.color}; color: ${designation.color};">
+                            <div class="room-section-title">🚪 ${room.name} - ${designation.type}</div>
                             <div class="room-section-info">
                                 ${roomAssignments.length} / ${room.capacity} beds occupied
                             </div>
