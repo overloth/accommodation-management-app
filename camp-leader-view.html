@@ -263,6 +263,39 @@
             min-width: 80px;
         }
 
+        .notes-section,
+        .wishes-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .notes-label,
+        .wishes-label {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .notes-content,
+        .wishes-content {
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .order-number {
+            font-size: 0.85rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 4px;
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -558,6 +591,22 @@
                     const checkin = fields['Start Date'];
                     const checkout = fields['End Date'];
 
+                    // Get order number - try multiple field name variations
+                    let orderNumber = '';
+                    if (fields['Order Number (from Booking)']) {
+                        orderNumber = Array.isArray(fields['Order Number (from Booking)']) 
+                            ? fields['Order Number (from Booking)'][0] 
+                            : fields['Order Number (from Booking)'];
+                    } else if (fields['Order Number']) {
+                        orderNumber = Array.isArray(fields['Order Number']) 
+                            ? fields['Order Number'][0] 
+                            : fields['Order Number'];
+                    }
+
+                    // Get notes and roommate wishes
+                    const notes = fields['Notes'] || '';
+                    const roommateWishes = fields['Roommate Wishes'] || '';
+
                     // Resolve roomId
                     let resolvedRoomId = rawRoomId || null;
                     if (!resolvedRoomId && bedId && bedsById[bedId]) {
@@ -577,7 +626,10 @@
                         clientName: fullName,
                         givenName: givenName,
                         familyName: familyName,
-                        gender: gender
+                        gender: gender,
+                        orderNumber: orderNumber,
+                        notes: notes,
+                        roommateWishes: roommateWishes
                     };
                 });
 
@@ -688,6 +740,27 @@
                     const assignment = roomAssignments.find(a => a.bedId === bed.id);
 
                     if (assignment) {
+                        // Build order number display
+                        const orderDisplay = assignment.orderNumber 
+                            ? `<div class="order-number">Order: ${assignment.orderNumber}</div>`
+                            : '';
+
+                        // Build notes section
+                        const notesSection = assignment.notes && assignment.notes.trim() 
+                            ? `<div class="notes-section">
+                                <div class="notes-label">📝 Notes:</div>
+                                <div class="notes-content">${assignment.notes}</div>
+                               </div>`
+                            : '';
+
+                        // Build roommate wishes section
+                        const wishesSection = assignment.roommateWishes && assignment.roommateWishes.trim()
+                            ? `<div class="wishes-section">
+                                <div class="wishes-label">🤝 Roommate Wishes:</div>
+                                <div class="wishes-content">${assignment.roommateWishes}</div>
+                               </div>`
+                            : '';
+
                         return `
                             <div class="bed-card">
                                 <div class="bed-header">
@@ -696,6 +769,7 @@
                                 </div>
                                 <div class="participant-info">
                                     <div class="participant-name">${assignment.clientName}</div>
+                                    ${orderDisplay}
                                     <div class="participant-detail">
                                         <span class="participant-detail-label">Gender:</span>
                                         <span>${assignment.gender || 'Not specified'}</span>
@@ -708,6 +782,8 @@
                                         <span class="participant-detail-label">Check-out:</span>
                                         <span>${formatDate(assignment.checkout)}</span>
                                     </div>
+                                    ${notesSection}
+                                    ${wishesSection}
                                 </div>
                             </div>
                         `;
