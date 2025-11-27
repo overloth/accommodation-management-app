@@ -1736,11 +1736,11 @@
                 // Load config from Firebase
                 const configLoaded = await loadConfigFromFirebase();
                 
-                if (configLoaded) {
-                    console.log('✅ Configuration ready');
-                } else {
-                    console.log('ℹ️ No configuration - sample data mode available');
-                }
+                // if (configLoaded) {
+                //     console.log('✅ Configuration ready');
+                // } else {
+                //     console.log('ℹ️ No configuration - sample data mode available');
+                // }
                 
                 showMainApp();
             } else {
@@ -1983,8 +1983,6 @@
                         makeAirtableRequest(config.tables.bedAssignments)
                     ]);
 
-                    console.log("📦 Airtable data:", { propertiesRes, roomsRes, bedsRes, assignmentsRes });
-
                     // Filter for Switzerland properties only
                     const swissProperties = propertiesRes.records.filter(record => {
                         const countryName = record.fields['Country Name (from Property Country)'];
@@ -2033,7 +2031,6 @@
 
                     const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
 
-                    console.log("📊 Swiss stats:", { totalProperties, totalRooms, totalBeds, occupiedBeds, occupancyRate });
 
                     totalPropertiesEl.textContent = totalProperties;
                     totalRoomsEl.textContent = totalRooms;
@@ -2046,7 +2043,6 @@
                 occupancyRateEl.textContent = '0%';
             }
 
-            console.log("🔍 Updating stats…", { sampleDataLoaded, config });
         }
 
 
@@ -2065,7 +2061,6 @@
                     localStorage.setItem('airtableToken', configData.token);
                     localStorage.setItem('airtableBaseId', configData.baseId);
                     
-                    console.log('✅ Configuration loaded from Firebase');
                     
                     // Update status message
                     const statusEl = document.getElementById('configStatus');
@@ -2126,10 +2121,7 @@
                 
                 const endDateString = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
                 document.getElementById('checkoutDate').value = endDateString;
-                
-                console.log('Check-in (Sunday):', checkinDate, '(day', startDate.getDay(), ')');
-                console.log('Check-out (Saturday):', endDateString, '(day', endDate.getDay(), ')');
-                console.log('Number of weeks:', numberOfWeeks);
+
             }
         }
 
@@ -2596,11 +2588,6 @@
                         if (bookings.length > 0) {
                             const activeBooking = bookings[0];
                             
-                            // CRITICAL DEBUG: Log the complete activeBooking object
-                            console.log('🔍 FULL activeBooking object for bed', bed.number, ':', JSON.stringify(activeBooking, null, 2));
-                            console.log('🔍 activeBooking.notes value:', activeBooking.notes);
-                            console.log('🔍 activeBooking.clientName:', activeBooking.clientName);
-                            
                             // Get client name - different structure for sample vs Airtable
                             if (sampleDataLoaded) {
                                 const client = sampleData.clients.find(c => c.id === activeBooking.clientId);
@@ -2611,8 +2598,6 @@
                                 
                                 // Try to get booking details from airtableBookings
                                 const booking = activeBooking.bookingId ? airtableBookings.find(b => b.id === activeBooking.bookingId) : null;
-                                console.log("activeBooking: ", activeBooking);
-                                console.log("Found booking: ", booking);
                                 
                                 if (booking) {
                                     const details = [];
@@ -2635,10 +2620,6 @@
                                         const weekEndDate = new Date(weekEnd);
                                         weekEndDate.setHours(23, 59, 59, 999);
                                         
-                                        console.log('Checkout date:', checkoutDateField, 'Parsed:', checkoutDate);
-                                        console.log('Week end:', weekEndDate);
-                                        console.log('Is ending this week?', checkoutDate <= weekEndDate);
-                                        
                                         if (checkoutDate <= weekEndDate) {
                                             stayStatusInfo = '<br><span style="display: inline-block; margin-top: 5px; padding: 3px 8px; background: #e67e22; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">🏁 Ending This Week</span>';
                                         } else {
@@ -2656,19 +2637,8 @@
                                 const isStaffOrGuest = staffTypes.includes(activeBooking.clientName);
                                 const isKid = activeBooking.bookingId && !isStaffOrGuest;
                                 
-                                console.log('=== NOTES DEBUG ===');
-                                console.log('activeBooking:', activeBooking);
-                                console.log('isKid:', isKid);
-                                console.log('activeBooking.notes:', activeBooking.notes);
-                                console.log('booking exists?:', booking ? 'yes' : 'no');
-                                
                                 // Display notes based on assignment type
                                 if (isKid && booking) {
-                                    // This is a KID - show editable notes from Bookings table
-                                    console.log('=== KID NOTES ===');
-                                    console.log('Booking ID:', booking.id);
-                                    console.log('Accommodation Notes:', booking.accommodationNotes);
-                                    console.log('Roommate Wishes:', booking.roommateWishes);
                                     
                                     const hasNotes = (booking.accommodationNotes && booking.accommodationNotes.trim() !== '') || 
                                                      (booking.roommateWishes && booking.roommateWishes.trim() !== '');
@@ -2701,11 +2671,6 @@
                                         `;
                                     }
                                 } else if (isStaffOrGuest) {
-                                    // This is STAFF/GUEST - show editable notes from Bed Assignments table
-                                    console.log('=== STAFF/GUEST NOTES ===');
-                                    console.log('Assignment ID:', activeBooking.id);
-                                    console.log('Assignment notes:', activeBooking.notes);
-                                    console.log('Client name:', activeBooking.clientName);
                                     
                                     if (activeBooking.notes && activeBooking.notes.trim() !== '') {
                                         // Has notes - show with edit/delete buttons
@@ -2884,16 +2849,11 @@
                             if (isOccupied && !sampleDataLoaded) {
                                 const booking = bookings[0];
                                 const fullBooking = airtableBookings.find(b => b.id === booking.bookingId);
-                                console.log('=== DAILY OVERVIEW STAY STATUS ===');
-                                console.log('Booking:', booking);
-                                console.log('Full booking:', fullBooking);
                                 
                                 if (fullBooking && fullBooking.checkout) {
                                     const checkoutDate = new Date(fullBooking.checkout);
                                     const weekEndDate = new Date(selectedWeekStart);
                                     weekEndDate.setDate(weekEndDate.getDate() + 6);
-                                    
-                                    console.log('Checkout:', fullBooking.checkout, 'Week end:', weekEndDate);
                                     
                                     if (checkoutDate <= weekEndDate) {
                                         stayInfo = '<span style="color: #e67e22; font-weight: bold; margin-left: 8px;">🏁 Ending This Week</span>';
@@ -3172,14 +3132,11 @@
                 });
                 
                 // CRITICAL DEBUG: Log assignments with notes
-                console.log('🔍 LOADED BED ASSIGNMENTS - Total:', window.bedAssignments.length);
                 const assignmentsWithNotes = window.bedAssignments.filter(a => a.notes && a.notes.trim() !== '');
-                console.log('🔍 Assignments WITH notes:', assignmentsWithNotes.length);
-                assignmentsWithNotes.forEach(a => {
-                    console.log(`  📝 ${a.clientName} (${a.id}): "${a.notes}"`);
-                });
+                // assignmentsWithNotes.forEach(a => {
+                //     console.log(`  📝 ${a.clientName} (${a.id}): "${a.notes}"`);
+                // });
 
-                console.log(`Loaded ${window.bedAssignments.length} bed assignments (resolved rooms/properties)`);
             } catch (error) {
                 console.error('Error loading bed assignments (with resolution):', error);
                 window.bedAssignments = [];
@@ -3191,12 +3148,9 @@
             
             try {
                 const bookingsResponse = await makeAirtableRequest(config.tables.bookings);
-                
-                console.log('Total records from Airtable:', bookingsResponse.records.length);
-                
+                                
                 airtableBookings = bookingsResponse.records.map(record => {
                     const fields = record.fields;
-                    console.log("fields: ", fields);
                     const givenName = Array.isArray(fields['Given Name (from Kids on Trip)']) 
                     ? fields['Given Name (from Kids on Trip)'][0] 
                     : fields['Given Name (from Kids on Trip)'] || '';
@@ -3204,9 +3158,6 @@
                     ? fields['Family Name (from Kids on Trip)'][0] 
                     : fields['Family Name (from Kids on Trip)'] || '';
                     const fullName = `${givenName} ${familyName}`.trim() || 'Unnamed';
-                    console.log("given name ", givenName );
-                    console.log("familyName ", familyName);
-                    console.log("full name ", fullName);
 
                     // Extract Age and Mother Tongue - handle various data formats
                     let age = fields['Age (from Kids on Trip)'];
@@ -3229,17 +3180,12 @@
                         motherTongue = null;
                     }
 
-                   // Extract Language Studying - DEBUG VERSION
-                   console.log('All fields for booking:', fields['Booking ID (From CMS)'], fields);
-
                    // Try to find the language field - check all possible field names
                    let languageStudying = 
                        fields['Language Name (from Language Studying) (from Bookings by Kid)'] ||
                        fields['Language Studying (from Bookings by Kid)'] ||
                        fields['Language (from Bookings by Kid)'] ||
                        null;
-
-                   console.log('Raw languageStudying value:', languageStudying);
 
                    if (Array.isArray(languageStudying)) {
                        languageStudying = languageStudying[0];
@@ -3248,8 +3194,6 @@
                        console.log('Language is an object:', languageStudying);
                        languageStudying = null;
                    }
-
-                   console.log('Final languageStudying:', languageStudying);
 
                    // Extract new fields: Accommodation Notes and Roommate Wishes
                     let accommodationNotes = fields['Accommodation Notes'] || '';
@@ -3292,9 +3236,6 @@
                         roommateWishes: roommateWishes
                     };
                 });
-                
-                console.log(`Loaded ${airtableBookings.length} bookings (no filters)`);
-                console.log('First booking:', airtableBookings[0]);
                 
             } catch (error) {
                 console.error('Error loading bookings:', error);
@@ -3424,9 +3365,6 @@
             // Calculate week start (Sunday)
             const dayOfWeek = selectedDate.getDay();
             selectedWeekStart = new Date(y, m, d - dayOfWeek, 0, 0, 0);
-            
-            console.log('Selected date:', selectedDate);
-            console.log('Week start:', selectedWeekStart);
             
             // Update title and show daily overview
             updateDailyOverviewTitle();
@@ -3860,7 +3798,6 @@
                 select.innerHTML = '<option value="">Loading clients...</option>';
                 try {
                     allClients = await loadClientsFromBookings();
-                    console.log('All clients loaded:', allClients);
                 } catch (error) {
                     console.error('Error loading clients:', error);
                     select.innerHTML = '<option value="">Error loading clients</option>';
@@ -3868,16 +3805,12 @@
                 }
             }
 
-
-            console.log('All clients loaded:', allClients);
-
             // let availableClients = getAvailableClientsForWeek(allClients, selectedWeekStart);
             // let availableClients = allClients;
         // Filter by property's camps
             if (!sampleDataLoaded && selectedProperty) {
                 const property = window.loadedProperties?.find(p => p.id === selectedProperty.id);
                 if (property && property.campIds && property.campIds.length > 0) {
-                    console.log('Property camp IDs:', property.campIds);
                     
                     allClients = allClients.filter(client => {
                         // Check if client's booking camp matches any of the property's camps
@@ -3885,25 +3818,18 @@
                         if (!booking || !booking.campId) return false;
                         
                         const matches = property.campIds.includes(booking.campId);
-                        console.log(`Client ${client.name}, Camp: ${booking.campId}, Matches: ${matches}`);
                         return matches;
                     });
                     
-                    console.log(`Filtered to ${allClients.length} clients for this property's camps`);
                 }
             }
 
             let availableClients = allClients;
             allClientsGlobal = allClients; // Store for gender filtering
-            console.log('Available clients (filtered):', availableClients);
 
             // Filter out clients who currently have ANY active bed assignment in this property
             if (!sampleDataLoaded && window.bedAssignments) {
                 const assignedKidIds = new Set();
-                
-                console.log('=== FILTERING ASSIGNED CLIENTS ===');
-                console.log('Total bed assignments:', window.bedAssignments.length);
-                console.log('Total bookings:', airtableBookings.length);
                 
                 // Filter assignments for THIS property's rooms only
                 const propertyRoomIds = new Set(currentPropertyRooms.map(r => r.id));
@@ -3924,29 +3850,17 @@
                     
                     if (booking && booking.kidId) {
                         assignedKidIds.add(booking.kidId);
-                        console.log('✓ Filtered out:', booking.clientName, 
-                                   'currently assigned from', assignment.checkin, 'to', assignment.checkout);
                     }
                 });
-                
-                console.log('Total assigned kid IDs:', assignedKidIds.size);
-                console.log('Available clients before filter:', availableClients.length);
                 
                 availableClients = availableClients.filter(client => {
                     const isAssigned = assignedKidIds.has(client.id);
-                    if (isAssigned) {
-                        console.log(`Client ${client.name} (${client.id}): FILTERED OUT - already has a bed assignment`);
-                    }
+                    // if (isAssigned) {
+                    //     console.log(`Client ${client.name} (${client.id}): FILTERED OUT - already has a bed assignment`);
+                    // }
                     return !isAssigned;
                 });
-                
-                console.log('Available clients after filter:', availableClients.length);
-                console.log('=== END FILTERING ===');
             }
-
-            console.log('Available clients:', availableClients);
-            
-            
             
             if (weekDesignation === 'Boys Room') {
                 roomInfo.innerHTML = '🔵 <strong>Boys Room</strong> - Only showing available male clients for this week';
@@ -4070,8 +3984,6 @@
                 availableClients.forEach(client => {
                     // const genderIcon = client.gender === 'Male' ? '👨' : '👩';
 
-                    console.log('----------------client gender:');
-                    console.log(client.gender);
                     const genderIcon = client.gender === 'Male' ? '👨' : client.gender === 'Female' ? '👩' : '👤';
 
                     let displayText = `${genderIcon} ${client.name}`;
@@ -4144,15 +4056,12 @@
                
                // Filter out already assigned clients
                filteredClients = filteredClients.filter(client => !assignedKidIds.has(client.id));
-               console.log(`After removing assigned: ${filteredClients.length} clients available`);
            }
            
            // Apply gender filter if a gender is selected
            if (selectedGender) {
                filteredClients = filteredClients.filter(client => client.gender === selectedGender);
-               console.log(`Filtered to ${filteredClients.length} ${selectedGender} clients`);
            } else {
-               console.log(`Showing all ${filteredClients.length} available clients (no gender filter)`);
            }
 
            // Calculate how many clients were filtered out
@@ -4282,8 +4191,6 @@
             }
             
             const availableClients = allClients.filter(client => !assignedClientIds.has(client.id));
-            
-            console.log(`Week ${weekStart.toLocaleDateString()}: ${allClients.length} total, ${assignedClientIds.size} assigned, ${availableClients.length} available`);
             
             return availableClients;
         }
@@ -4456,7 +4363,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                         
                         // Show custom confirmation modal
                         showConfirmationModal(htmlMessage, async () => {
-                            console.log('User confirmed assignment despite gender mismatch');
                             await performBedAssignment(clientId, newClientName, clientGender, phone, checkin, checkout);
                         });
                         return; // Exit here, the callback will handle the assignment
@@ -4623,7 +4529,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
     // Airtable mode
     // Handle STAFF, HOTEL_GUEST, PRERESERVED, and Braunwald Adrenalin staff assignments
     if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESERVED' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
-        console.log(`Assigning ${clientId} to bed:`, selectedBed.id);
         
         // Create Bed Assignment record with only bed name, start date, and end date
         await makeAirtableRequest(config.tables.bedAssignments, 'POST', {
@@ -4638,7 +4543,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
             }]
         });
         
-        console.log(`${clientId} assignment created successfully`);
     } else {
         // Normal client assignment
         if (!clientId) {
@@ -4653,10 +4557,7 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
             showNotification('Booking not found for selected client.', 'error');
             return;
         }
-        
-        console.log('Assigning booking:', booking.id, 'to bed:', selectedBed.id);
-        console.log('Booking dates:', booking.checkin, 'to', booking.checkout);
-        
+
         // Update the booking in Airtable to link it to this bed
         await makeAirtableRequest(config.tables.bookings, 'PATCH', {
             records: [{
@@ -4682,8 +4583,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
         
         // Update local cache immediately
         booking.bedId = selectedBed.id;
-        
-        console.log('Updated booking in cache:', booking);
     }
 }
                 
@@ -4696,7 +4595,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                 }
                 
                 // Now reload beds which will check the updated bookings
-                console.log('Reloading beds for selected week:', selectedWeekStart);
                 await loadBeds(selectedRoom.id);
                 
                 showNotification('Bed assigned successfully!', 'success');
@@ -4781,13 +4679,9 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                             const durationDays = Math.ceil((assignmentEnd - assignmentStart) / (1000 * 60 * 60 * 24)) + 1;
                             const durationWeeks = Math.ceil(durationDays / 7);
                             
-                            console.log(`Assignment: ${assignment.checkin} to ${assignment.checkout} (${durationWeeks} weeks)`);
-                            console.log(`Releasing week: ${selectedWeekStart.toISOString().split('T')[0]} to ${weekEnd.toISOString().split('T')[0]}`);
-                            
                             if (durationWeeks === 1 || isHotelGuestOrPrereserved) {
                                 // Delete the assignment entirely (for single week OR for HOTEL_GUEST/PRERESERVED)
                                 await makeAirtableRequest(`${config.tables.bedAssignments}/${assignment.id}`, 'DELETE');
-                                console.log('Deleted assignment:', assignment.id);
                                 showNotification('Bed assignment deleted', 'success');
                             } else {
                                 // Assignment spans multiple weeks - need to update dates
@@ -4808,7 +4702,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                                             }
                                         }]
                                     });
-                                    console.log('Updated start date to:', newStartStr);
                                     showNotification('Assignment updated - start date moved forward', 'success');
                                 } else if (assignmentEnd.toISOString().split('T')[0] === weekEndStr) {
                                     // Releasing the last week - move end date backward
@@ -4824,7 +4717,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                                             }
                                         }]
                                     });
-                                    console.log('Updated end date to:', newEndStr);
                                     showNotification('Assignment updated - end date moved backward', 'success');
                                 } else {
                                     // Releasing a middle week - need to split into two assignments
@@ -5160,7 +5052,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                 weekStart.setDate(date.getDate() - dayOfWeek);
                 const weekDesignation = calculateRoomDesignationForWeek(roomId, weekStart);
 
-                console.log(`Date: ${date.toISOString().split('T')[0]}, Room: ${roomId}, Designation: ${weekDesignation}, Assignments: ${assignmentsOnDate.length}`);
                 let cssClass = 'available';
                 if (weekDesignation === 'Boys Room') {
                     cssClass = 'boys';
@@ -5189,7 +5080,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                     cssClass = 'occupied';
                 }
 
-                console.log(`Final CSS class: ${cssClass}`);
                 
                 const clientNames = assignmentsOnDate.map(a => a.clientName).join(', ');
                 const tooltip = `${weekDesignation}: ${clientNames}`;
@@ -5243,7 +5133,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                 const assignedKidIds = new Set();
                 const kidAssignmentInfo = {};
                 
-                console.log('🔍 Checking bed assignments:', window.bedAssignments ? window.bedAssignments.length : 0);
                 
                 if (window.bedAssignments && window.bedAssignments.length > 0) {
                     window.bedAssignments.forEach(assignment => {
@@ -5286,7 +5175,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                                 propertyName = selectedProperty.name;
                             }
                             
-                            console.log('✅ Kid', booking.clientName, '→ Property:', propertyName, ', Room:', roomName);
                             
                             kidAssignmentInfo[booking.kidId] = {
                                 propertyName: propertyName,
@@ -5298,7 +5186,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                     });
                 }
                 
-                console.log('📊 Total kids with assignments:', Object.keys(kidAssignmentInfo).length);
                 
                 // Map bookings to kids data
                 allKidsData = airtableBookings.map(booking => {
@@ -5329,15 +5216,12 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                     };
                 });
                 
-                console.log(`✅ Loaded ${allKidsData.length} total kids`);
-                console.log(`✅ Assigned kids: ${allKidsData.filter(k => k.isAssigned).length}`);
-                
                 const sampleAssigned = allKidsData.find(k => k.isAssigned);
-                if (sampleAssigned) {
-                    console.log('📋 Sample assigned kid:', sampleAssigned);
-                } else {
-                    console.warn('⚠️ No assigned kids found!');
-                }
+                // if (sampleAssigned) {
+                //     console.log('📋 Sample assigned kid:', sampleAssigned);
+                // } else {
+                //     console.warn('⚠️ No assigned kids found!');
+                // }
                 
                 // Update property name display
                 document.getElementById('kidsOverviewProperty').textContent = 
@@ -5722,8 +5606,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
             const phoneGroup = document.getElementById('phoneGroup');
             const checkoutDateField = document.getElementById('checkoutDate');
             
-            console.log('handleClientSelection called, clientId:', clientId);
-            console.log('checkoutDateField:', checkoutDateField);
             
             // If STAFF, HOTEL_GUEST, PRERESERVED, or any of the Braunwald Adrenalin staff types is selected, hide unnecessary fields
             if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESERVED' || clientId === 'STAFF_FRILINGUE' || clientId === 'STAFF_ADRENALIN' || clientId === 'TEACHER_FRILINGUE') {
@@ -5738,12 +5620,10 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                 
                 // Make checkout date editable for HOTEL_GUEST and PRERESERVED
                 if (clientId === 'HOTEL_GUEST' || clientId === 'PRERESERVED') {
-                    console.log('Unlocking checkout field for:', clientId);
                     checkoutDateField.removeAttribute('readonly');
                     checkoutDateField.style.background = 'white';
                     checkoutDateField.style.cursor = 'text';
                 } else {
-                    console.log('Keeping checkout field locked for:', clientId);
                     // Keep it readonly for other staff types
                     checkoutDateField.setAttribute('readonly', 'readonly');
                     checkoutDateField.style.background = '#f8f9fa';
@@ -5953,7 +5833,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                     if (booking) {
                         booking.accommodationNotes = '';
                         booking.roommateWishes = '';
-                        console.log('Updated booking in airtableBookings:', booking);
                     }
                     
                     // Update the kid in allKidsData array  
@@ -5961,7 +5840,6 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                     if (kid) {
                         kid.accommodationNotes = '';
                         kid.roommateWishes = '';
-                        console.log('Updated kid in allKidsData:', kid);
                     }
 
                     showNotification('Notes deleted successfully!', 'success');
@@ -6013,14 +5891,12 @@ if (clientId === 'STAFF' || clientId === 'HOTEL_GUEST' || clientId === 'PRERESER
                     const booking = airtableBookings.find(b => b.id === currentNotesKidId);
                     if (booking) {
                         booking.accommodationNotes = accommodationNotes;
-                        console.log('Updated booking in airtableBookings:', booking);
                     }
                     
                     // Update the kid in allKidsData array
                     const kid = allKidsData.find(k => k.id === currentNotesKidId);
                     if (kid) {
                         kid.accommodationNotes = accommodationNotes;
-                        console.log('Updated kid in allKidsData:', kid);
                     }
 
                     closeKidNotesModal();
