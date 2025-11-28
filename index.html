@@ -2538,8 +2538,21 @@
                             
                             console.log('❌ Bed', bedName, 'did NOT match - filtering out');
                             return false;
-                        })
-                        .map(record => ({
+                        });
+                    
+                    // DEBUG: Show ALL beds that were checked
+                    console.log('=== BUNKER DEBUG ===');
+                    console.log('Total beds found after filter:', beds.length);
+                    console.log('Room ID we are looking for:', roomId);
+                    console.log('All beds from Airtable:', response.records.length);
+                    response.records.forEach(record => {
+                        const bedName = record.fields['Name'];
+                        const roomsField = record.fields.Rooms;
+                        const lookupRoomName = record.fields['Room Name (from Rooms)'];
+                        console.log(`Bed: ${bedName}, Rooms field:`, roomsField, 'Lookup:', lookupRoomName);
+                    });
+                    
+                    beds = beds.map(record => ({
                             id: record.id,
                             number: record.fields['Name'],
                             roomId: roomId,
