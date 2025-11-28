@@ -2505,7 +2505,7 @@
                     beds = response.records
                         .filter(record => {
                             const roomsField = record.fields.Rooms;
-                            // const lookupRoomName = record.fields['Room Name (from Rooms)'];
+                            const lookupRoomName = record.fields['Room Name (from Rooms)'];
                             const bedName = record.fields['Name'];
         
                             // DEBUG: Log each bed record we're checking
