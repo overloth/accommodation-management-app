@@ -1916,6 +1916,41 @@
                         throw new Error('Airtable configuration missing');
                     }
                     
+                    // For GET requests, handle pagination to get ALL records
+                    if (method === 'GET') {
+                        let allRecords = [];
+                        let offset = null;
+                        
+                        do {
+                            const url = offset 
+                                ? `https://api.airtable.com/v0/${config.baseId}/${table}?offset=${offset}`
+                                : `https://api.airtable.com/v0/${config.baseId}/${table}`;
+                            
+                            const options = {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${config.token}`,
+                                    'Content-Type': 'application/json'
+                                }
+                            };
+                            
+                            const response = await fetch(url, options);
+                            if (!response.ok) {
+                                throw new Error(`Airtable API error: ${response.status} ${response.statusText}`);
+                            }
+                            
+                            const result = await response.json();
+                            allRecords = allRecords.concat(result.records);
+                            offset = result.offset;
+                            
+                            console.log(`Fetched ${result.records.length} records from ${table}, total so far: ${allRecords.length}`);
+                        } while (offset);
+                        
+                        console.log(`✅ Total records fetched from ${table}: ${allRecords.length}`);
+                        return { records: allRecords };
+                    }
+                    
+                    // For POST/PATCH requests (non-GET), use original logic
                     const url = `https://api.airtable.com/v0/${config.baseId}/${table}`;
                     const options = {
                         method: method,
