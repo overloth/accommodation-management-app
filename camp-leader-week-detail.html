@@ -459,27 +459,28 @@
     </div>
 
     <script>
+        console.log('📊 Camp Leader Week Detail - Starting...');
+
         // Firebase configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyAdOSPXI1NQh0OxmGAGUJdLlIvZcfPeMhw",
-            authDomain: "frilingue-app.firebaseapp.com",
-            databaseURL: "https://frilingue-app-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "frilingue-app",
-            storageBucket: "frilingue-app.appspot.com",
-            messagingSenderId: "59195883230",
-            appId: "1:59195883230:web:e1af652bbbc3badb2c6603"
+            apiKey: "AIzaSyCaOMtd-Tl9bvTdMmLtDm0ALH9FctuVBoY",
+            authDomain: "accommodation-management-57373.firebaseapp.com",
+            projectId: "accommodation-management-57373",
+            storageBucket: "accommodation-management-57373.firebasestorage.app",
+            messagingSenderId: "905096938169",
+            appId: "1:905096938169:web:715d8c7cb73d5c3aa61168",
+            databaseURL: "https://accommodation-management-57373-default-rtdb.europe-west1.firebasedatabase.app"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Airtable configuration
-        const config = {
-            token: 'patSB5fvpQwKH3Drd.4d9cdaedadf76e8976e3bfe2dc3e85ddf09a3b0c6f6ffce0ed1f43e3de3b3e74',
-            baseId: 'appoDAW3suAvdyatD',
+        // Configuration
+        let config = {
+            token: '',
+            baseId: '',
             tables: {
-                bookings: 'tbl0Vqwvt1Jcf1iH5'
+                bookings: 'Bookings'
             }
         };
 
@@ -491,11 +492,100 @@
             endDate: null
         };
 
+        // Load configuration from Firebase
+        async function loadConfigFromFirebase() {
+            try {
+                console.log('📡 Loading Airtable config from Firebase...');
+                const configRef = database.ref('config/airtable');
+                const snapshot = await configRef.once('value');
+                const configData = snapshot.val();
+
+                if (configData && configData.token && configData.baseId) {
+                    config.token = configData.token;
+                    config.baseId = configData.baseId;
+                    console.log('✅ Config loaded from Firebase');
+                    return true;
+                } else {
+                    const token = localStorage.getItem('airtableToken');
+                    const baseId = localStorage.getItem('airtableBaseId');
+                    
+                    if (token && baseId) {
+                        config.token = token;
+                        config.baseId = baseId;
+                        console.log('✅ Config loaded from localStorage');
+                        return true;
+                    }
+                }
+
+                console.log('❌ No Airtable configuration found');
+                return false;
+            } catch (error) {
+                console.error('❌ Error loading config:', error);
+                return false;
+            }
+        }
+
+        // Make Airtable request
+        async function makeAirtableRequest(table, filterFormula = '') {
+            if (!config.token || !config.baseId) {
+                throw new Error('Airtable configuration missing');
+            }
+            
+            // Handle pagination to get ALL records
+            let allRecords = [];
+            let offset = null;
+            
+            do {
+                let url = `https://api.airtable.com/v0/${config.baseId}/${table}`;
+                const params = [];
+                
+                if (filterFormula) {
+                    params.push(`filterByFormula=${encodeURIComponent(filterFormula)}`);
+                }
+                if (offset) {
+                    params.push(`offset=${offset}`);
+                }
+                if (params.length > 0) {
+                    url += `?${params.join('&')}`;
+                }
+                
+                console.log('📡 Fetching from Airtable:', url);
+                
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${config.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                };
+                
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`Airtable API error: ${response.status} ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                allRecords = allRecords.concat(result.records);
+                offset = result.offset;
+                
+                console.log(`Fetched ${result.records.length} records from ${table}, total so far: ${allRecords.length}`);
+            } while (offset);
+            
+            console.log(`✅ Total records fetched from ${table}: ${allRecords.length}`);
+            return { records: allRecords };
+        }
+
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            parseURLParameters();
-            updatePageHeader();
-            loadWeekData();
+        document.addEventListener('DOMContentLoaded', async () => {
+            const configLoaded = await loadConfigFromFirebase();
+            if (configLoaded) {
+                parseURLParameters();
+                updatePageHeader();
+                loadWeekData();
+            } else {
+                showError('Airtable configuration not found. Please set up the configuration in the main app.');
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
         });
 
         function parseURLParameters() {
