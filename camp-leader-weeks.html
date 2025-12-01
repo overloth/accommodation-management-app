@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camp Leader Weekly Overview - friLingue</title>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .back-button {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .header-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            min-height: 400px;
+            justify-content: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        .properties-section {
+            display: none;
+        }
+
+        .properties-section.active {
+            display: block;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .section-subtitle {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .property-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            text-align: center;
+        }
+
+        .property-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #3498db;
+        }
+
+        .property-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .property-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .property-location {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .property-location::before {
+            content: "📍";
+        }
+
+        .weeks-section {
+            display: none;
+        }
+
+        .weeks-section.active {
+            display: block;
+        }
+
+        .weeks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .week-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            text-align: center;
+        }
+
+        .week-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #3498db;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        }
+
+        .week-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        .week-dates {
+            font-size: 1.1rem;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .week-info {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .view-week-btn {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .view-week-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .view-week-btn:active {
+            transform: scale(0.98);
+        }
+
+        .selected-property-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .selected-property-info h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .selected-property-info p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .header {
+                background: white;
+                color: #2c3e50;
+                border-bottom: 2px solid #3498db;
+            }
+
+            .back-button {
+                display: none;
+            }
+
+            .view-week-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-button" onclick="goBack()">← Back</button>
+            <div class="header-icon">📅</div>
+            <h1>Camp Leader Weekly Overview</h1>
+            <p>Select a property and week to view detailed information</p>
+        </div>
+
+        <div class="content">
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                <div class="loading-text">Loading properties...</div>
+            </div>
+
+            <div class="properties-section" id="propertiesSection">
+                <h2 class="section-title">Select a Property</h2>
+                <p class="section-subtitle">Choose a property to view weekly overviews</p>
+                <div class="properties-grid" id="propertiesGrid"></div>
+            </div>
+
+            <div class="weeks-section" id="weeksSection">
+                <div class="selected-property-info" id="selectedPropertyInfo"></div>
+                <h2 class="section-title">Select a Week</h2>
+                <p class="section-subtitle">Click on a week to view detailed camp leader information</p>
+                <div class="weeks-grid" id="weeksGrid"></div>
+            </div>
+
+            <div class="error-message" id="errorMessage" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdOSPXI1NQh0OxmGAGUJdLlIvZcfPeMhw",
+            authDomain: "frilingue-app.firebaseapp.com",
+            databaseURL: "https://frilingue-app-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "frilingue-app",
+            storageBucket: "frilingue-app.appspot.com",
+            messagingSenderId: "59195883230",
+            appId: "1:59195883230:web:e1af652bbbc3badb2c6603"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Airtable configuration
+        const config = {
+            token: 'patSB5fvpQwKH3Drd.4d9cdaedadf76e8976e3bfe2dc3e85ddf09a3b0c6f6ffce0ed1f43e3de3b3e74',
+            baseId: 'appoDAW3suAvdyatD',
+            tables: {
+                properties: 'tblDxM8I6Cnh8uDKd',
+                bookings: 'tbl0Vqwvt1Jcf1iH5'
+            }
+        };
+
+        let properties = [];
+        let selectedProperty = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProperties();
+        });
+
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        async function loadProperties() {
+            try {
+                const response = await fetch(
+                    `https://api.airtable.com/v0/${config.baseId}/${config.tables.properties}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${config.token}`
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch properties');
+                }
+
+                const data = await response.json();
+                properties = data.records.map(record => ({
+                    id: record.id,
+                    name: record.fields['Property Name'] || 'Unknown',
+                    location: record.fields['Location'] || '',
+                    icon: getPropertyIcon(record.fields['Property Name'])
+                }));
+
+                displayProperties();
+            } catch (error) {
+                console.error('Error loading properties:', error);
+                showError('Failed to load properties. Please try again.');
+            } finally {
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('propertiesSection').classList.add('active');
+            }
+        }
+
+        function getPropertyIcon(propertyName) {
+            const name = propertyName.toLowerCase();
+            if (name.includes('braunwald')) return '🏔️';
+            if (name.includes('liddes') || name.includes('bernard')) return '⛰️';
+            if (name.includes('schwarzsee')) return '🏞️';
+            if (name.includes('estavayer')) return '🏖️';
+            return '🏠';
+        }
+
+        function displayProperties() {
+            const grid = document.getElementById('propertiesGrid');
+            grid.innerHTML = properties.map(property => `
+                <div class="property-card" onclick="selectProperty('${property.id}')">
+                    <div class="property-icon">${property.icon}</div>
+                    <div class="property-name">${property.name}</div>
+                    <div class="property-location">${property.location}</div>
+                    <button class="view-week-btn" onclick="event.stopPropagation(); selectProperty('${property.id}')">
+                        View Weeks
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function selectProperty(propertyId) {
+            selectedProperty = properties.find(p => p.id === propertyId);
+            
+            if (!selectedProperty) return;
+
+            // Show selected property info
+            document.getElementById('selectedPropertyInfo').innerHTML = `
+                <h3>${selectedProperty.icon} ${selectedProperty.name}</h3>
+                <p>${selectedProperty.location}</p>
+            `;
+
+            // Hide properties section, show weeks section
+            document.getElementById('propertiesSection').classList.remove('active');
+            document.getElementById('weeksSection').classList.add('active');
+
+            // Generate weeks starting from December 7, 2024
+            generateWeeks();
+        }
+
+        function generateWeeks() {
+            const startDate = new Date('2024-12-07'); // Winter courses start date
+            const endDate = new Date('2025-03-31'); // Approximate end date
+            const weeks = [];
+            
+            let currentWeekStart = new Date(startDate);
+            let weekNumber = 1;
+
+            while (currentWeekStart <= endDate) {
+                const weekEnd = new Date(currentWeekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6); // 7 days per week
+
+                weeks.push({
+                    number: weekNumber,
+                    startDate: new Date(currentWeekStart),
+                    endDate: weekEnd > endDate ? endDate : weekEnd
+                });
+
+                currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+                weekNumber++;
+            }
+
+            displayWeeks(weeks);
+        }
+
+        function displayWeeks(weeks) {
+            const grid = document.getElementById('weeksGrid');
+            grid.innerHTML = weeks.map(week => {
+                const startStr = formatDate(week.startDate);
+                const endStr = formatDate(week.endDate);
+                
+                return `
+                    <div class="week-card" onclick="viewWeek(${week.number}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}')">
+                        <div class="week-number">Week ${week.number}</div>
+                        <div class="week-dates">${startStr} - ${endStr}</div>
+                        <div class="week-info">📊 Click to view details</div>
+                        <button class="view-week-btn" onclick="event.stopPropagation(); viewWeek(${week.number}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}')">
+                            View Week Details
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatDate(date) {
+            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            return date.toLocaleDateString('en-GB', options);
+        }
+
+        function viewWeek(weekNumber, startDate, endDate) {
+            // Create URL with parameters
+            const url = `camp-leader-week-detail.html?property=${selectedProperty.id}&propertyName=${encodeURIComponent(selectedProperty.name)}&week=${weekNumber}&startDate=${startDate}&endDate=${endDate}`;
+            window.location.href = url;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
