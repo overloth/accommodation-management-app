@@ -633,64 +633,100 @@
 
         async function loadWeekData() {
             try {
-                // For now, we'll create placeholder data
-                // You'll connect this to your Airtable later
+                console.log('📊 Loading data for week', weekData.weekNumber);
+                console.log('   Property:', weekData.propertyName, '(ID:', weekData.property, ')');
+                console.log('   Date range:', weekData.startDate, 'to', weekData.endDate);
                 
-                // Simulate loading delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Load all bookings from Airtable
+                const response = await makeAirtableRequest(config.tables.bookings);
+                console.log('📦 Received', response.records.length, 'total bookings');
 
-                // Sample data structure (you'll replace this with actual Airtable data)
-                const sampleBookings = [
-                    {
-                        firstName: 'Emma',
-                        surname: 'Schmidt',
-                        arrivalDate: '2024-12-07',
-                        dateOfBirth: '2010-03-15',
-                        duration: '1 week',
-                        language: 'French',
-                        level: 'Intermediate',
-                        intensiveLessons: 'Yes',
-                        extraCourses: 'Ski',
-                        arrival: 'Train 14:30',
-                        departure: 'Car 16:00',
-                        others: 'Vegetarian',
-                        laundryService: 'Yes',
-                        phonePrefix: '+41',
-                        parentsPhone: '79 123 4567',
-                        passportCopy: 'Yes',
-                        insuranceCopy: 'Yes'
-                    },
-                    {
-                        firstName: 'Lucas',
-                        surname: 'Dubois',
-                        arrivalDate: '2024-12-07',
-                        dateOfBirth: '2011-07-22',
-                        duration: '1 week',
-                        language: 'German',
-                        level: 'Beginner',
-                        intensiveLessons: 'No',
-                        extraCourses: 'Ski',
-                        arrival: 'Car 15:00',
-                        departure: 'Train 17:30',
-                        others: 'None',
-                        laundryService: 'No',
-                        phonePrefix: '+33',
-                        parentsPhone: '6 12 34 56 78',
-                        passportCopy: 'Yes',
-                        insuranceCopy: 'Pending'
+                // Filter bookings that overlap with this week AND belong to this property
+                const weekStart = new Date(weekData.startDate);
+                const weekEnd = new Date(weekData.endDate);
+                weekEnd.setHours(23, 59, 59, 999); // End of day
+                
+                const weekBookings = response.records.filter(record => {
+                    const fields = record.fields;
+                    
+                    // Check if booking belongs to the selected property
+                    const bookingPropertyId = fields['Property'] || fields['Property (from Camp)'];
+                    const propertyId = Array.isArray(bookingPropertyId) ? bookingPropertyId[0] : bookingPropertyId;
+                    
+                    if (propertyId !== weekData.property) {
+                        return false; // Not for this property
                     }
-                ];
+                    
+                    // Get arrival and departure dates
+                    const arrivalDate = fields['Arrival Date'] || fields['Start Date'] || fields['Check-in Date'];
+                    const departureDate = fields['Departure Date'] || fields['End Date'] || fields['Check-out Date'];
+                    
+                    if (!arrivalDate) return false;
+                    
+                    const arrival = new Date(arrivalDate);
+                    const departure = departureDate ? new Date(departureDate) : null;
+                    
+                    // Check if booking overlaps with this week
+                    // Booking overlaps if:
+                    // - Arrival is during the week, OR
+                    // - Departure is during the week, OR
+                    // - Booking spans the entire week
+                    
+                    const arrivalInWeek = arrival >= weekStart && arrival <= weekEnd;
+                    const departureInWeek = departure && departure >= weekStart && departure <= weekEnd;
+                    const spansWeek = arrival <= weekStart && (!departure || departure >= weekEnd);
+                    
+                    return arrivalInWeek || departureInWeek || spansWeek;
+                }).map(record => {
+                    const fields = record.fields;
+                    
+                    // Extract kid information
+                    const givenName = fields['Given Name (from Kid)'] || fields['First Name'] || fields['Kid First Name'] || '';
+                    const familyName = fields['Family Name (from Kid)'] || fields['Last Name'] || fields['Kid Surname'] || '';
+                    const firstName = Array.isArray(givenName) ? givenName[0] : givenName;
+                    const surname = Array.isArray(familyName) ? familyName[0] : familyName;
+                    
+                    return {
+                        firstName: firstName,
+                        surname: surname,
+                        arrivalDate: fields['Arrival Date'] || fields['Start Date'] || fields['Check-in Date'] || '',
+                        dateOfBirth: fields['Date of Birth (from Kid)'] || fields['Birthday'] || '',
+                        duration: fields['Duration'] || calculateDuration(fields['Arrival Date'] || fields['Start Date'], fields['Departure Date'] || fields['End Date']),
+                        language: fields['Course Language'] || fields['Language'] || '',
+                        level: fields['Language Level'] || fields['Level'] || '',
+                        intensiveLessons: fields['Intensive Lessons'] || fields['Intensive'] || 'No',
+                        extraCourses: fields['Extra Courses'] || fields['Activities'] || '',
+                        arrival: fields['Arrival Details'] || fields['Arrival'] || '',
+                        departure: fields['Departure Details'] || fields['Departure'] || '',
+                        others: fields['Others'] || fields['Special Notes'] || '',
+                        laundryService: fields['Laundry Service'] || fields['Laundry'] || 'No',
+                        phonePrefix: fields['Phone Prefix'] || fields['Country Code'] || '',
+                        parentsPhone: fields['Parent Phone'] || fields['Phone'] || '',
+                        passportCopy: fields['Passport Copy'] || 'No',
+                        insuranceCopy: fields['Insurance Copy'] || 'No'
+                    };
+                });
 
-                displayWeekData(sampleBookings);
-                updateSummaryCards(sampleBookings);
+                console.log('✅ Found', weekBookings.length, 'bookings for this property and week');
+
+                displayWeekData(weekBookings);
+                updateSummaryCards(weekBookings);
                 
             } catch (error) {
-                console.error('Error loading week data:', error);
-                showError('Failed to load week data. Please try again.');
+                console.error('❌ Error loading week data:', error);
+                showError('Failed to load week data: ' + error.message);
             } finally {
                 document.getElementById('loadingIndicator').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
             }
+        }
+        
+        function calculateDuration(startDate, endDate) {
+            if (!startDate || !endDate) return '';
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+            return days === 7 ? '1 week' : `${days} days`;
         }
 
         function displayWeekData(bookings) {
@@ -764,7 +800,9 @@
         }
 
         function goBack() {
-            window.location.href = 'camp-leader-weeks.html';
+            // Go back to weeks selection for the same property
+            const url = `camp-leader-weeks.html?property=${weekData.property}&propertyName=${encodeURIComponent(weekData.propertyName)}&showWeeks=true`;
+            window.location.href = url;
         }
 
         function printPage() {

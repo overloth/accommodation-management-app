@@ -458,7 +458,25 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const configLoaded = await loadConfigFromFirebase();
             if (configLoaded) {
-                loadProperties();
+                // Check if we should show weeks directly (coming back from detail page)
+                const urlParams = new URLSearchParams(window.location.search);
+                const showWeeks = urlParams.get('showWeeks');
+                const propertyId = urlParams.get('property');
+                const propertyName = urlParams.get('propertyName');
+                
+                if (showWeeks === 'true' && propertyId && propertyName) {
+                    // Directly show weeks for this property
+                    await loadProperties();
+                    const property = properties.find(p => p.id === propertyId);
+                    if (property) {
+                        selectProperty(property.id);
+                    } else {
+                        // Property not found, create it from URL params
+                        selectProperty(propertyId, decodeURIComponent(propertyName));
+                    }
+                } else {
+                    loadProperties();
+                }
             } else {
                 showError('Airtable configuration not found. Please set up the configuration in the main app.');
             }
@@ -519,8 +537,19 @@
             `).join('');
         }
 
-        function selectProperty(propertyId) {
-            selectedProperty = properties.find(p => p.id === propertyId);
+        function selectProperty(propertyIdOrObj, propertyNameParam = null) {
+            // Handle both object and ID+name parameters
+            if (typeof propertyIdOrObj === 'object') {
+                selectedProperty = propertyIdOrObj;
+            } else {
+                // Coming from URL parameters
+                selectedProperty = properties.find(p => p.id === propertyIdOrObj) || {
+                    id: propertyIdOrObj,
+                    name: propertyNameParam || 'Unknown Property',
+                    location: '',
+                    icon: '🏠'
+                };
+            }
             
             if (!selectedProperty) return;
 
