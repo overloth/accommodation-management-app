@@ -568,7 +568,7 @@
         }
 
         function generateWeeks() {
-            const startDate = new Date('2024-12-07'); // Winter courses start date
+            const startDate = new Date('2024-12-08'); // Sunday, December 8, 2024 (changed from Saturday Dec 7)
             const endDate = new Date('2026-04-30'); // Extended to April 2026 to include all bookings
             const weeks = [];
             
@@ -577,7 +577,7 @@
 
             while (currentWeekStart <= endDate) {
                 const weekEnd = new Date(currentWeekStart);
-                weekEnd.setDate(weekEnd.getDate() + 6); // 7 days per week
+                weekEnd.setDate(weekEnd.getDate() + 6); // Sunday to Saturday (7 days)
 
                 weeks.push({
                     number: weekNumber,
@@ -602,7 +602,7 @@
                     <div class="week-card" onclick="viewWeek(${week.number}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}')">
                         <div class="week-number">Week ${week.number}</div>
                         <div class="week-dates">${startStr} - ${endStr}</div>
-                        <div class="week-info">📊 Click to view details</div>
+                        <div class="week-info" style="font-size: 0.75rem; color: #666; margin-top: 5px;">Sunday - Saturday</div>
                         <button class="view-week-btn" onclick="event.stopPropagation(); viewWeek(${week.number}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}')">
                             View Week Details
                         </button>
