@@ -420,20 +420,9 @@
                                 <th>Kid First Name</th>
                                 <th>Kid Surname</th>
                                 <th>Arrival Date</th>
-                                <th>Date of Birth</th>
                                 <th>Duration</th>
-                                <th>Language</th>
-                                <th>Level</th>
-                                <th>Intensive Lessons</th>
-                                <th>Extra Courses</th>
-                                <th>Arrival</th>
-                                <th>Departure</th>
-                                <th>Others</th>
-                                <th>Laundry Service</th>
-                                <th>Phone Prefix</th>
-                                <th>Parents Phone</th>
-                                <th>Passport Copy</th>
-                                <th>Insurance Copy</th>
+                                <th>Camp/Language</th>
+                                <th>Accommodation</th>
                             </tr>
                         </thead>
                         <tbody id="dataTableBody">
@@ -480,7 +469,8 @@
             token: '',
             baseId: '',
             tables: {
-                bookings: 'Bookings'
+                bookings: 'Bookings',
+                camps: 'Camps'
             }
         };
 
@@ -637,11 +627,24 @@
                 console.log('   Property:', weekData.propertyName, '(ID:', weekData.property, ')');
                 console.log('   Date range:', weekData.startDate, 'to', weekData.endDate);
                 
+                // First, load camps to find which camps belong to this property
+                console.log('📡 Loading camps for property filtering...');
+                const campsResponse = await makeAirtableRequest('Camps');
+                const propertyCamps = campsResponse.records
+                    .filter(camp => {
+                        const campProperty = camp.fields['Property'];
+                        const propertyId = Array.isArray(campProperty) ? campProperty[0] : campProperty;
+                        return propertyId === weekData.property;
+                    })
+                    .map(camp => camp.id);
+                
+                console.log('✅ Found', propertyCamps.length, 'camps for this property:', propertyCamps);
+                
                 // Load all bookings from Airtable
                 const response = await makeAirtableRequest(config.tables.bookings);
                 console.log('📦 Received', response.records.length, 'total bookings');
 
-                // Filter bookings that overlap with this week AND belong to this property
+                // Filter bookings that overlap with this week AND belong to this property's camps
                 const weekStart = new Date(weekData.startDate);
                 const weekEnd = new Date(weekData.endDate);
                 weekEnd.setHours(23, 59, 59, 999); // End of day
@@ -649,61 +652,114 @@
                 const weekBookings = response.records.filter(record => {
                     const fields = record.fields;
                     
-                    // Check if booking belongs to the selected property
-                    const bookingPropertyId = fields['Property'] || fields['Property (from Camp)'];
-                    const propertyId = Array.isArray(bookingPropertyId) ? bookingPropertyId[0] : bookingPropertyId;
+                    // Check if booking belongs to one of this property's camps
+                    const bookingCamp = fields['Camp'];
+                    const campId = Array.isArray(bookingCamp) ? bookingCamp[0] : bookingCamp;
                     
-                    if (propertyId !== weekData.property) {
-                        return false; // Not for this property
+                    if (!propertyCamps.includes(campId)) {
+                        return false; // Not for this property's camps
                     }
                     
                     // Get arrival and departure dates
-                    const arrivalDate = fields['Arrival Date'] || fields['Start Date'] || fields['Check-in Date'];
-                    const departureDate = fields['Departure Date'] || fields['End Date'] || fields['Check-out Date'];
+                    const arrivalDate = fields['Arrival Date'];
                     
-                    if (!arrivalDate) return false;
+                    if (!arrivalDate) {
+                        console.log('⚠️ Booking', fields['Booking Name'], 'has no Arrival Date');
+                        return false;
+                    }
                     
                     const arrival = new Date(arrivalDate);
-                    const departure = departureDate ? new Date(departureDate) : null;
+                    
+                    // Calculate departure based on duration or use explicit field
+                    let departure = null;
+                    const departureField = fields['Departure Date'];
+                    const durationField = fields['Duration'];
+                    
+                    if (departureField) {
+                        departure = new Date(departureField);
+                    } else if (durationField) {
+                        // Parse duration (e.g., "1 week", "2 weeks", "7 days")
+                        const weeks = durationField.match(/(\d+)\s*week/i);
+                        const days = durationField.match(/(\d+)\s*day/i);
+                        
+                        if (weeks) {
+                            departure = new Date(arrival);
+                            departure.setDate(arrival.getDate() + (parseInt(weeks[1]) * 7));
+                        } else if (days) {
+                            departure = new Date(arrival);
+                            departure.setDate(arrival.getDate() + parseInt(days[1]));
+                        } else {
+                            // Default to 1 week if we can't parse
+                            departure = new Date(arrival);
+                            departure.setDate(arrival.getDate() + 7);
+                        }
+                    } else {
+                        // Default to 1 week
+                        departure = new Date(arrival);
+                        departure.setDate(arrival.getDate() + 7);
+                    }
                     
                     // Check if booking overlaps with this week
-                    // Booking overlaps if:
-                    // - Arrival is during the week, OR
-                    // - Departure is during the week, OR
-                    // - Booking spans the entire week
-                    
                     const arrivalInWeek = arrival >= weekStart && arrival <= weekEnd;
                     const departureInWeek = departure && departure >= weekStart && departure <= weekEnd;
                     const spansWeek = arrival <= weekStart && (!departure || departure >= weekEnd);
                     
-                    return arrivalInWeek || departureInWeek || spansWeek;
+                    const overlaps = arrivalInWeek || departureInWeek || spansWeek;
+                    
+                    console.log('Checking:', fields['Booking Name']);
+                    console.log('  Arrival:', arrival.toISOString().split('T')[0]);
+                    console.log('  Departure:', departure ? departure.toISOString().split('T')[0] : 'calculated');
+                    console.log('  Week:', weekStart.toISOString().split('T')[0], 'to', weekEnd.toISOString().split('T')[0]);
+                    console.log('  Overlaps?', overlaps, '(arrivalInWeek:', arrivalInWeek, ', departureInWeek:', departureInWeek, ', spansWeek:', spansWeek, ')');
+                    
+                    return overlaps;
                 }).map(record => {
                     const fields = record.fields;
                     
-                    // Extract kid information
-                    const givenName = fields['Given Name (from Kid)'] || fields['First Name'] || fields['Kid First Name'] || '';
-                    const familyName = fields['Family Name (from Kid)'] || fields['Last Name'] || fields['Kid Surname'] || '';
-                    const firstName = Array.isArray(givenName) ? givenName[0] : givenName;
-                    const surname = Array.isArray(familyName) ? familyName[0] : familyName;
+                    // Extract booking name to get kid names
+                    const bookingName = fields['Booking Name'] || '';
+                    
+                    // Booking name format is usually like: "8608 - Mr Diobe Wyss - Carlota Rauchenstein"
+                    // or "8610 - Mr Paul Christoph Nussbaumer - Eliane Nussbaumer"
+                    const nameParts = bookingName.split(' - ');
+                    let firstName = '';
+                    let surname = '';
+                    
+                    if (nameParts.length >= 3) {
+                        // Last part is the kid's name
+                        const kidName = nameParts[nameParts.length - 1].trim();
+                        const nameWords = kidName.split(' ');
+                        firstName = nameWords[0] || '';
+                        surname = nameWords.slice(1).join(' ') || '';
+                    }
+                    
+                    // Get accommodation type
+                    const accommodation = fields['Accommodation'];
+                    const accommodationType = Array.isArray(accommodation) ? accommodation[0] : accommodation;
+                    
+                    // Get camp name
+                    const campName = fields['Camp (from Camp)'];
+                    const camp = Array.isArray(campName) ? campName[0] : campName;
                     
                     return {
                         firstName: firstName,
                         surname: surname,
-                        arrivalDate: fields['Arrival Date'] || fields['Start Date'] || fields['Check-in Date'] || '',
-                        dateOfBirth: fields['Date of Birth (from Kid)'] || fields['Birthday'] || '',
-                        duration: fields['Duration'] || calculateDuration(fields['Arrival Date'] || fields['Start Date'], fields['Departure Date'] || fields['End Date']),
-                        language: fields['Course Language'] || fields['Language'] || '',
-                        level: fields['Language Level'] || fields['Level'] || '',
-                        intensiveLessons: fields['Intensive Lessons'] || fields['Intensive'] || 'No',
-                        extraCourses: fields['Extra Courses'] || fields['Activities'] || '',
-                        arrival: fields['Arrival Details'] || fields['Arrival'] || '',
-                        departure: fields['Departure Details'] || fields['Departure'] || '',
-                        others: fields['Others'] || fields['Special Notes'] || '',
-                        laundryService: fields['Laundry Service'] || fields['Laundry'] || 'No',
-                        phonePrefix: fields['Phone Prefix'] || fields['Country Code'] || '',
-                        parentsPhone: fields['Parent Phone'] || fields['Phone'] || '',
-                        passportCopy: fields['Passport Copy'] || 'No',
-                        insuranceCopy: fields['Insurance Copy'] || 'No'
+                        arrivalDate: fields['Arrival Date'] || '',
+                        dateOfBirth: '', // Not visible in your Bookings table
+                        duration: fields['Duration'] || '1 week',
+                        language: camp || '', // Using camp name as it has language info
+                        level: '', // Not visible in your Bookings table
+                        intensiveLessons: '', // Not visible in your Bookings table
+                        extraCourses: '', // Not visible in your Bookings table
+                        arrival: '', // Not visible in your Bookings table
+                        departure: '', // Not visible in your Bookings table
+                        others: '', // Not visible in your Bookings table
+                        laundryService: '', // Not visible in your Bookings table
+                        phonePrefix: '', // Not visible in your Bookings table
+                        parentsPhone: '', // Not visible in your Bookings table
+                        passportCopy: '', // Not visible in your Bookings table
+                        insuranceCopy: '', // Not visible in your Bookings table
+                        accommodation: accommodationType || ''
                     };
                 });
 
@@ -743,20 +799,9 @@
                     <td>${booking.firstName}</td>
                     <td>${booking.surname}</td>
                     <td>${formatDateShort(booking.arrivalDate)}</td>
-                    <td>${formatDateShort(booking.dateOfBirth)}</td>
                     <td>${booking.duration}</td>
                     <td>${booking.language}</td>
-                    <td>${booking.level}</td>
-                    <td>${booking.intensiveLessons}</td>
-                    <td>${booking.extraCourses}</td>
-                    <td>${booking.arrival}</td>
-                    <td>${booking.departure}</td>
-                    <td>${booking.others}</td>
-                    <td>${booking.laundryService}</td>
-                    <td>${booking.phonePrefix}</td>
-                    <td>${booking.parentsPhone}</td>
-                    <td>${getStatusBadge(booking.passportCopy)}</td>
-                    <td>${getStatusBadge(booking.insuranceCopy)}</td>
+                    <td>${booking.accommodation}</td>
                 </tr>
             `).join('');
         }
@@ -773,11 +818,6 @@
 
         function updateSummaryCards(bookings) {
             const totalKids = bookings.length;
-            const withIntensive = bookings.filter(b => b.intensiveLessons === 'Yes').length;
-            const withLaundry = bookings.filter(b => b.laundryService === 'Yes').length;
-            const missingDocs = bookings.filter(b => 
-                b.passportCopy !== 'Yes' || b.insuranceCopy !== 'Yes'
-            ).length;
 
             document.getElementById('summaryCards').innerHTML = `
                 <div class="summary-card">
@@ -785,16 +825,8 @@
                     <div class="summary-label">Total Kids</div>
                 </div>
                 <div class="summary-card">
-                    <div class="summary-number">${withIntensive}</div>
-                    <div class="summary-label">Intensive Lessons</div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-number">${withLaundry}</div>
-                    <div class="summary-label">Laundry Service</div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-number" style="color: ${missingDocs > 0 ? '#e74c3c' : '#27ae60'}">${missingDocs}</div>
-                    <div class="summary-label">Missing Documents</div>
+                    <div class="summary-number">${bookings.filter(b => b.accommodation && b.accommodation.includes('room')).length}</div>
+                    <div class="summary-label">With Accommodation</div>
                 </div>
             `;
         }
