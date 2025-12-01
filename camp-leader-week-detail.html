@@ -623,45 +623,77 @@
 
         async function loadWeekData() {
             try {
-                console.log('📊 Loading data for week', weekData.weekNumber);
-                console.log('   Property:', weekData.propertyName, '(ID:', weekData.property, ')');
-                console.log('   Date range:', weekData.startDate, 'to', weekData.endDate);
+                console.log('═══════════════════════════════════════════════════');
+                console.log('📊 LOADING WEEK DATA');
+                console.log('═══════════════════════════════════════════════════');
+                console.log('Week Number:', weekData.weekNumber);
+                console.log('Property Name:', weekData.propertyName);
+                console.log('Property ID:', weekData.property);
+                console.log('Date Range:', weekData.startDate, 'to', weekData.endDate);
+                console.log('═══════════════════════════════════════════════════');
                 
                 // Load all bookings from Airtable
                 const response = await makeAirtableRequest(config.tables.bookings);
-                console.log('📦 Received', response.records.length, 'total bookings');
+                console.log('📦 Total bookings received:', response.records.length);
+                
+                // Log first few bookings to see their structure
+                if (response.records.length > 0) {
+                    console.log('Sample booking structure:', response.records[0].fields);
+                }
 
                 // Filter bookings that overlap with this week AND belong to this property
                 const weekStart = new Date(weekData.startDate);
                 const weekEnd = new Date(weekData.endDate);
                 weekEnd.setHours(23, 59, 59, 999); // End of day
                 
-                console.log('Week start:', weekStart.toISOString().split('T')[0]);
-                console.log('Week end:', weekEnd.toISOString().split('T')[0]);
+                console.log('Week start:', weekStart.toISOString());
+                console.log('Week end:', weekEnd.toISOString());
+                console.log('───────────────────────────────────────────────────');
+                console.log('CHECKING EACH BOOKING:');
+                console.log('───────────────────────────────────────────────────');
                 
                 const weekBookings = response.records.filter(record => {
                     const fields = record.fields;
+                    
+                    console.log('\n🔍 Booking:', fields['Booking Name']);
                     
                     // Check if booking belongs to this property
                     // Try multiple ways: direct Property field, or Property from Camp
                     const bookingProperty = fields['Property'];
                     const propertyFromCamp = fields['Property (from Camp)'];
                     
+                    console.log('  → Property field value:', bookingProperty);
+                    console.log('  → Property (from Camp) field value:', propertyFromCamp);
+                    
                     let propertyId = null;
                     if (bookingProperty) {
                         propertyId = Array.isArray(bookingProperty) ? bookingProperty[0] : bookingProperty;
+                        console.log('  → Using direct Property:', propertyId);
                     } else if (propertyFromCamp) {
                         propertyId = Array.isArray(propertyFromCamp) ? propertyFromCamp[0] : propertyFromCamp;
+                        console.log('  → Using Property from Camp:', propertyId);
                     }
                     
                     // Also check by property name
                     const propertyName = fields['Property (from Property)'] || fields['Property Name'];
                     const propertyNameStr = Array.isArray(propertyName) ? propertyName[0] : propertyName;
+                    console.log('  → Property name from lookup:', propertyNameStr);
+                    
+                    console.log('  → COMPARING:');
+                    console.log('     Booking Property ID:', propertyId);
+                    console.log('     Selected Property ID:', weekData.property);
+                    console.log('     IDs Match?', propertyId === weekData.property);
+                    console.log('     Booking Property Name:', propertyNameStr);
+                    console.log('     Selected Property Name:', weekData.propertyName);
+                    console.log('     Names Match?', propertyNameStr && propertyNameStr.includes(weekData.propertyName));
                     
                     const propertyMatches = propertyId === weekData.property || 
                                           (propertyNameStr && propertyNameStr.includes(weekData.propertyName));
                     
+                    console.log('  → Property Matches?', propertyMatches ? '✅ YES' : '❌ NO');
+                    
                     if (!propertyMatches) {
+                        console.log('  ⚠️ SKIPPING: Property does not match');
                         return false; // Not for this property
                     }
                     
@@ -669,7 +701,7 @@
                     const arrivalDate = fields['Arrival Date'];
                     
                     if (!arrivalDate) {
-                        console.log('⚠️ Booking', fields['Booking Name'], 'has no Arrival Date');
+                        console.log('  ⚠️ SKIPPING: No Arrival Date');
                         return false;
                     }
                     
@@ -704,6 +736,10 @@
                         departure.setDate(arrival.getDate() + 7);
                     }
                     
+                    console.log('  → Arrival:', arrival.toISOString().split('T')[0]);
+                    console.log('  → Departure:', departure ? departure.toISOString().split('T')[0] : 'N/A');
+                    console.log('  → Duration:', durationField);
+                    
                     // Check if booking overlaps with this week
                     const arrivalInWeek = arrival >= weekStart && arrival <= weekEnd;
                     const departureInWeek = departure && departure >= weekStart && departure <= weekEnd;
@@ -711,13 +747,17 @@
                     
                     const overlaps = arrivalInWeek || departureInWeek || spansWeek;
                     
-                    console.log('Checking:', fields['Booking Name']);
-                    console.log('  Property field:', bookingProperty, '| Property from camp:', propertyFromCamp);
-                    console.log('  Property name:', propertyNameStr);
-                    console.log('  Matches our property?', propertyMatches);
-                    console.log('  Arrival:', arrival.toISOString().split('T')[0]);
-                    console.log('  Departure:', departure ? departure.toISOString().split('T')[0] : 'calculated');
-                    console.log('  Overlaps?', overlaps, '(arrivalInWeek:', arrivalInWeek, ', departureInWeek:', departureInWeek, ', spansWeek:', spansWeek, ')');
+                    console.log('  → Date Check:');
+                    console.log('     Arrival in week?', arrivalInWeek);
+                    console.log('     Departure in week?', departureInWeek);
+                    console.log('     Spans entire week?', spansWeek);
+                    console.log('  → OVERLAPS?', overlaps ? '✅ YES' : '❌ NO');
+                    
+                    if (overlaps) {
+                        console.log('  ✅ INCLUDED IN RESULTS');
+                    } else {
+                        console.log('  ⚠️ SKIPPING: Dates do not overlap');
+                    }
                     
                     return overlaps;
                 }).map(record => {
@@ -769,7 +809,12 @@
                     };
                 });
 
-                console.log('✅ Found', weekBookings.length, 'bookings for this property and week');
+                console.log('═══════════════════════════════════════════════════');
+                console.log('✅ FILTERING COMPLETE');
+                console.log('═══════════════════════════════════════════════════');
+                console.log('Total bookings checked:', response.records.length);
+                console.log('Bookings matching this week:', weekBookings.length);
+                console.log('═══════════════════════════════════════════════════');
 
                 displayWeekData(weekBookings);
                 updateSummaryCards(weekBookings);
