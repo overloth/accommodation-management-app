@@ -188,11 +188,64 @@
             display: block;
         }
 
+        .season-container {
+            margin-bottom: 50px;
+        }
+
+        .season-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border-left: 5px solid;
+        }
+
+        .season-header.winter {
+            border-left-color: #3498db;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        }
+
+        .season-header.spring {
+            border-left-color: #2ecc71;
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+        }
+
+        .season-header.summer {
+            border-left-color: #f39c12;
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+        }
+
+        .season-header.autumn {
+            border-left-color: #e74c3c;
+            background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+        }
+
+        .season-icon {
+            font-size: 2.5rem;
+        }
+
+        .season-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .season-subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            margin: 0;
+        }
+
         .weeks-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
-            margin-top: 30px;
+            margin-top: 20px;
         }
 
         .week-card {
@@ -230,79 +283,68 @@
         .week-info {
             color: #666;
             font-size: 0.9rem;
-            margin-bottom: 5px;
+            margin-top: 10px;
         }
 
         .view-week-btn {
-            background: linear-gradient(135deg, #3498db, #2c3e50);
+            background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
             border: none;
             padding: 12px 24px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 1rem;
-            font-weight: 600;
-            width: 100%;
-            margin-top: 15px;
             transition: all 0.3s ease;
+            margin-top: 15px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
         }
 
         .view-week-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
         }
 
-        .view-week-btn:active {
-            transform: scale(0.98);
-        }
-
-        .selected-property-info {
-            background: #f8f9fa;
+        .selected-property-banner {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 30px;
-            text-align: left;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            text-align: center;
         }
 
-        .selected-property-info h3 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 1.3rem;
+        .selected-property-banner h3 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
         }
 
-        .selected-property-info p {
-            color: #666;
-            font-size: 0.95rem;
+        .selected-property-banner p {
+            opacity: 0.9;
+            font-size: 1rem;
         }
 
         .error-message {
+            display: none;
             background: #fee;
+            border: 2px solid #fcc;
             color: #c33;
             padding: 20px;
             border-radius: 10px;
+            margin-top: 20px;
             text-align: center;
-            margin: 20px 0;
         }
 
-        @media print {
-            body {
-                background: white;
-                padding: 0;
-            }
+        .error-message.show {
+            display: block;
+        }
 
-            .header {
-                background: white;
-                color: #2c3e50;
-                border-bottom: 2px solid #3498db;
-            }
-
-            .back-button {
-                display: none;
-            }
-
-            .view-week-btn {
-                display: none;
-            }
+        .no-weeks-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.2rem;
         }
     </style>
 </head>
@@ -311,95 +353,130 @@
         <div class="header">
             <button class="back-button" onclick="goBack()">← Back</button>
             <div class="header-icon">📅</div>
-            <h1>Camp Leader Weekly Overview</h1>
-            <p>Select a property and week to view detailed information</p>
+            <h1>Weekly Camp Overview</h1>
+            <p>Select a property and week to view camp details</p>
         </div>
 
         <div class="content">
-            <div class="loading" id="loadingIndicator">
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="loading">
                 <div class="spinner"></div>
                 <div class="loading-text">Loading properties...</div>
             </div>
 
-            <div class="properties-section" id="propertiesSection">
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message"></div>
+
+            <!-- Properties Selection Section -->
+            <div id="propertiesSection" class="properties-section">
                 <h2 class="section-title">Select a Property</h2>
-                <p class="section-subtitle">Choose a property to view weekly overviews</p>
-                <div class="properties-grid" id="propertiesGrid"></div>
+                <p class="section-subtitle">Choose a property to view weekly schedules</p>
+                <div id="propertiesGrid" class="properties-grid"></div>
             </div>
 
-            <div class="weeks-section" id="weeksSection">
-                <div class="selected-property-info" id="selectedPropertyInfo"></div>
-                <h2 class="section-title">Select a Week</h2>
-                <p class="section-subtitle">Click on a week to view detailed camp leader information</p>
-                <div class="weeks-grid" id="weeksGrid"></div>
+            <!-- Weeks Section (Organized by Season) -->
+            <div id="weeksSection" class="weeks-section">
+                <div class="selected-property-banner" id="selectedPropertyInfo"></div>
+                <div id="seasonsContainer"></div>
+                <div id="noWeeksMessage" class="no-weeks-message" style="display: none;">
+                    No weeks available for the selected property.
+                </div>
             </div>
-
-            <div class="error-message" id="errorMessage" style="display: none;"></div>
         </div>
     </div>
 
     <script>
-        console.log('📅 Camp Leader Weekly Overview - Starting...');
-
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCaOMtd-Tl9bvTdMmLtDm0ALH9FctuVBoY",
-            authDomain: "accommodation-management-57373.firebaseapp.com",
-            projectId: "accommodation-management-57373",
-            storageBucket: "accommodation-management-57373.firebasestorage.app",
-            messagingSenderId: "905096938169",
-            appId: "1:905096938169:web:715d8c7cb73d5c3aa61168",
-            databaseURL: "https://accommodation-management-57373-default-rtdb.europe-west1.firebasedatabase.app"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
         // Configuration
         let config = {
-            token: '',
             baseId: '',
+            token: '',
             tables: {
                 properties: 'Properties',
-                bookings: 'Bookings'
+                bookings: 'Bookings',
+                camps: 'Camps'
             }
         };
 
-        // Property icons
-        const propertyIcons = ['🏔️', '⛰️', '🏞️', '🏖️', '🏕️', '🌲', '⛺'];
-
+        // State
         let properties = [];
         let selectedProperty = null;
+        let campData = [];
+
+        // Property icons for visual variety
+        const propertyIcons = ['🏔️', '🏡', '🏰', '🏕️', '🌲', '⛰️', '🏞️', '🏘️'];
+
+        // Season configurations
+        const seasonConfig = {
+            winter: {
+                name: 'Winter',
+                icon: '❄️',
+                class: 'winter',
+                // Beginning of December -> including first week of April
+                startMonth: 12,
+                endMonth: 4,
+                endDay: 7 // First week of April
+            },
+            spring: {
+                name: 'Spring',
+                icon: '🌸',
+                class: 'spring',
+                // Second week of April -> end of May
+                startMonth: 4,
+                startDay: 8, // Second week of April
+                endMonth: 5
+            },
+            summer: {
+                name: 'Summer',
+                icon: '☀️',
+                class: 'summer',
+                // Whole June -> till middle of September
+                startMonth: 6,
+                endMonth: 9,
+                endDay: 15 // Middle of September
+            },
+            autumn: {
+                name: 'Autumn',
+                icon: '🍂',
+                class: 'autumn',
+                // From middle of September -> end of November
+                startMonth: 9,
+                startDay: 16, // From middle of September
+                endMonth: 11
+            }
+        };
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            databaseURL: "https://frilingue-invoice-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
         // Load configuration from Firebase
         async function loadConfigFromFirebase() {
             try {
-                console.log('📡 Loading Airtable config from Firebase...');
-                const configRef = database.ref('config/airtable');
-                const snapshot = await configRef.once('value');
-                const configData = snapshot.val();
-
-                if (configData && configData.token && configData.baseId) {
-                    config.token = configData.token;
-                    config.baseId = configData.baseId;
-                    console.log('✅ Config loaded from Firebase');
+                console.log('🔄 Loading configuration from Firebase...');
+                const snapshot = await database.ref('airtableConfig').once('value');
+                const data = snapshot.val();
+                
+                if (data && data.token && data.baseId) {
+                    config.token = data.token;
+                    config.baseId = data.baseId;
+                    
+                    if (data.tables) {
+                        config.tables = { ...config.tables, ...data.tables };
+                    }
+                    
+                    console.log('✅ Configuration loaded successfully');
                     return true;
                 } else {
-                    const token = localStorage.getItem('airtableToken');
-                    const baseId = localStorage.getItem('airtableBaseId');
-                    
-                    if (token && baseId) {
-                        config.token = token;
-                        config.baseId = baseId;
-                        console.log('✅ Config loaded from localStorage');
-                        return true;
-                    }
+                    console.error('❌ Configuration incomplete or missing');
+                    return false;
                 }
-
-                console.log('❌ No Airtable configuration found');
-                return false;
             } catch (error) {
-                console.error('❌ Error loading config:', error);
+                console.error('❌ Error loading configuration:', error);
                 return false;
             }
         }
@@ -454,10 +531,64 @@
             return { records: allRecords };
         }
 
+        // Load camp data from Airtable
+        async function loadCampData() {
+            try {
+                console.log('🏕️ Loading camp data...');
+                const response = await makeAirtableRequest(config.tables.camps);
+                
+                campData = response.records.map(record => ({
+                    id: record.id,
+                    season: record.fields['Season'] || '',
+                    startDate: record.fields['Camp Start Date'] ? new Date(record.fields['Camp Start Date']) : null,
+                    endDate: record.fields['Camp End Date'] ? new Date(record.fields['Camp End Date']) : null
+                })).filter(camp => camp.startDate && camp.endDate);
+                
+                console.log('✅ Loaded', campData.length, 'camps');
+                return campData;
+            } catch (error) {
+                console.error('❌ Error loading camp data:', error);
+                return [];
+            }
+        }
+
+        // Determine season from date
+        function getSeasonFromDate(date) {
+            const month = date.getMonth() + 1; // 1-12
+            const day = date.getDate();
+            
+            // Winter: Beginning of December -> including first week of April
+            if (month === 12 || month === 1 || month === 2 || month === 3 || 
+                (month === 4 && day <= 7)) {
+                return 'winter';
+            }
+            
+            // Spring: Second week of April -> end of May
+            if ((month === 4 && day >= 8) || month === 5) {
+                return 'spring';
+            }
+            
+            // Summer: Whole June -> till middle of September
+            if (month === 6 || month === 7 || month === 8 || 
+                (month === 9 && day <= 15)) {
+                return 'summer';
+            }
+            
+            // Autumn: From middle of September -> end of November
+            if ((month === 9 && day >= 16) || month === 10 || month === 11) {
+                return 'autumn';
+            }
+            
+            return 'winter'; // Default fallback
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             const configLoaded = await loadConfigFromFirebase();
             if (configLoaded) {
+                // Load camp data first
+                await loadCampData();
+                
                 // Check if we should show weeks directly (coming back from detail page)
                 const urlParams = new URLSearchParams(window.location.search);
                 const showWeeks = urlParams.get('showWeeks');
@@ -563,52 +694,122 @@
             document.getElementById('propertiesSection').classList.remove('active');
             document.getElementById('weeksSection').classList.add('active');
 
-            // Generate weeks starting from December 7, 2024
-            generateWeeks();
+            // Generate weeks organized by seasons
+            generateSeasonalWeeks();
         }
 
-        function generateWeeks() {
-            const startDate = new Date('2024-12-08'); // Sunday, December 8, 2024 (changed from Saturday Dec 7)
-            const endDate = new Date('2026-04-30'); // Extended to April 2026 to include all bookings
-            const weeks = [];
+        function generateSeasonalWeeks() {
+            // Determine date range based on camp data or use defaults
+            let earliestDate = new Date('2024-12-01');
+            let latestDate = new Date('2027-11-30');
             
-            let currentWeekStart = new Date(startDate);
-            let weekNumber = 1;
-
-            while (currentWeekStart <= endDate) {
-                const weekEnd = new Date(currentWeekStart);
-                weekEnd.setDate(weekEnd.getDate() + 6); // Sunday to Saturday (7 days)
-
-                weeks.push({
-                    number: weekNumber,
-                    startDate: new Date(currentWeekStart),
-                    endDate: weekEnd > endDate ? endDate : weekEnd
-                });
-
-                currentWeekStart.setDate(currentWeekStart.getDate() + 7);
-                weekNumber++;
+            if (campData.length > 0) {
+                const campDates = campData.map(c => c.startDate).filter(d => d);
+                const campEndDates = campData.map(c => c.endDate).filter(d => d);
+                
+                if (campDates.length > 0) {
+                    earliestDate = new Date(Math.min(...campDates));
+                    latestDate = new Date(Math.max(...campEndDates));
+                }
             }
-
-            displayWeeks(weeks);
+            
+            console.log('📅 Generating weeks from', earliestDate, 'to', latestDate);
+            
+            // Generate all weeks
+            const allWeeks = [];
+            let currentWeekStart = new Date(earliestDate);
+            
+            // Adjust to Sunday
+            currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+            
+            while (currentWeekStart <= latestDate) {
+                const weekEnd = new Date(currentWeekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6); // Sunday to Saturday
+                
+                const season = getSeasonFromDate(currentWeekStart);
+                
+                allWeeks.push({
+                    startDate: new Date(currentWeekStart),
+                    endDate: weekEnd,
+                    season: season
+                });
+                
+                currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+            }
+            
+            // Group weeks by season and year
+            const seasonalWeeks = {
+                winter: [],
+                spring: [],
+                summer: [],
+                autumn: []
+            };
+            
+            allWeeks.forEach(week => {
+                if (week.season && seasonalWeeks[week.season]) {
+                    seasonalWeeks[week.season].push(week);
+                }
+            });
+            
+            // Display weeks organized by season
+            displaySeasonalWeeks(seasonalWeeks);
         }
 
-        function displayWeeks(weeks) {
-            const grid = document.getElementById('weeksGrid');
-            grid.innerHTML = weeks.map(week => {
-                const startStr = formatDate(week.startDate);
-                const endStr = formatDate(week.endDate);
-                
-                return `
-                    <div class="week-card" onclick="viewWeek(${week.number}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}')">
-                        <div class="week-number">Week ${week.number}</div>
-                        <div class="week-dates">${startStr} - ${endStr}</div>
-                        <div class="week-info" style="font-size: 0.75rem; color: #666; margin-top: 5px;">Sunday - Saturday</div>
-                        <button class="view-week-btn" onclick="event.stopPropagation(); viewWeek(${week.number}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}')">
-                            View Week Details
-                        </button>
-                    </div>
-                `;
-            }).join('');
+        function displaySeasonalWeeks(seasonalWeeks) {
+            const container = document.getElementById('seasonsContainer');
+            const noWeeksMessage = document.getElementById('noWeeksMessage');
+            
+            let hasWeeks = false;
+            let html = '';
+            
+            // Display seasons in order: Winter, Spring, Summer, Autumn
+            const seasonOrder = ['winter', 'spring', 'summer', 'autumn'];
+            
+            seasonOrder.forEach(seasonKey => {
+                const weeks = seasonalWeeks[seasonKey];
+                if (weeks && weeks.length > 0) {
+                    hasWeeks = true;
+                    const season = seasonConfig[seasonKey];
+                    
+                    html += `
+                        <div class="season-container">
+                            <div class="season-header ${season.class}">
+                                <div class="season-icon">${season.icon}</div>
+                                <div>
+                                    <h2 class="season-title">${season.name}</h2>
+                                    <p class="season-subtitle">${weeks.length} weeks</p>
+                                </div>
+                            </div>
+                            <div class="weeks-grid">
+                                ${weeks.map((week, index) => {
+                                    const weekNumber = index + 1; // Reset week numbering for each season
+                                    const startStr = formatDate(week.startDate);
+                                    const endStr = formatDate(week.endDate);
+                                    
+                                    return `
+                                        <div class="week-card" onclick="viewWeek(${weekNumber}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}', '${seasonKey}')">
+                                            <div class="week-number">Week ${weekNumber}</div>
+                                            <div class="week-dates">${startStr} - ${endStr}</div>
+                                            <div class="week-info" style="font-size: 0.75rem; color: #666; margin-top: 5px;">Sunday - Saturday</div>
+                                            <button class="view-week-btn" onclick="event.stopPropagation(); viewWeek(${weekNumber}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}', '${seasonKey}')">
+                                                View Week Details
+                                            </button>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            if (hasWeeks) {
+                container.innerHTML = html;
+                noWeeksMessage.style.display = 'none';
+            } else {
+                container.innerHTML = '';
+                noWeeksMessage.style.display = 'block';
+            }
         }
 
         function formatDate(date) {
@@ -616,9 +817,9 @@
             return date.toLocaleDateString('en-GB', options);
         }
 
-        function viewWeek(weekNumber, startDate, endDate) {
-            // Create URL with parameters
-            const url = `camp-leader-week-detail.html?property=${selectedProperty.id}&propertyName=${encodeURIComponent(selectedProperty.name)}&week=${weekNumber}&startDate=${startDate}&endDate=${endDate}`;
+        function viewWeek(weekNumber, startDate, endDate, season) {
+            // Create URL with parameters including season
+            const url = `camp-leader-week-detail.html?property=${selectedProperty.id}&propertyName=${encodeURIComponent(selectedProperty.name)}&week=${weekNumber}&startDate=${startDate}&endDate=${endDate}&season=${season}`;
             window.location.href = url;
         }
 
