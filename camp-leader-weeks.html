@@ -464,7 +464,8 @@
         async function loadConfigFromFirebase() {
             try {
                 console.log('🔄 Loading configuration from Firebase...');
-                const snapshot = await database.ref('airtableConfig').once('value');
+                const configRef = database.ref('config/airtable');
+                const snapshot = await configRef.once('value');
                 const data = snapshot.val();
                 
                 console.log('📦 Firebase data received:', data);
