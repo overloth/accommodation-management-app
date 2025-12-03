@@ -470,7 +470,9 @@
             baseId: '',
             tables: {
                 bookings: 'Bookings',
-                camps: 'Camps'
+                camps: 'Camps',
+                kids: 'Kids',
+                kidCampDetails: 'Kid Camp Details'
             }
         };
 
@@ -636,6 +638,21 @@
                 const response = await makeAirtableRequest(config.tables.bookings);
                 console.log('📦 Total bookings received:', response.records.length);
                 
+                // Load Kids data
+                console.log('📡 Fetching Kids data...');
+                const kidsResponse = await makeAirtableRequest(config.tables.kids);
+                console.log('📦 Total kids received:', kidsResponse.records.length);
+                
+                // Create a map of kid IDs to kid names
+                const kidsMap = {};
+                kidsResponse.records.forEach(kid => {
+                    const kidId = kid.fields['ID'] || kid.id;
+                    const givenName = kid.fields['Given Name'] || '';
+                    const surname = kid.fields['Surname'] || '';
+                    kidsMap[kid.id] = { firstName: givenName, surname: surname };
+                    console.log(`  Kid ${kid.id}: ${givenName} ${surname}`);
+                });
+                
                 // Log first few bookings to see their structure
                 if (response.records.length > 0) {
                     console.log('Sample booking structure:', response.records[0].fields);
@@ -763,21 +780,40 @@
                 }).map(record => {
                     const fields = record.fields;
                     
-                    // Extract booking name to get kid names
-                    const bookingName = fields['Booking Name'] || '';
-                    
-                    // Booking name format is usually like: "8608 - Mr Diobe Wyss - Carlota Rauchenstein"
-                    // or "8610 - Mr Paul Christoph Nussbaumer - Eliane Nussbaumer"
-                    const nameParts = bookingName.split(' - ');
+                    // Try to get kid name from Kids on Trip relationship first
                     let firstName = '';
                     let surname = '';
                     
-                    if (nameParts.length >= 3) {
-                        // Last part is the kid's name
-                        const kidName = nameParts[nameParts.length - 1].trim();
-                        const nameWords = kidName.split(' ');
-                        firstName = nameWords[0] || '';
-                        surname = nameWords.slice(1).join(' ') || '';
+                    const kidsOnTrip = fields['Kids on Trip'];
+                    console.log('  🔗 Kids on Trip field:', kidsOnTrip);
+                    
+                    if (kidsOnTrip && Array.isArray(kidsOnTrip) && kidsOnTrip.length > 0) {
+                        const kidId = kidsOnTrip[0]; // Get first kid
+                        console.log('  🔍 Looking up kid ID:', kidId);
+                        if (kidsMap[kidId]) {
+                            firstName = kidsMap[kidId].firstName;
+                            surname = kidsMap[kidId].surname;
+                            console.log(`  ✅ Found in Kids table: ${firstName} ${surname}`);
+                        } else {
+                            console.log('  ⚠️ Kid ID not found in Kids map');
+                        }
+                    }
+                    
+                    // Fallback: Extract from booking name if Kids lookup failed
+                    if (!firstName && !surname) {
+                        const bookingName = fields['Booking Name'] || '';
+                        console.log(`  ⚠️ Falling back to Booking Name: ${bookingName}`);
+                        
+                        // Booking name format: "8608 - Mr Diobe Wyss - Carlota Rauchenstein"
+                        const nameParts = bookingName.split(' - ');
+                        
+                        if (nameParts.length >= 3) {
+                            const kidName = nameParts[nameParts.length - 1].trim();
+                            const nameWords = kidName.split(' ');
+                            firstName = nameWords[0] || '';
+                            surname = nameWords.slice(1).join(' ') || '';
+                            console.log(`  → Parsed: ${firstName} ${surname}`);
+                        }
                     }
                     
                     // Get accommodation type
@@ -795,6 +831,7 @@
                         dateOfBirth: '', // Not visible in your Bookings table
                         duration: fields['Duration'] || '1 week',
                         language: camp || '', // Using camp name as it has language info
+                        accommodation: accommodationType || 'undefined',
                         level: '', // Not visible in your Bookings table
                         intensiveLessons: '', // Not visible in your Bookings table
                         extraCourses: '', // Not visible in your Bookings table
