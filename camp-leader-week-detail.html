@@ -648,9 +648,9 @@
                 kidsResponse.records.forEach(kid => {
                     const kidId = kid.fields['ID'] || kid.id;
                     const givenName = kid.fields['Given Name'] || '';
-                    const surname = kid.fields['Surname'] || '';
-                    kidsMap[kid.id] = { firstName: givenName, surname: surname };
-                    console.log(`  Kid ${kid.id}: ${givenName} ${surname}`);
+                    const familyName = kid.fields['Family Name'] || '';
+                    kidsMap[kid.id] = { firstName: givenName, surname: familyName };
+                    console.log(`  Kid ${kid.id}: ${givenName} ${familyName}`);
                 });
                 
                 // Log first few bookings to see their structure
