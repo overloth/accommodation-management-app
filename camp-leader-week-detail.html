@@ -420,8 +420,10 @@
                                 <th>Kid First Name</th>
                                 <th>Kid Surname</th>
                                 <th>Arrival Date</th>
+                                <th>Date of Birth</th>
                                 <th>Duration</th>
-                                <th>Camp/Language</th>
+                                <th>Language</th>
+                                <th>Level</th>
                                 <th>Accommodation</th>
                             </tr>
                         </thead>
@@ -643,14 +645,41 @@
                 const kidsResponse = await makeAirtableRequest(config.tables.kids);
                 console.log('📦 Total kids received:', kidsResponse.records.length);
                 
-                // Create a map of kid IDs to kid names
+                // Load Kid Camp Details data
+                console.log('📡 Fetching Kid Camp Details data...');
+                const kidCampDetailsResponse = await makeAirtableRequest(config.tables.kidCampDetails);
+                console.log('📦 Total kid camp details received:', kidCampDetailsResponse.records.length);
+                
+                // Create a map of kid IDs to kid names and DOB
                 const kidsMap = {};
                 kidsResponse.records.forEach(kid => {
                     const kidId = kid.fields['ID'] || kid.id;
                     const givenName = kid.fields['Given Name'] || '';
                     const familyName = kid.fields['Family Name'] || '';
-                    kidsMap[kid.id] = { firstName: givenName, surname: familyName };
-                    console.log(`  Kid ${kid.id}: ${givenName} ${familyName}`);
+                    const dateOfBirth = kid.fields['Date of Birth'] || '';
+                    kidsMap[kid.id] = { 
+                        firstName: givenName, 
+                        surname: familyName,
+                        dateOfBirth: dateOfBirth
+                    };
+                    console.log(`  Kid ${kid.id}: ${givenName} ${familyName}, DOB: ${dateOfBirth}`);
+                });
+                
+                // Create a map of Kid Camp Details by KCD ID field
+                const kidCampDetailsMap = {};
+                kidCampDetailsResponse.records.forEach(detail => {
+                    const kcdId = detail.fields['KCD ID']; // This links to booking
+                    const languageStudying = detail.fields['Language Studying'] || '';
+                    const languageProficiency = detail.fields['Language Proficiency'] || '';
+                    
+                    if (kcdId) {
+                        const kcdIdValue = Array.isArray(kcdId) ? kcdId[0] : kcdId;
+                        kidCampDetailsMap[kcdIdValue] = {
+                            language: languageStudying,
+                            level: languageProficiency
+                        };
+                        console.log(`  KCD ${kcdIdValue}: Language: ${languageStudying}, Level: ${languageProficiency}`);
+                    }
                 });
                 
                 // Log first few bookings to see their structure
@@ -783,6 +812,9 @@
                     // Try to get kid name from Kids on Trip relationship first
                     let firstName = '';
                     let surname = '';
+                    let dateOfBirth = '';
+                    let language = '';
+                    let level = '';
                     
                     const kidsOnTrip = fields['Kids on Trip'];
                     console.log('  🔗 Kids on Trip field:', kidsOnTrip);
@@ -793,15 +825,29 @@
                         if (kidsMap[kidId]) {
                             firstName = kidsMap[kidId].firstName;
                             surname = kidsMap[kidId].surname;
-                            console.log(`  ✅ Found in Kids table: ${firstName} ${surname}`);
+                            dateOfBirth = kidsMap[kidId].dateOfBirth;
+                            console.log(`  ✅ Found in Kids table: ${firstName} ${surname}, DOB: ${dateOfBirth}`);
                         } else {
                             console.log('  ⚠️ Kid ID not found in Kids map');
                         }
                     }
                     
+                    // Get language and level from Kid Camp Details
+                    const bookingName = fields['Booking Name'] || '';
+                    // Extract booking number from "8156 - Mrs Ines Schmidt - Marit Schmidt"
+                    const bookingNumber = bookingName.split(' - ')[0];
+                    console.log('  🔍 Looking up Kid Camp Details for booking:', bookingNumber);
+                    
+                    if (kidCampDetailsMap[bookingNumber]) {
+                        language = kidCampDetailsMap[bookingNumber].language;
+                        level = kidCampDetailsMap[bookingNumber].level;
+                        console.log(`  ✅ Found Kid Camp Details: Language: ${language}, Level: ${level}`);
+                    } else {
+                        console.log('  ⚠️ Kid Camp Details not found for booking:', bookingNumber);
+                    }
+                    
                     // Fallback: Extract from booking name if Kids lookup failed
                     if (!firstName && !surname) {
-                        const bookingName = fields['Booking Name'] || '';
                         console.log(`  ⚠️ Falling back to Booking Name: ${bookingName}`);
                         
                         // Booking name format: "8608 - Mr Diobe Wyss - Carlota Rauchenstein"
@@ -820,7 +866,7 @@
                     const accommodation = fields['Accommodation'];
                     const accommodationType = Array.isArray(accommodation) ? accommodation[0] : accommodation;
                     
-                    // Get camp name
+                    // Get camp name (fallback for language if Kid Camp Details not found)
                     const campName = fields['Camp (from Camp)'];
                     const camp = Array.isArray(campName) ? campName[0] : campName;
                     
@@ -828,21 +874,21 @@
                         firstName: firstName,
                         surname: surname,
                         arrivalDate: fields['Arrival Date'] || '',
-                        dateOfBirth: '', // Not visible in your Bookings table
+                        dateOfBirth: dateOfBirth,
                         duration: fields['Duration'] || '1 week',
-                        language: camp || '', // Using camp name as it has language info
+                        language: language || camp || '', // Use Kid Camp Details language, fallback to camp name
+                        level: level,
                         accommodation: accommodationType || 'undefined',
-                        level: '', // Not visible in your Bookings table
-                        intensiveLessons: '', // Not visible in your Bookings table
-                        extraCourses: '', // Not visible in your Bookings table
-                        arrival: '', // Not visible in your Bookings table
-                        departure: '', // Not visible in your Bookings table
+                        intensiveLessons: '',
+                        extraCourses: '',
+                        arrival: '',
+                        departure: '',
                         others: fields['Accommodation Notes'] || '',
-                        laundryService: '', // Not visible in your Bookings table
-                        phonePrefix: '', // Not visible in your Bookings table
-                        parentsPhone: '', // Not visible in your Bookings table
-                        passportCopy: '', // Not visible in your Bookings table
-                        insuranceCopy: '' // Not visible in your Bookings table
+                        laundryService: '',
+                        phonePrefix: '',
+                        parentsPhone: '',
+                        passportCopy: '',
+                        insuranceCopy: ''
                     };
                 });
 
@@ -887,9 +933,11 @@
                     <td>${booking.firstName}</td>
                     <td>${booking.surname}</td>
                     <td>${formatDateShort(booking.arrivalDate)}</td>
+                    <td>${booking.dateOfBirth ? formatDateShort(booking.dateOfBirth) : '-'}</td>
                     <td>${booking.duration}</td>
-                    <td>${booking.language}</td>
-                    <td>${booking.accommodation}</td>
+                    <td>${booking.language || '-'}</td>
+                    <td>${booking.level || '-'}</td>
+                    <td>${booking.accommodation || 'undefined'}</td>
                 </tr>
             `).join('');
         }
