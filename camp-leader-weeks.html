@@ -777,17 +777,27 @@
         }
 
         function generateSeasonalWeeks() {
-            // Determine date range based on camp data or use defaults
-            let earliestDate = new Date('2024-12-01');
-            let latestDate = new Date('2027-11-30');
+            // Start from December 2025 (upcoming season)
+            const today = new Date();
+            let earliestDate = new Date('2025-12-01'); // Start from December 2025
+            let latestDate = new Date('2027-11-30'); // Go through end of 2027
             
+            // If camp data exists, use it to refine the date range
             if (campData.length > 0) {
                 const campDates = campData.map(c => c.startDate).filter(d => d);
                 const campEndDates = campData.map(c => c.endDate).filter(d => d);
                 
                 if (campDates.length > 0) {
-                    earliestDate = new Date(Math.min(...campDates));
-                    latestDate = new Date(Math.max(...campEndDates));
+                    const minCampDate = new Date(Math.min(...campDates));
+                    const maxCampDate = new Date(Math.max(...campEndDates));
+                    
+                    // Only use camp dates if they're in the future or current
+                    if (minCampDate >= earliestDate) {
+                        earliestDate = minCampDate;
+                    }
+                    if (maxCampDate > latestDate) {
+                        latestDate = maxCampDate;
+                    }
                 }
             }
             
