@@ -669,16 +669,24 @@
                 const kidCampDetailsMap = {};
                 kidCampDetailsResponse.records.forEach(detail => {
                     const kcdId = detail.fields['KCD ID']; // This links to booking
-                    const languageStudying = detail.fields['Language Studying'] || '';
-                    const languageProficiency = detail.fields['Language Proficiency'] || '';
+                    const languageStudying = detail.fields['Language Studying']; // This is a linked record
+                    const languageProficiency = detail.fields['Language Proficiency'] || ''; // Single select
+                    
+                    // Extract language name from linked record (it's an array)
+                    let languageName = '';
+                    if (languageStudying && Array.isArray(languageStudying)) {
+                        languageName = languageStudying[0] || ''; // Get first language
+                    } else if (languageStudying) {
+                        languageName = languageStudying;
+                    }
                     
                     if (kcdId) {
                         const kcdIdValue = Array.isArray(kcdId) ? kcdId[0] : kcdId;
                         kidCampDetailsMap[kcdIdValue] = {
-                            language: languageStudying,
+                            language: languageName,
                             level: languageProficiency
                         };
-                        console.log(`  KCD ${kcdIdValue}: Language: ${languageStudying}, Level: ${languageProficiency}`);
+                        console.log(`  KCD ${kcdIdValue}: Language: ${languageName}, Level: ${languageProficiency}`);
                     }
                 });
                 
