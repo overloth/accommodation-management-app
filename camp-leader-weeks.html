@@ -451,8 +451,21 @@
         };
 
         // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        let database;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            console.log('✅ Firebase initialized successfully');
+        } catch (error) {
+            console.error('❌ Firebase initialization error:', error);
+            // If Firebase is already initialized, just get the database reference
+            try {
+                database = firebase.database();
+                console.log('✅ Using existing Firebase instance');
+            } catch (e) {
+                console.error('❌ Could not get Firebase database:', e);
+            }
+        }
 
         // Load configuration from Firebase
         async function loadConfigFromFirebase() {
@@ -460,6 +473,8 @@
                 console.log('🔄 Loading configuration from Firebase...');
                 const snapshot = await database.ref('airtableConfig').once('value');
                 const data = snapshot.val();
+                
+                console.log('📦 Firebase data received:', data);
                 
                 if (data && data.token && data.baseId) {
                     config.token = data.token;
@@ -470,13 +485,17 @@
                     }
                     
                     console.log('✅ Configuration loaded successfully');
+                    console.log('📋 Base ID:', config.baseId);
+                    console.log('📋 Tables:', config.tables);
                     return true;
                 } else {
                     console.error('❌ Configuration incomplete or missing');
+                    console.error('Data received:', data);
                     return false;
                 }
             } catch (error) {
                 console.error('❌ Error loading configuration:', error);
+                console.error('Error details:', error.message, error.stack);
                 return false;
             }
         }
@@ -536,18 +555,25 @@
             try {
                 console.log('🏕️ Loading camp data...');
                 const response = await makeAirtableRequest(config.tables.camps);
+                console.log('📦 Raw camp response:', response);
                 
-                campData = response.records.map(record => ({
-                    id: record.id,
-                    season: record.fields['Season'] || '',
-                    startDate: record.fields['Camp Start Date'] ? new Date(record.fields['Camp Start Date']) : null,
-                    endDate: record.fields['Camp End Date'] ? new Date(record.fields['Camp End Date']) : null
-                })).filter(camp => camp.startDate && camp.endDate);
+                campData = response.records.map(record => {
+                    console.log('Processing camp record:', record.fields);
+                    return {
+                        id: record.id,
+                        season: record.fields['Season'] || '',
+                        startDate: record.fields['Camp Start Date'] ? new Date(record.fields['Camp Start Date']) : null,
+                        endDate: record.fields['Camp End Date'] ? new Date(record.fields['Camp End Date']) : null
+                    };
+                }).filter(camp => camp.startDate && camp.endDate);
                 
-                console.log('✅ Loaded', campData.length, 'camps');
+                console.log('✅ Loaded', campData.length, 'camps with valid dates');
+                console.log('Camp data sample:', campData.slice(0, 3));
                 return campData;
             } catch (error) {
                 console.error('❌ Error loading camp data:', error);
+                console.error('Error details:', error.message);
+                // Don't fail completely - we can still generate weeks without camp data
                 return [];
             }
         }
@@ -584,10 +610,19 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 App starting...');
             const configLoaded = await loadConfigFromFirebase();
+            console.log('Config loaded:', configLoaded);
+            
             if (configLoaded) {
-                // Load camp data first
-                await loadCampData();
+                try {
+                    // Load camp data first (but don't fail if it errors)
+                    console.log('Loading camp data...');
+                    await loadCampData();
+                    console.log('Camp data loaded, count:', campData.length);
+                } catch (error) {
+                    console.error('Failed to load camp data, but continuing:', error);
+                }
                 
                 // Check if we should show weeks directly (coming back from detail page)
                 const urlParams = new URLSearchParams(window.location.search);
@@ -595,7 +630,10 @@
                 const propertyId = urlParams.get('property');
                 const propertyName = urlParams.get('propertyName');
                 
+                console.log('URL params:', { showWeeks, propertyId, propertyName });
+                
                 if (showWeeks === 'true' && propertyId && propertyName) {
+                    console.log('Showing weeks directly for property:', propertyId);
                     // Directly show weeks for this property
                     await loadProperties();
                     const property = properties.find(p => p.id === propertyId);
@@ -606,10 +644,13 @@
                         selectProperty(propertyId, decodeURIComponent(propertyName));
                     }
                 } else {
-                    loadProperties();
+                    console.log('Loading properties normally...');
+                    await loadProperties();
                 }
             } else {
+                console.error('Config not loaded, showing error');
                 showError('Airtable configuration not found. Please set up the configuration in the main app.');
+                document.getElementById('loadingIndicator').style.display = 'none';
             }
         });
 
@@ -624,6 +665,7 @@
 
             try {
                 console.log('🏢 Loading properties...');
+                console.log('Using table name:', config.tables.properties);
                 
                 const response = await makeAirtableRequest(config.tables.properties);
                 console.log('📦 Received', response.records.length, 'properties from Airtable');
@@ -633,6 +675,7 @@
                         const countryName = record.fields['Country Name (from Property Country)'];
                         const isSwiss = countryName === 'Switzerland' || 
                                        (Array.isArray(countryName) && countryName.includes('Switzerland'));
+                        console.log('Property:', record.fields['Property Name'], 'Country:', countryName, 'Is Swiss:', isSwiss);
                         return isSwiss;
                     })
                     .map((record, index) => ({
@@ -643,10 +686,16 @@
                     }));
 
                 console.log('✅ Found', properties.length, 'properties in Switzerland');
+                console.log('Properties:', properties);
 
-                displayProperties();
+                if (properties.length === 0) {
+                    showError('No Swiss properties found in Airtable.');
+                } else {
+                    displayProperties();
+                }
             } catch (error) {
                 console.error('❌ Error loading properties:', error);
+                console.error('Error stack:', error.stack);
                 showError('Failed to load properties: ' + error.message + '. Make sure your Airtable configuration is set up in the main app.');
             } finally {
                 loadingIndicator.style.display = 'none';
@@ -826,7 +875,8 @@
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
+            errorDiv.classList.add('show');
+            console.error('💥 Showing error to user:', message);
         }
     </script>
 </body>
