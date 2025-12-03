@@ -447,25 +447,18 @@
 
         // Firebase Configuration
         const firebaseConfig = {
-            databaseURL: "https://frilingue-invoice-default-rtdb.europe-west1.firebasedatabase.app"
+            apiKey: "AIzaSyCaOMtd-Tl9bvTdMmLtDm0ALH9FctuVBoY",
+            authDomain: "accommodation-management-57373.firebaseapp.com",
+            projectId: "accommodation-management-57373",
+            storageBucket: "accommodation-management-57373.firebasestorage.app",
+            messagingSenderId: "905096938169",
+            appId: "1:905096938169:web:715d8c7cb73d5c3aa61168",
+            databaseURL: "https://accommodation-management-57373-default-rtdb.europe-west1.firebasedatabase.app"
         };
 
         // Initialize Firebase
-        let database;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            database = firebase.database();
-            console.log('✅ Firebase initialized successfully');
-        } catch (error) {
-            console.error('❌ Firebase initialization error:', error);
-            // If Firebase is already initialized, just get the database reference
-            try {
-                database = firebase.database();
-                console.log('✅ Using existing Firebase instance');
-            } catch (e) {
-                console.error('❌ Could not get Firebase database:', e);
-            }
-        }
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
         // Load configuration from Firebase
         async function loadConfigFromFirebase() {
