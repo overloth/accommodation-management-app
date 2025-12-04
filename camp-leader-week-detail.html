@@ -658,6 +658,35 @@
             return { prefix: '-', number: cleaned || '-' };
         }
 
+        function parseExtrasFees(extrasFees) {
+            if (!extrasFees) return { intensiveLessons: '-', extraCourses: '-' };
+            
+            // Convert to array if it's not already
+            const feesArray = Array.isArray(extrasFees) ? extrasFees : [extrasFees];
+            
+            const intensiveLessons = [];
+            const extraCourses = [];
+            
+            feesArray.forEach(fee => {
+                if (!fee) return;
+                
+                const feeLower = fee.toLowerCase();
+                
+                // Check if it contains "intensive" with x2, x3, etc.
+                if (feeLower.includes('intensive')) {
+                    intensiveLessons.push(fee);
+                } else {
+                    // Everything else goes to extra courses
+                    extraCourses.push(fee);
+                }
+            });
+            
+            return {
+                intensiveLessons: intensiveLessons.length > 0 ? intensiveLessons.join(', ') : '-',
+                extraCourses: extraCourses.length > 0 ? extraCourses.join(', ') : '-'
+            };
+        }
+
         async function loadWeekData() {
             try {
                 console.log('═══════════════════════════════════════════════════');
@@ -759,9 +788,44 @@
                         const bookingNameStr = Array.isArray(bookingName) ? bookingName[0] : bookingName;
                         const bookingNumber = bookingNameStr.split(' - ')[0];
                         
+                        // Get Extras Fees field (from Booking) - this is a lookup field that returns an array
+                        const extrasFees = detail.fields['Extras Fees (from Booking)'];
+                        let intensiveLessons = '';
+                        let extraCourses = '';
+                        
+                        if (extrasFees) {
+                            // Convert to array if it's a string, or use as-is if already an array
+                            let feesArray = [];
+                            if (Array.isArray(extrasFees)) {
+                                // If it's an array of strings, flatten it
+                                feesArray = extrasFees.flatMap(item => {
+                                    if (typeof item === 'string') {
+                                        // Split by common separators: comma, semicolon, newline
+                                        return item.split(/[,;\n]+/).map(s => s.trim()).filter(s => s);
+                                    }
+                                    return item;
+                                });
+                            } else if (typeof extrasFees === 'string') {
+                                feesArray = extrasFees.split(/[,;\n]+/).map(s => s.trim()).filter(s => s);
+                            }
+                            
+                            // Separate intensive lessons from extra courses
+                            const intensiveItems = [];
+                            const extraItems = [];
+                            
+                            feesArray.forEach(item => {
+                                if (item && item.toLowerCase().includes('intensive')) {
+                                    intensiveItems.push(item);
+                                } else if (item) {
+                                    extraItems.push(item);
+                                }
+                            });
+                            
+                            intensiveLessons = intensiveItems.join(', ');
+                            extraCourses = extraItems.join(', ');
+                        }
+                        
                         // Get additional fields from Kid Camp Details
-                        const intensiveLessons = detail.fields['Intensive Lessons'] || '';
-                        const extraCourses = detail.fields['Activities'] || ''; // Assuming this field contains extra courses
                         const others = detail.fields['Other (but no medication)'] || '';
                         const passportCopy = detail.fields['Passport Copy'] || '';
                         const insuranceCopy = detail.fields['Insurance Copy'] || '';
@@ -780,14 +844,14 @@
                             kidCampDetailsMap[bookingNumber] = {
                                 language: languageName,
                                 level: languageProficiency,
-                                intensiveLessons: intensiveLessons,
-                                extraCourses: extraCourses,
+                                intensiveLessons: intensiveLessons || '-',
+                                extraCourses: extraCourses || '-',
                                 others: others,
                                 passportCopy: passportCopy,
                                 insuranceCopy: insuranceCopy,
                                 kidPhone: kidPhoneFromDetails
                             };
-                            console.log(`  Booking ${bookingNumber}: Language: ${languageName}, Level: ${languageProficiency}, Kid Phone: ${kidPhoneFromDetails}`);
+                            console.log(`  Booking ${bookingNumber}: Language: ${languageName}, Level: ${languageProficiency}, Intensive: ${intensiveLessons}, Extra: ${extraCourses}, Kid Phone: ${kidPhoneFromDetails}`);
                         }
                     }
                 });
@@ -958,8 +1022,6 @@
                     if (kidCampDetailsMap[bookingNumber]) {
                         language = kidCampDetailsMap[bookingNumber].language;
                         level = kidCampDetailsMap[bookingNumber].level;
-                        intensiveLessons = kidCampDetailsMap[bookingNumber].intensiveLessons;
-                        extraCourses = kidCampDetailsMap[bookingNumber].extraCourses;
                         others = kidCampDetailsMap[bookingNumber].others;
                         passportCopy = kidCampDetailsMap[bookingNumber].passportCopy;
                         insuranceCopy = kidCampDetailsMap[bookingNumber].insuranceCopy;
@@ -974,6 +1036,13 @@
                     } else {
                         console.log('  ⚠️ Kid Camp Details not found for booking:', bookingNumber);
                     }
+                    
+                    // Get Intensive Lessons and Extra Courses from Extras Fees field in Bookings
+                    const extrasFees = fields['Extras Fees'];
+                    const parsedExtras = parseExtrasFees(extrasFees);
+                    intensiveLessons = parsedExtras.intensiveLessons;
+                    extraCourses = parsedExtras.extraCourses;
+                    console.log(`  📋 Extras Fees parsed - Intensive: ${intensiveLessons}, Extra Courses: ${extraCourses}`);
                     
                     // Get parent phone number from Clients
                     let parentPhoneNumber = '';
