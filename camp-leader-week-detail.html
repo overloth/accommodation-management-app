@@ -665,10 +665,10 @@
                     console.log(`  Kid ${kid.id}: ${givenName} ${familyName}, DOB: ${dateOfBirth}`);
                 });
                 
-                // Create a map of Kid Camp Details by KCD ID field
+                // Create a map of Kid Camp Details by booking number
                 const kidCampDetailsMap = {};
                 kidCampDetailsResponse.records.forEach(detail => {
-                    const kcdId = detail.fields['KCD ID']; // This links to booking
+                    const bookingName = detail.fields['Kid Booking Name']; // Get the booking name field
                     const languageStudying = detail.fields['Language Studying']; // This is a linked record
                     const languageProficiency = detail.fields['Language Proficiency'] || ''; // Single select
                     
@@ -680,13 +680,18 @@
                         languageName = languageStudying;
                     }
                     
-                    if (kcdId) {
-                        const kcdIdValue = Array.isArray(kcdId) ? kcdId[0] : kcdId;
-                        kidCampDetailsMap[kcdIdValue] = {
-                            language: languageName,
-                            level: languageProficiency
-                        };
-                        console.log(`  KCD ${kcdIdValue}: Language: ${languageName}, Level: ${languageProficiency}`);
+                    // Extract booking number from booking name (e.g., "8156" from "8156 - Mrs Ines Schmidt - Marit Schmidt")
+                    if (bookingName) {
+                        const bookingNameStr = Array.isArray(bookingName) ? bookingName[0] : bookingName;
+                        const bookingNumber = bookingNameStr.split(' - ')[0];
+                        
+                        if (bookingNumber) {
+                            kidCampDetailsMap[bookingNumber] = {
+                                language: languageName,
+                                level: languageProficiency
+                            };
+                            console.log(`  Booking ${bookingNumber}: Language: ${languageName}, Level: ${languageProficiency}`);
+                        }
                     }
                 });
                 
