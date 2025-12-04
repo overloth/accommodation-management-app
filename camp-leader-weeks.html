@@ -340,6 +340,26 @@
             box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
         }
 
+        .view-equipment-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+            width: 100%;
+        }
+
+        .view-equipment-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+        }
+
         .selected-property-banner {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
@@ -879,6 +899,9 @@
                                         const startStr = formatDate(week.startDate);
                                         const endStr = formatDate(week.endDate);
                                         
+                                        // Check if this is winter season
+                                        const isWinter = seasonKey === 'winter';
+                                        
                                         return `
                                             <div class="week-card" onclick="viewWeek(${weekNumber}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}', '${seasonKey}')">
                                                 <div class="week-number">Week ${weekNumber}</div>
@@ -887,6 +910,11 @@
                                                 <button class="view-week-btn" onclick="event.stopPropagation(); viewWeek(${weekNumber}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}', '${seasonKey}')">
                                                     View Week Details
                                                 </button>
+                                                ${isWinter ? `
+                                                <button class="view-equipment-btn" onclick="event.stopPropagation(); viewEquipment(${weekNumber}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}', '${seasonKey}')" style="margin-top: 10px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                                    ⛷️ Winter Equipment
+                                                </button>
+                                                ` : ''}
                                             </div>
                                         `;
                                     }).join('')}
@@ -935,6 +963,12 @@
         function viewWeek(weekNumber, startDate, endDate, season) {
             // Create URL with parameters including season
             const url = `camp-leader-week-detail.html?property=${selectedProperty.id}&propertyName=${encodeURIComponent(selectedProperty.name)}&week=${weekNumber}&startDate=${startDate}&endDate=${endDate}&season=${season}`;
+            window.location.href = url;
+        }
+
+        function viewEquipment(weekNumber, startDate, endDate, season) {
+            // Create URL for winter equipment page
+            const url = `camp-leader-equipment.html?property=${selectedProperty.id}&propertyName=${encodeURIComponent(selectedProperty.name)}&week=${weekNumber}&startDate=${startDate}&endDate=${endDate}&season=${season}`;
             window.location.href = url;
         }
 
