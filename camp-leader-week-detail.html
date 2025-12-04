@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<html lang="en"><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -641,21 +640,21 @@
         function parsePhoneNumber(phoneNumber) {
             if (!phoneNumber) return { prefix: '-', number: '-' };
             
-            // Remove all spaces and special characters except +
-            const cleaned = phoneNumber.replace(/[^\d+]/g, '');
+            // Remove all spaces from the phone number
+            const cleaned = phoneNumber.replace(/\s+/g, '');
             
-            // Extract prefix (everything from + to the first non-digit after it)
-            const prefixMatch = cleaned.match(/^\+\d+/);
-            if (prefixMatch) {
-                const prefix = prefixMatch[0];
-                const number = cleaned.substring(prefix.length);
+            // Check if it starts with +
+            if (cleaned.startsWith('+')) {
+                // Extract first 3 characters as prefix (e.g., +49, +41, +33)
+                const prefix = cleaned.substring(0, 3);
+                const number = cleaned.substring(3);
                 return {
                     prefix: `(${prefix})`,
                     number: number ? `(0)${number}` : '-'
                 };
             }
             
-            // If no prefix found, return the number as is
+            // If no + prefix, return the number as is
             return { prefix: '-', number: cleaned || '-' };
         }
 
@@ -717,13 +716,25 @@
                     const givenName = kid.fields['Given Name'] || '';
                     const familyName = kid.fields['Family Name'] || '';
                     const dateOfBirth = kid.fields['Date of Birth'] || '';
-                    const phoneNumber = kid.fields['KIDS Handy/Mobile Phone'] || '';
+                    
+                    // Try multiple possible field names for phone number
+                    const phoneNumber = kid.fields['KIDS Handy/Mobile Phone'] || 
+                                       kid.fields['KIDS Handy/Mobile'] || 
+                                       kid.fields['Handy/Mobile Phone'] ||
+                                       kid.fields['Mobile Phone'] || '';
+                    
                     kidsMap[kid.id] = { 
                         firstName: givenName, 
                         surname: familyName,
                         dateOfBirth: dateOfBirth,
                         phoneNumber: phoneNumber
                     };
+                    
+                    // Log all fields of first kid to see exact field names
+                    if (Object.keys(kidsMap).length === 1) {
+                        console.log('  First kid fields:', Object.keys(kid.fields));
+                    }
+                    
                     console.log(`  Kid ${kid.id}: ${givenName} ${familyName}, DOB: ${dateOfBirth}, Phone: ${phoneNumber}`);
                 });
                 
@@ -755,6 +766,16 @@
                         const passportCopy = detail.fields['Passport Copy'] || '';
                         const insuranceCopy = detail.fields['Insurance Copy'] || '';
                         
+                        // Try to get Kid ID from Kid Camp Details (it might have a link to Kids)
+                        let kidPhoneFromDetails = '';
+                        const kidsLink = detail.fields['Kids'] || detail.fields['Kid'];
+                        if (kidsLink && Array.isArray(kidsLink) && kidsLink.length > 0) {
+                            const kidId = kidsLink[0];
+                            if (kidsMap[kidId]) {
+                                kidPhoneFromDetails = kidsMap[kidId].phoneNumber;
+                            }
+                        }
+                        
                         if (bookingNumber) {
                             kidCampDetailsMap[bookingNumber] = {
                                 language: languageName,
@@ -763,9 +784,11 @@
                                 extraCourses: extraCourses,
                                 others: others,
                                 passportCopy: passportCopy,
-                                insuranceCopy: insuranceCopy
+                                insuranceCopy: insuranceCopy,
+                                kidPhone: kidPhoneFromDetails
                             };
-                            console.log(`  Booking ${bookingNumber}: Language: ${languageName}, Level: ${languageProficiency}`);
+                            console.log(`  Booking ${bookingNumber}: Language: ${languageName}, Level: ${languageProficiency}, Kid Phone: ${kidPhoneFromDetails}`);
+                        }
                         }
                     }
                 });
@@ -941,6 +964,13 @@
                         others = kidCampDetailsMap[bookingNumber].others;
                         passportCopy = kidCampDetailsMap[bookingNumber].passportCopy;
                         insuranceCopy = kidCampDetailsMap[bookingNumber].insuranceCopy;
+                        
+                        // Use kid phone from Kid Camp Details if we don't have it from Kids table
+                        if (!kidPhoneNumber && kidCampDetailsMap[bookingNumber].kidPhone) {
+                            kidPhoneNumber = kidCampDetailsMap[bookingNumber].kidPhone;
+                            console.log(`  ✅ Using kid phone from Kid Camp Details: ${kidPhoneNumber}`);
+                        }
+                        
                         console.log(`  ✅ Found Kid Camp Details: Language: ${language}, Level: ${level}`);
                     } else {
                         console.log('  ⚠️ Kid Camp Details not found for booking:', bookingNumber);
@@ -1139,4 +1169,4 @@
         }
     </script>
 </body>
-</html></html>
+</html>
