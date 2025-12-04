@@ -474,7 +474,8 @@
                 bookings: 'Bookings',
                 camps: 'Camps',
                 kids: 'Kids',
-                kidCampDetails: 'Kid Camp Details'
+                kidCampDetails: 'Kid Camp Details',
+                languages: 'Languages'
             }
         };
 
@@ -645,6 +646,19 @@
                 const kidsResponse = await makeAirtableRequest(config.tables.kids);
                 console.log('📦 Total kids received:', kidsResponse.records.length);
                 
+                // Load Languages data
+                console.log('📡 Fetching Languages data...');
+                const languagesResponse = await makeAirtableRequest(config.tables.languages);
+                console.log('📦 Total languages received:', languagesResponse.records.length);
+                
+                // Create a map of language IDs to language names
+                const languagesMap = {};
+                languagesResponse.records.forEach(lang => {
+                    const languageName = lang.fields['Language Name'] || '';
+                    languagesMap[lang.id] = languageName;
+                    console.log(`  Language ${lang.id}: ${languageName}`);
+                });
+                
                 // Load Kid Camp Details data
                 console.log('📡 Fetching Kid Camp Details data...');
                 const kidCampDetailsResponse = await makeAirtableRequest(config.tables.kidCampDetails);
@@ -669,15 +683,16 @@
                 const kidCampDetailsMap = {};
                 kidCampDetailsResponse.records.forEach(detail => {
                     const bookingName = detail.fields['Kid Booking Name']; // Get the booking name field
-                    const languageStudying = detail.fields['Language Studying']; // This is a linked record
+                    const languageStudying = detail.fields['Language Studying']; // This is a linked record (ID)
                     const languageProficiency = detail.fields['Language Proficiency'] || ''; // Single select
                     
-                    // Extract language name from linked record (it's an array)
+                    // Extract language ID from linked record and resolve to name
                     let languageName = '';
                     if (languageStudying && Array.isArray(languageStudying)) {
-                        languageName = languageStudying[0] || ''; // Get first language
+                        const languageId = languageStudying[0]; // Get first language ID
+                        languageName = languagesMap[languageId] || languageId; // Resolve to name, fallback to ID
                     } else if (languageStudying) {
-                        languageName = languageStudying;
+                        languageName = languagesMap[languageStudying] || languageStudying; // Resolve to name, fallback to ID
                     }
                     
                     // Extract booking number from booking name (e.g., "8156" from "8156 - Mrs Ines Schmidt - Marit Schmidt")
