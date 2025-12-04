@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html lang="en"><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -425,6 +426,16 @@
                                 <th>Language</th>
                                 <th>Level</th>
                                 <th>Accommodation</th>
+                                <th>Intensive Lessons</th>
+                                <th>Extra Courses</th>
+                                <th>Arrival</th>
+                                <th>Departure</th>
+                                <th>Others</th>
+                                <th>Prefix</th>
+                                <th>Phone Parents</th>
+                                <th>Phone Kids</th>
+                                <th>Passport Copy</th>
+                                <th>Insurance Copy</th>
                             </tr>
                         </thead>
                         <tbody id="dataTableBody">
@@ -475,7 +486,8 @@
                 camps: 'Camps',
                 kids: 'Kids',
                 kidCampDetails: 'Kid Camp Details',
-                languages: 'Languages'
+                languages: 'Languages',
+                clients: 'Clients'
             }
         };
 
@@ -626,6 +638,27 @@
             return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
         }
 
+        function parsePhoneNumber(phoneNumber) {
+            if (!phoneNumber) return { prefix: '-', number: '-' };
+            
+            // Remove all spaces and special characters except +
+            const cleaned = phoneNumber.replace(/[^\d+]/g, '');
+            
+            // Extract prefix (everything from + to the first non-digit after it)
+            const prefixMatch = cleaned.match(/^\+\d+/);
+            if (prefixMatch) {
+                const prefix = prefixMatch[0];
+                const number = cleaned.substring(prefix.length);
+                return {
+                    prefix: `(${prefix})`,
+                    number: number ? `(0)${number}` : '-'
+                };
+            }
+            
+            // If no prefix found, return the number as is
+            return { prefix: '-', number: cleaned || '-' };
+        }
+
         async function loadWeekData() {
             try {
                 console.log('═══════════════════════════════════════════════════');
@@ -659,6 +692,19 @@
                     console.log(`  Language ${lang.id}: ${languageName}`);
                 });
                 
+                // Load Clients data
+                console.log('📡 Fetching Clients data...');
+                const clientsResponse = await makeAirtableRequest(config.tables.clients);
+                console.log('📦 Total clients received:', clientsResponse.records.length);
+                
+                // Create a map of client IDs to phone numbers
+                const clientsMap = {};
+                clientsResponse.records.forEach(client => {
+                    const phoneNumber = client.fields['Handy/Mobile Number'] || '';
+                    clientsMap[client.id] = phoneNumber;
+                    console.log(`  Client ${client.id}: ${phoneNumber}`);
+                });
+                
                 // Load Kid Camp Details data
                 console.log('📡 Fetching Kid Camp Details data...');
                 const kidCampDetailsResponse = await makeAirtableRequest(config.tables.kidCampDetails);
@@ -671,12 +717,14 @@
                     const givenName = kid.fields['Given Name'] || '';
                     const familyName = kid.fields['Family Name'] || '';
                     const dateOfBirth = kid.fields['Date of Birth'] || '';
+                    const phoneNumber = kid.fields['KIDS Handy/Mobile Phone'] || '';
                     kidsMap[kid.id] = { 
                         firstName: givenName, 
                         surname: familyName,
-                        dateOfBirth: dateOfBirth
+                        dateOfBirth: dateOfBirth,
+                        phoneNumber: phoneNumber
                     };
-                    console.log(`  Kid ${kid.id}: ${givenName} ${familyName}, DOB: ${dateOfBirth}`);
+                    console.log(`  Kid ${kid.id}: ${givenName} ${familyName}, DOB: ${dateOfBirth}, Phone: ${phoneNumber}`);
                 });
                 
                 // Create a map of Kid Camp Details by booking number
@@ -700,10 +748,22 @@
                         const bookingNameStr = Array.isArray(bookingName) ? bookingName[0] : bookingName;
                         const bookingNumber = bookingNameStr.split(' - ')[0];
                         
+                        // Get additional fields from Kid Camp Details
+                        const intensiveLessons = detail.fields['Intensive Lessons'] || '';
+                        const extraCourses = detail.fields['Activities'] || ''; // Assuming this field contains extra courses
+                        const others = detail.fields['Other (but no medication)'] || '';
+                        const passportCopy = detail.fields['Passport Copy'] || '';
+                        const insuranceCopy = detail.fields['Insurance Copy'] || '';
+                        
                         if (bookingNumber) {
                             kidCampDetailsMap[bookingNumber] = {
                                 language: languageName,
-                                level: languageProficiency
+                                level: languageProficiency,
+                                intensiveLessons: intensiveLessons,
+                                extraCourses: extraCourses,
+                                others: others,
+                                passportCopy: passportCopy,
+                                insuranceCopy: insuranceCopy
                             };
                             console.log(`  Booking ${bookingNumber}: Language: ${languageName}, Level: ${languageProficiency}`);
                         }
@@ -841,8 +901,14 @@
                     let firstName = '';
                     let surname = '';
                     let dateOfBirth = '';
+                    let kidPhoneNumber = '';
                     let language = '';
                     let level = '';
+                    let intensiveLessons = '';
+                    let extraCourses = '';
+                    let others = '';
+                    let passportCopy = '';
+                    let insuranceCopy = '';
                     
                     const kidsOnTrip = fields['Kids on Trip'];
                     console.log('  🔗 Kids on Trip field:', kidsOnTrip);
@@ -854,13 +920,14 @@
                             firstName = kidsMap[kidId].firstName;
                             surname = kidsMap[kidId].surname;
                             dateOfBirth = kidsMap[kidId].dateOfBirth;
-                            console.log(`  ✅ Found in Kids table: ${firstName} ${surname}, DOB: ${dateOfBirth}`);
+                            kidPhoneNumber = kidsMap[kidId].phoneNumber;
+                            console.log(`  ✅ Found in Kids table: ${firstName} ${surname}, DOB: ${dateOfBirth}, Phone: ${kidPhoneNumber}`);
                         } else {
                             console.log('  ⚠️ Kid ID not found in Kids map');
                         }
                     }
                     
-                    // Get language and level from Kid Camp Details
+                    // Get data from Kid Camp Details
                     const bookingName = fields['Booking Name'] || '';
                     // Extract booking number from "8156 - Mrs Ines Schmidt - Marit Schmidt"
                     const bookingNumber = bookingName.split(' - ')[0];
@@ -869,10 +936,31 @@
                     if (kidCampDetailsMap[bookingNumber]) {
                         language = kidCampDetailsMap[bookingNumber].language;
                         level = kidCampDetailsMap[bookingNumber].level;
+                        intensiveLessons = kidCampDetailsMap[bookingNumber].intensiveLessons;
+                        extraCourses = kidCampDetailsMap[bookingNumber].extraCourses;
+                        others = kidCampDetailsMap[bookingNumber].others;
+                        passportCopy = kidCampDetailsMap[bookingNumber].passportCopy;
+                        insuranceCopy = kidCampDetailsMap[bookingNumber].insuranceCopy;
                         console.log(`  ✅ Found Kid Camp Details: Language: ${language}, Level: ${level}`);
                     } else {
                         console.log('  ⚠️ Kid Camp Details not found for booking:', bookingNumber);
                     }
+                    
+                    // Get parent phone number from Clients
+                    let parentPhoneNumber = '';
+                    const clientIds = fields['Client'];
+                    if (clientIds && Array.isArray(clientIds) && clientIds.length > 0) {
+                        const clientId = clientIds[0];
+                        parentPhoneNumber = clientsMap[clientId] || '';
+                        console.log(`  ✅ Found parent phone: ${parentPhoneNumber}`);
+                    }
+                    
+                    // Parse phone numbers to extract prefix and format
+                    const kidPhone = parsePhoneNumber(kidPhoneNumber);
+                    const parentPhone = parsePhoneNumber(parentPhoneNumber);
+                    
+                    // Use the same prefix from whichever phone has one, or kid's if both have it
+                    const phonePrefix = kidPhone.prefix !== '-' ? kidPhone.prefix : parentPhone.prefix;
                     
                     // Fallback: Extract from booking name if Kids lookup failed
                     if (!firstName && !surname) {
@@ -898,6 +986,10 @@
                     const campName = fields['Camp (from Camp)'];
                     const camp = Array.isArray(campName) ? campName[0] : campName;
                     
+                    // Get arrival and departure info
+                    const arrivalInfo = fields['Arrival'] || '';
+                    const departureInfo = fields['Departure'] || '';
+                    
                     return {
                         firstName: firstName,
                         surname: surname,
@@ -905,18 +997,18 @@
                         dateOfBirth: dateOfBirth,
                         duration: fields['Duration'] || '1 week',
                         language: language || camp || '', // Use Kid Camp Details language, fallback to camp name
-                        level: level,
+                        level: level || '-',
                         accommodation: accommodationType || 'undefined',
-                        intensiveLessons: '',
-                        extraCourses: '',
-                        arrival: '',
-                        departure: '',
-                        others: fields['Accommodation Notes'] || '',
-                        laundryService: '',
-                        phonePrefix: '',
-                        parentsPhone: '',
-                        passportCopy: '',
-                        insuranceCopy: ''
+                        intensiveLessons: intensiveLessons || '-',
+                        extraCourses: extraCourses || '-',
+                        arrival: arrivalInfo || '-',
+                        departure: departureInfo || '-',
+                        others: others || '-',
+                        phonePrefix: phonePrefix,
+                        parentsPhone: parentPhone.number,
+                        kidsPhone: kidPhone.number,
+                        passportCopy: passportCopy || '-',
+                        insuranceCopy: insuranceCopy || '-'
                     };
                 });
 
@@ -966,6 +1058,16 @@
                     <td>${booking.language || '-'}</td>
                     <td>${booking.level || '-'}</td>
                     <td>${booking.accommodation || 'undefined'}</td>
+                    <td>${booking.intensiveLessons}</td>
+                    <td>${booking.extraCourses}</td>
+                    <td>${booking.arrival}</td>
+                    <td>${booking.departure}</td>
+                    <td>${booking.others}</td>
+                    <td>${booking.phonePrefix}</td>
+                    <td>${booking.parentsPhone}</td>
+                    <td>${booking.kidsPhone}</td>
+                    <td>${booking.passportCopy}</td>
+                    <td>${booking.insuranceCopy}</td>
                 </tr>
             `).join('');
         }
@@ -1037,4 +1139,4 @@
         }
     </script>
 </body>
-</html>
+</html></html>
