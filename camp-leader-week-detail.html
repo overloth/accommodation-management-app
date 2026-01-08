@@ -429,6 +429,7 @@
                                 <th>Extra Courses</th>
                                 <th>Arrival</th>
                                 <th>Departure</th>
+                                <th>Special Food Requirements</th>
                                 <th>Others</th>
                                 <th>Prefix</th>
                                 <th>Phone Parents</th>
@@ -1146,6 +1147,8 @@
                         console.log('  ⚠️ Kid Camp Details not found for booking:', bookingNumber);
                     }
                     
+                    const specialFoodReq = fields['Special Food Requirements'] || '-';
+
                     // Get Intensive Lessons, Extra Courses, and Others from Extras Fees field in Bookings
                     const extrasFees = fields['Extras Fees'];
                     const parsedExtras = parseExtrasFees(extrasFees);
@@ -1239,6 +1242,7 @@
                         intensiveLessons: intensiveLessons || '-',
                         extraCourses: extraCourses || '-',
                         arrival: arrivalInfo,
+                        specialFoodReq: specialFoodReq,
                         departure: departureInfo,
                         others: othersInfo,
                         phonePrefix: phonePrefix,
@@ -1298,6 +1302,7 @@
                     <td>${booking.intensiveLessons}</td>
                     <td>${booking.extraCourses}</td>
                     <td>${booking.arrival}</td>
+                    <td>${booking.specialFoodReq}</td>
                     <td>${booking.departure}</td>
                     <td>${booking.others}</td>
                     <td>${booking.phonePrefix}</td>
