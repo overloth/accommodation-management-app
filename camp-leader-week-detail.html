@@ -665,14 +665,13 @@
             
             if (!extrasFees) {
                 console.log('   → No extras fees, returning defaults');
-                return { intensiveLessons: '-', extraCourses: '-' };
+                return { intensiveLessons: '-', extraCourses: '-', others: '-' };
             }
             
             // Convert to string if it's an array
             let extrasString = '';
             if (Array.isArray(extrasFees)) {
                 console.log('   → Converting array to string');
-                // Join array elements with comma
                 extrasString = extrasFees.join(', ');
             } else if (typeof extrasFees === 'string') {
                 extrasString = extrasFees;
@@ -684,12 +683,16 @@
             console.log('   → Processing string:', extrasString);
             
             // Split by pattern: digits.digits followed by comma
-            // This splits after "25.00," or "250.00," etc.
             const parts = extrasString.split(/(\d+\.\d{2}),?\s*/);
             console.log('   → Split into parts:', parts);
             
+            // Define code categories
+            const intensiveCodes = ['x2', 'x3', 'x2e', 'x3e', 'x2f', 'x3f', 'x2d', 'x3d'];
+            const extraCoursesCodes = ['sl', 'sb', 'code', 'cod', 'cd', 'pho', 'wk', 's', 't', 'u', 'v', 'ea', 'fa', 'da', 'sa', 'ev', 'ud', 'afe', 'afg', 'aff', 'bfe', 'bfg', 'bff', 'ass', 'ttw', 'fbt'];
+            
             const intensiveLessons = [];
             const extraCourses = [];
+            const others = [];
             
             // Process pairs: [name+code, price, name+code, price, ...]
             for (let i = 0; i < parts.length; i += 2) {
@@ -706,35 +709,113 @@
                 if (match) {
                     const [, name, code] = match;
                     const price = priceStr ? parseFloat(priceStr) : null;
+                    const codeNormalized = code.trim().toLowerCase();
                     
-                    console.log(`      ✓ Parsed: Name="${name.trim()}", Code="${code.trim()}", Price=${price}`);
+                    console.log(`      ✓ Parsed: Name="${name.trim()}", Code="${codeNormalized}", Price=${price}`);
                     
-                    const fullItem = `${nameAndCode.trim()} ${priceStr || ''}`.trim();
+                    const fullItem = `${name.trim()} (${code.trim()}) ${priceStr || ''}`.trim();
                     
-                    // Check if it's an intensive lesson
-                    if (nameAndCode.toLowerCase().includes('intensive')) {
+                    // Categorize based on code
+                    if (intensiveCodes.includes(codeNormalized)) {
                         intensiveLessons.push(fullItem);
-                        console.log(`      → Added to INTENSIVE LESSONS`);
-                    } else {
+                        console.log(`      → Added to INTENSIVE LESSONS (code: ${codeNormalized})`);
+                    } else if (extraCoursesCodes.includes(codeNormalized)) {
                         extraCourses.push(fullItem);
-                        console.log(`      → Added to EXTRA COURSES`);
+                        console.log(`      → Added to EXTRA COURSES (code: ${codeNormalized})`);
+                    } else {
+                        others.push(fullItem);
+                        console.log(`      → Added to OTHERS (code: ${codeNormalized})`);
                     }
                 } else {
                     console.log(`      ⚠️ Could not parse format: "${nameAndCode}"`);
-                    // Store as-is if format doesn't match
+                    // Store as-is in others if format doesn't match
                     const fullItem = `${nameAndCode.trim()} ${priceStr || ''}`.trim();
-                    
-                    if (nameAndCode.toLowerCase().includes('intensive')) {
-                        intensiveLessons.push(fullItem);
-                    } else {
-                        extraCourses.push(fullItem);
-                    }
+                    others.push(fullItem);
                 }
             }
             
             const result = {
                 intensiveLessons: intensiveLessons.length > 0 ? intensiveLessons.join(', ') : '-',
-                extraCourses: extraCourses.length > 0 ? extraCourses.join(', ') : '-'
+                extraCourses: extraCourses.length > 0 ? extraCourses.join(', ') : '-',
+                others: others.length > 0 ? others.join(', ') : '-'
+            };
+            
+            console.log('   → FINAL RESULT:', result);
+            return result;
+        }
+
+        function parseAccompaniedTrainRide(accompaniedTrainRide) {
+            console.log('🚂 parseAccompaniedTrainRide called with:', accompaniedTrainRide);
+            
+            if (!accompaniedTrainRide) {
+                console.log('   → No train ride data, returning defaults');
+                return { arrival: '-', departure: '-' };
+            }
+            
+            // Convert to string
+            let trainRideString = '';
+            if (Array.isArray(accompaniedTrainRide)) {
+                trainRideString = accompaniedTrainRide.join(', ');
+            } else if (typeof accompaniedTrainRide === 'string') {
+                trainRideString = accompaniedTrainRide;
+            } else {
+                trainRideString = String(accompaniedTrainRide);
+            }
+            
+            console.log('   → Processing string:', trainRideString);
+            
+            // Split by pattern: digits.digits followed by comma
+            const parts = trainRideString.split(/(\d+\.\d{2}),?\s*/);
+            console.log('   → Split into parts:', parts);
+            
+            // Define code categories
+            const arrivalCodes = ['a', 'c', 'g', 'e', 'z', 'x', 'i', 'ptfg', 'tfg', 'tfz'];
+            const departureCodes = ['b', 'd', 'h', 'f', 'y', 'w', 'pttg', 'ttg', 'ttz'];
+            const bothCodes = ['ab', 'cdb', 'gh', 'ef'];
+            
+            const arrivalItems = [];
+            const departureItems = [];
+            
+            // Process pairs: [name+code, price, name+code, price, ...]
+            for (let i = 0; i < parts.length; i += 2) {
+                const nameAndCode = parts[i];
+                const priceStr = parts[i + 1];
+                
+                if (!nameAndCode || !nameAndCode.trim()) continue;
+                
+                console.log(`   → Processing item: "${nameAndCode}" with price "${priceStr}"`);
+                
+                // Extract name and code from format "Name (code)"
+                const match = nameAndCode.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+                
+                if (match) {
+                    const [, name, code] = match;
+                    const codeNormalized = code.trim().toLowerCase();
+                    
+                    console.log(`      ✓ Parsed: Name="${name.trim()}", Code="${codeNormalized}"`);
+                    
+                    const fullItem = `${name.trim()} (${code.trim()}) ${priceStr || ''}`.trim();
+                    
+                    // Categorize based on code
+                    if (bothCodes.includes(codeNormalized)) {
+                        arrivalItems.push(fullItem);
+                        departureItems.push(fullItem);
+                        console.log(`      → Added to BOTH ARRIVAL & DEPARTURE (code: ${codeNormalized})`);
+                    } else if (arrivalCodes.includes(codeNormalized)) {
+                        arrivalItems.push(fullItem);
+                        console.log(`      → Added to ARRIVAL (code: ${codeNormalized})`);
+                    } else if (departureCodes.includes(codeNormalized)) {
+                        departureItems.push(fullItem);
+                        console.log(`      → Added to DEPARTURE (code: ${codeNormalized})`);
+                    } else {
+                        console.log(`      ⚠️ Unknown train ride code: ${codeNormalized}`);
+                    }
+                }
+            }
+            
+            const result = {
+                arrival: arrivalItems.length > 0 ? arrivalItems.join(', ') : '-',
+                departure: departureItems.length > 0 ? departureItems.join(', ') : '-'
             };
             
             console.log('   → FINAL RESULT:', result);
@@ -824,67 +905,43 @@
                 // Create a map of Kid Camp Details by booking number
                 const kidCampDetailsMap = {};
                 kidCampDetailsResponse.records.forEach(detail => {
-                    const bookingName = detail.fields['Kid Booking Name']; // Get the booking name field
-                    const languageStudying = detail.fields['Language Studying']; // This is a linked record (ID)
-                    const languageProficiency = detail.fields['Language Proficiency'] || ''; // Single select
+                    const bookingName = detail.fields['Kid Booking Name'];
+                    const languageStudying = detail.fields['Language Studying'];
+                    const languageProficiency = detail.fields['Language Proficiency'] || '';
                     
                     // Extract language ID from linked record and resolve to name
                     let languageName = '';
                     if (languageStudying && Array.isArray(languageStudying)) {
-                        const languageId = languageStudying[0]; // Get first language ID
-                        languageName = languagesMap[languageId] || languageId; // Resolve to name, fallback to ID
+                        const languageId = languageStudying[0];
+                        languageName = languagesMap[languageId] || languageId;
                     } else if (languageStudying) {
-                        languageName = languagesMap[languageStudying] || languageStudying; // Resolve to name, fallback to ID
+                        languageName = languagesMap[languageStudying] || languageStudying;
                     }
                     
-                    // Extract booking number from booking name (e.g., "8156" from "8156 - Mrs Ines Schmidt - Marit Schmidt")
+                    // Extract booking number from booking name
                     if (bookingName) {
                         const bookingNameStr = Array.isArray(bookingName) ? bookingName[0] : bookingName;
                         const bookingNumber = bookingNameStr.split(' - ')[0];
                         
-                        // Get Extras Fees field (from Booking) - this is a lookup field that returns an array
+                        // Get Extras Fees field (from Booking) - Parse it properly
                         const extrasFees = detail.fields['Extras Fees (from Booking)'];
-                        let intensiveLessons = '';
-                        let extraCourses = '';
-                        
-                        if (extrasFees) {
-                            // Convert to array if it's a string, or use as-is if already an array
-                            let feesArray = [];
-                            if (Array.isArray(extrasFees)) {
-                                // If it's an array of strings, flatten it
-                                feesArray = extrasFees.flatMap(item => {
-                                    if (typeof item === 'string') {
-                                        // Split by common separators: comma, semicolon, newline
-                                        return item.split(/[,;\n]+/).map(s => s.trim()).filter(s => s);
-                                    }
-                                    return item;
-                                });
-                            } else if (typeof extrasFees === 'string') {
-                                feesArray = extrasFees.split(/[,;\n]+/).map(s => s.trim()).filter(s => s);
-                            }
-                            
-                            // Separate intensive lessons from extra courses
-                            const intensiveItems = [];
-                            const extraItems = [];
-                            
-                            feesArray.forEach(item => {
-                                if (item && item.toLowerCase().includes('intensive')) {
-                                    intensiveItems.push(item);
-                                } else if (item) {
-                                    extraItems.push(item);
-                                }
-                            });
-                            
-                            intensiveLessons = intensiveItems.join(', ');
-                            extraCourses = extraItems.join(', ');
-                        }
+                        const parsedExtras = parseExtrasFees(extrasFees);
+                        const intensiveLessons = parsedExtras.intensiveLessons;
+                        const extraCourses = parsedExtras.extraCourses;
+                        const othersFromExtras = parsedExtras.others;
                         
                         // Get additional fields from Kid Camp Details
-                        const others = detail.fields['Other (but no medication)'] || '';
+                        const othersFromField = detail.fields['Other (but no medication)'] || '';
                         const passportCopy = detail.fields['Passport Copy'] || '';
                         const insuranceCopy = detail.fields['Insurance Copy'] || '';
                         
-                        // Try to get Kid ID from Kid Camp Details (it might have a link to Kids)
+                        // Combine others from extras parsing and field
+                        const othersParts = [];
+                        if (othersFromExtras && othersFromExtras !== '-') othersParts.push(othersFromExtras);
+                        if (othersFromField) othersParts.push(othersFromField);
+                        const others = othersParts.length > 0 ? othersParts.join(', ') : '';
+                        
+                        // Try to get Kid ID from Kid Camp Details
                         let kidPhoneFromDetails = '';
                         const kidsLink = detail.fields['Kids'] || detail.fields['Kid'];
                         if (kidsLink && Array.isArray(kidsLink) && kidsLink.length > 0) {
@@ -918,7 +975,7 @@
                 // Filter bookings that overlap with this week AND belong to this property
                 const weekStart = new Date(weekData.startDate);
                 const weekEnd = new Date(weekData.endDate);
-                weekEnd.setHours(23, 59, 59, 999); // End of day
+                weekEnd.setHours(23, 59, 59, 999);
                 
                 console.log('Week start:', weekStart.toISOString());
                 console.log('Week end:', weekEnd.toISOString());
@@ -932,7 +989,6 @@
                     console.log('\n🔍 Booking:', fields['Booking Name']);
                     
                     // Check if booking belongs to this property
-                    // Try multiple ways: direct Property field, or Property from Camp
                     const bookingProperty = fields['Property'];
                     const propertyFromCamp = fields['Property (from Camp)'];
                     
@@ -968,7 +1024,7 @@
                     
                     if (!propertyMatches) {
                         console.log('  ⚠️ SKIPPING: Property does not match');
-                        return false; // Not for this property
+                        return false;
                     }
                     
                     // Get arrival and departure dates
@@ -989,7 +1045,6 @@
                     if (departureField) {
                         departure = new Date(departureField);
                     } else if (durationField) {
-                        // Parse duration (e.g., "1 week", "2 weeks", "7 days")
                         const weeks = durationField.match(/(\d+)\s*week/i);
                         const days = durationField.match(/(\d+)\s*day/i);
                         
@@ -1000,12 +1055,10 @@
                             departure = new Date(arrival);
                             departure.setDate(arrival.getDate() + parseInt(days[1]));
                         } else {
-                            // Default to 1 week if we can't parse
                             departure = new Date(arrival);
                             departure.setDate(arrival.getDate() + 7);
                         }
                     } else {
-                        // Default to 1 week
                         departure = new Date(arrival);
                         departure.setDate(arrival.getDate() + 7);
                     }
@@ -1054,7 +1107,7 @@
                     console.log('  🔗 Kids on Trip field:', kidsOnTrip);
                     
                     if (kidsOnTrip && Array.isArray(kidsOnTrip) && kidsOnTrip.length > 0) {
-                        const kidId = kidsOnTrip[0]; // Get first kid
+                        const kidId = kidsOnTrip[0];
                         console.log('  🔍 Looking up kid ID:', kidId);
                         if (kidsMap[kidId]) {
                             firstName = kidsMap[kidId].firstName;
@@ -1069,7 +1122,6 @@
                     
                     // Get data from Kid Camp Details
                     const bookingName = fields['Booking Name'] || '';
-                    // Extract booking number from "8156 - Mrs Ines Schmidt - Marit Schmidt"
                     const bookingNumber = bookingName.split(' - ')[0];
                     console.log('  🔍 Looking up Kid Camp Details for booking:', bookingNumber);
                     
@@ -1080,7 +1132,6 @@
                         passportCopy = kidCampDetailsMap[bookingNumber].passportCopy;
                         insuranceCopy = kidCampDetailsMap[bookingNumber].insuranceCopy;
                         
-                        // Use kid phone from Kid Camp Details if we don't have it from Kids table
                         if (!kidPhoneNumber && kidCampDetailsMap[bookingNumber].kidPhone) {
                             kidPhoneNumber = kidCampDetailsMap[bookingNumber].kidPhone;
                             console.log(`  ✅ Using kid phone from Kid Camp Details: ${kidPhoneNumber}`);
@@ -1091,12 +1142,20 @@
                         console.log('  ⚠️ Kid Camp Details not found for booking:', bookingNumber);
                     }
                     
-                    // Get Intensive Lessons and Extra Courses from Extras Fees field in Bookings
+                    // Get Intensive Lessons, Extra Courses, and Others from Extras Fees field in Bookings
                     const extrasFees = fields['Extras Fees'];
                     const parsedExtras = parseExtrasFees(extrasFees);
                     intensiveLessons = parsedExtras.intensiveLessons;
                     extraCourses = parsedExtras.extraCourses;
+                    
+                    // Parse Accompanied Train Ride for Arrival and Departure
+                    const accompaniedTrainRide = fields['Accompanied train ride'];
+                    const parsedTrainRide = parseAccompaniedTrainRide(accompaniedTrainRide);
+                    const arrivalFromTrain = parsedTrainRide.arrival;
+                    const departureFromTrain = parsedTrainRide.departure;
+                    
                     console.log(`  📋 Extras Fees parsed - Intensive: ${intensiveLessons}, Extra Courses: ${extraCourses}`);
+                    console.log(`  🚂 Train Ride parsed - Arrival: ${arrivalFromTrain}, Departure: ${departureFromTrain}`);
                     
                     // Get parent phone number from Clients
                     let parentPhoneNumber = '';
@@ -1118,7 +1177,6 @@
                     if (!firstName && !surname) {
                         console.log(`  ⚠️ Falling back to Booking Name: ${bookingName}`);
                         
-                        // Booking name format: "8608 - Mr Diobe Wyss - Carlota Rauchenstein"
                         const nameParts = bookingName.split(' - ');
                         
                         if (nameParts.length >= 3) {
@@ -1138,9 +1196,27 @@
                     const campName = fields['Camp (from Camp)'];
                     const camp = Array.isArray(campName) ? campName[0] : campName;
                     
-                    // Get arrival and departure info
-                    const arrivalInfo = fields['Arrival'] || '';
-                    const departureInfo = fields['Departure'] || '';
+                    // Get arrival and departure info - combine from field and train ride
+                    const arrivalField = fields['Arrival'] || '';
+                    const departureField = fields['Departure'] || '';
+                    
+                    // Combine arrivals
+                    const arrivalParts = [];
+                    if (arrivalField && arrivalField !== '-') arrivalParts.push(arrivalField);
+                    if (arrivalFromTrain && arrivalFromTrain !== '-') arrivalParts.push(arrivalFromTrain);
+                    const arrivalInfo = arrivalParts.length > 0 ? arrivalParts.join(', ') : '-';
+                    
+                    // Combine departures
+                    const departureParts = [];
+                    if (departureField && departureField !== '-') departureParts.push(departureField);
+                    if (departureFromTrain && departureFromTrain !== '-') departureParts.push(departureFromTrain);
+                    const departureInfo = departureParts.length > 0 ? departureParts.join(', ') : '-';
+                    
+                    // Combine others
+                    const othersParts = [];
+                    if (others && others !== '-') othersParts.push(others);
+                    if (parsedExtras.others && parsedExtras.others !== '-') othersParts.push(parsedExtras.others);
+                    const othersInfo = othersParts.length > 0 ? othersParts.join(', ') : '-';
                     
                     return {
                         firstName: firstName,
@@ -1148,14 +1224,14 @@
                         arrivalDate: fields['Arrival Date'] || '',
                         dateOfBirth: dateOfBirth,
                         duration: fields['Duration'] || '1 week',
-                        language: language || camp || '', // Use Kid Camp Details language, fallback to camp name
+                        language: language || camp || '',
                         level: level || '-',
                         accommodation: accommodationType || 'undefined',
                         intensiveLessons: intensiveLessons || '-',
                         extraCourses: extraCourses || '-',
-                        arrival: arrivalInfo || '-',
-                        departure: departureInfo || '-',
-                        others: others || '-',
+                        arrival: arrivalInfo,
+                        departure: departureInfo,
+                        others: othersInfo,
                         phonePrefix: phonePrefix,
                         parentsPhone: parentPhone.number,
                         kidsPhone: kidPhone.number,
@@ -1250,7 +1326,6 @@
         }
 
         function goBack() {
-            // Go back to weeks selection for the same property
             const url = `camp-leader-weeks.html?property=${weekData.property}&propertyName=${encodeURIComponent(weekData.propertyName)}&showWeeks=true`;
             window.location.href = url;
         }
