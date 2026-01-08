@@ -659,32 +659,86 @@
         }
 
         function parseExtrasFees(extrasFees) {
-            if (!extrasFees) return { intensiveLessons: '-', extraCourses: '-' };
+            console.log('🎯 parseExtrasFees called with:', extrasFees);
+            console.log('   Type:', typeof extrasFees);
+            console.log('   Is Array?', Array.isArray(extrasFees));
             
-            // Convert to array if it's not already
-            const feesArray = Array.isArray(extrasFees) ? extrasFees : [extrasFees];
+            if (!extrasFees) {
+                console.log('   → No extras fees, returning defaults');
+                return { intensiveLessons: '-', extraCourses: '-' };
+            }
+            
+            // Convert to string if it's an array
+            let extrasString = '';
+            if (Array.isArray(extrasFees)) {
+                console.log('   → Converting array to string');
+                // Join array elements with comma
+                extrasString = extrasFees.join(', ');
+            } else if (typeof extrasFees === 'string') {
+                extrasString = extrasFees;
+            } else {
+                console.log('   → Unknown type, converting to string');
+                extrasString = String(extrasFees);
+            }
+            
+            console.log('   → Processing string:', extrasString);
+            
+            // Split by pattern: digits.digits followed by comma
+            // This splits after "25.00," or "250.00," etc.
+            const parts = extrasString.split(/(\d+\.\d{2}),?\s*/);
+            console.log('   → Split into parts:', parts);
             
             const intensiveLessons = [];
             const extraCourses = [];
             
-            feesArray.forEach(fee => {
-                if (!fee) return;
+            // Process pairs: [name+code, price, name+code, price, ...]
+            for (let i = 0; i < parts.length; i += 2) {
+                const nameAndCode = parts[i];
+                const priceStr = parts[i + 1];
                 
-                const feeLower = fee.toLowerCase();
+                if (!nameAndCode || !nameAndCode.trim()) continue;
                 
-                // Check if it contains "intensive" with x2, x3, etc.
-                if (feeLower.includes('intensive')) {
-                    intensiveLessons.push(fee);
+                console.log(`   → Processing item: "${nameAndCode}" with price "${priceStr}"`);
+                
+                // Extract name and code from format "Name (code)"
+                const match = nameAndCode.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+                
+                if (match) {
+                    const [, name, code] = match;
+                    const price = priceStr ? parseFloat(priceStr) : null;
+                    
+                    console.log(`      ✓ Parsed: Name="${name.trim()}", Code="${code.trim()}", Price=${price}`);
+                    
+                    const fullItem = `${nameAndCode.trim()} ${priceStr || ''}`.trim();
+                    
+                    // Check if it's an intensive lesson
+                    if (nameAndCode.toLowerCase().includes('intensive')) {
+                        intensiveLessons.push(fullItem);
+                        console.log(`      → Added to INTENSIVE LESSONS`);
+                    } else {
+                        extraCourses.push(fullItem);
+                        console.log(`      → Added to EXTRA COURSES`);
+                    }
                 } else {
-                    // Everything else goes to extra courses
-                    extraCourses.push(fee);
+                    console.log(`      ⚠️ Could not parse format: "${nameAndCode}"`);
+                    // Store as-is if format doesn't match
+                    const fullItem = `${nameAndCode.trim()} ${priceStr || ''}`.trim();
+                    
+                    if (nameAndCode.toLowerCase().includes('intensive')) {
+                        intensiveLessons.push(fullItem);
+                    } else {
+                        extraCourses.push(fullItem);
+                    }
                 }
-            });
+            }
             
-            return {
+            const result = {
                 intensiveLessons: intensiveLessons.length > 0 ? intensiveLessons.join(', ') : '-',
                 extraCourses: extraCourses.length > 0 ? extraCourses.join(', ') : '-'
             };
+            
+            console.log('   → FINAL RESULT:', result);
+            return result;
         }
 
         async function loadWeekData() {
