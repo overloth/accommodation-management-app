@@ -713,24 +713,27 @@
                     
                     console.log(`      ✓ Parsed: Name="${name.trim()}", Code="${codeNormalized}", Price=${price}`);
                     
-                    const fullItem = `${name.trim()} (${code.trim()}) ${priceStr || ''}`.trim();
+                    // const fullItem = `${name.trim()} (${code.trim()}) ${priceStr || ''}`.trim();
+                    const displayItem = name.trim();
                     
                     // Categorize based on code
                     if (intensiveCodes.includes(codeNormalized)) {
-                        intensiveLessons.push(fullItem);
+                        intensiveLessons.push(displayItem);
                         console.log(`      → Added to INTENSIVE LESSONS (code: ${codeNormalized})`);
                     } else if (extraCoursesCodes.includes(codeNormalized)) {
                         extraCourses.push(fullItem);
                         console.log(`      → Added to EXTRA COURSES (code: ${codeNormalized})`);
                     } else {
-                        others.push(fullItem);
+                        others.push(displayItem);
                         console.log(`      → Added to OTHERS (code: ${codeNormalized})`);
                     }
                 } else {
                     console.log(`      ⚠️ Could not parse format: "${nameAndCode}"`);
                     // Store as-is in others if format doesn't match
-                    const fullItem = `${nameAndCode.trim()} ${priceStr || ''}`.trim();
-                    others.push(fullItem);
+                    // const fullItem = `${nameAndCode.trim()} ${priceStr || ''}`.trim();
+                    const displayItem = name.trim();
+                    // others.push(fullItem);
+                    others.push(displayItem);
                 }
             }
             
@@ -794,18 +797,19 @@
                     
                     console.log(`      ✓ Parsed: Name="${name.trim()}", Code="${codeNormalized}"`);
                     
-                    const fullItem = `${name.trim()} (${code.trim()}) ${priceStr || ''}`.trim();
+                    // const fullItem = `${name.trim()} (${code.trim()}) ${priceStr || ''}`.trim();
+                    const displayItem = name.trim();
                     
                     // Categorize based on code
                     if (bothCodes.includes(codeNormalized)) {
-                        arrivalItems.push(fullItem);
-                        departureItems.push(fullItem);
+                        arrivalItems.push(displayItem);
+                        departureItems.push(displayItem);
                         console.log(`      → Added to BOTH ARRIVAL & DEPARTURE (code: ${codeNormalized})`);
                     } else if (arrivalCodes.includes(codeNormalized)) {
-                        arrivalItems.push(fullItem);
+                        arrivalItems.push(displayItem);
                         console.log(`      → Added to ARRIVAL (code: ${codeNormalized})`);
                     } else if (departureCodes.includes(codeNormalized)) {
-                        departureItems.push(fullItem);
+                        departureItems.push(displayItem);
                         console.log(`      → Added to DEPARTURE (code: ${codeNormalized})`);
                     } else {
                         console.log(`      ⚠️ Unknown train ride code: ${codeNormalized}`);
