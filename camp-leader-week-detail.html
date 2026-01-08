@@ -1149,7 +1149,7 @@
                     extraCourses = parsedExtras.extraCourses;
                     
                     // Parse Accompanied Train Ride for Arrival and Departure
-                    const accompaniedTrainRide = fields['Accompanied train ride'];
+                    const accompaniedTrainRide = fields['Accompanied Train Ride'];
                     const parsedTrainRide = parseAccompaniedTrainRide(accompaniedTrainRide);
                     const arrivalFromTrain = parsedTrainRide.arrival;
                     const departureFromTrain = parsedTrainRide.departure;
@@ -1215,7 +1215,12 @@
                     // Combine others
                     const othersParts = [];
                     if (others && others !== '-') othersParts.push(others);
-                    if (parsedExtras.others && parsedExtras.others !== '-') othersParts.push(parsedExtras.others);
+                    if (parsedExtras.others && parsedExtras.others !== '-') {
+                        // Only add if it's different from what's already in "others"
+                        if (others !== parsedExtras.others) {
+                            othersParts.push(parsedExtras.others);
+                        }
+                    }
                     const othersInfo = othersParts.length > 0 ? othersParts.join(', ') : '-';
                     
                     return {
