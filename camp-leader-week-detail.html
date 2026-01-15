@@ -1055,17 +1055,17 @@
                         
                         if (weeks) {
                             departure = new Date(arrival);
-                            departure.setDate(arrival.getDate() + (parseInt(weeks[1]) * 7));
+                            departure.setDate(arrival.getDate() + (parseInt(weeks[1]) * 7) - 1);
                         } else if (days) {
                             departure = new Date(arrival);
-                            departure.setDate(arrival.getDate() + parseInt(days[1]));
+                            departure.setDate(arrival.getDate() + parseInt(days[1]) - 1);
                         } else {
                             departure = new Date(arrival);
-                            departure.setDate(arrival.getDate() + 7);
+                            departure.setDate(arrival.getDate() + 6);
                         }
                     } else {
                         departure = new Date(arrival);
-                        departure.setDate(arrival.getDate() + 7);
+                        departure.setDate(arrival.getDate() + 6);
                     }
                     
                     console.log('  → Arrival:', arrival.toISOString().split('T')[0]);
