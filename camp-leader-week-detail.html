@@ -1232,13 +1232,17 @@
                         }
                     }
                     const othersInfo = othersParts.length > 0 ? othersParts.join(', ') : '-';
+
+                    // Calculate duration from Number of weeks field
+                    const numberOfWeeks = fields['Number of weeks'] || 1;
+                    const durationText = numberOfWeeks === 1 ? '1 week' : `${numberOfWeeks} weeks`;
                     
                     return {
                         firstName: firstName,
                         surname: surname,
                         arrivalDate: fields['Arrival Date'] || '',
                         dateOfBirth: dateOfBirth,
-                        duration: fields['Duration'] || '1 week',
+                        duration: durationText,
                         language: language || camp || '',
                         level: level || '-',
                         accommodation: accommodationType || 'undefined',
