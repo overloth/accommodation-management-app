@@ -755,6 +755,8 @@
                 console.log('   → No train ride data, returning defaults');
                 return { arrival: '-', departure: '-' };
             }
+
+
             
             // Convert to string
             let trainRideString = '';
@@ -767,6 +769,43 @@
             }
             
             console.log('   → Processing string:', trainRideString);
+
+
+            // Mapping of codes to display names
+            const codeToNameMap = {
+                // BZ arrival
+                'a': 'regular ticket Zurich',
+                'c': 'regular ticket Bern',
+                'g': 'GA Bern',
+                'e': 'GA Zurich',
+
+                // BZ Departure
+                'b': 'regular ticket Zurich',
+                'd': 'regular ticket Bern',
+                'h': 'GA Bern',
+                'f': 'GA Zurich',
+
+                // BZ both ways
+                'ab': 'regular ticket Zurich',
+                'cdb': 'regular ticket Bern',
+                'gh': 'GA Bern',
+                'ef': 'GA Zurich',
+
+                // Airport transfer arrival
+                'z': 'Airport Zurich',
+                'x': 'Airport Zurich private',
+                'i': 'Airport Geneva',
+                'ptfg': 'Airport Geneva private',
+                'tfg': 'Airport Geneva (outside timeframe)',
+                'tfz': 'Airport Zurich (outside timeframe)',
+
+                // Airport transfer departure
+                'y': 'Airport Zurich',
+                'w': 'Airport Zurich private',
+                'ttg': 'Airport Geneva',
+                'pttg': 'Airport Geneva private',
+                'ttz': 'Airport Zurich (outside timeframe)'
+            };
             
             // Split by pattern: digits.digits followed by comma
             const parts = trainRideString.split(/(\d+\.\d{2}),?\s*/);
@@ -791,15 +830,19 @@
                 
                 // Extract name and code from format "Name (code)"
                 const match = nameAndCode.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
-                
+
                 if (match) {
                     const [, name, code] = match;
                     const codeNormalized = code.trim().toLowerCase();
-                    
+
                     console.log(`      ✓ Parsed: Name="${name.trim()}", Code="${codeNormalized}"`);
-                    
+
                     // const fullItem = `${name.trim()} (${code.trim()}) ${priceStr || ''}`.trim();
-                    const displayItem = name.trim();
+                    // const displayItem = name.trim();
+                    // Use mapped name if available, otherwise use original name
+                    const displayItem = codeToNameMap[codeNormalized] || name.trim();
+
+                    console.log(`      ✓ Display name: "${displayItem}"`);
                     
                     // Categorize based on code
                     if (bothCodes.includes(codeNormalized)) {
