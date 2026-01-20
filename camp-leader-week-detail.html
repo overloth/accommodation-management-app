@@ -976,18 +976,22 @@
                         const parsedExtras = parseExtrasFees(extrasFees);
                         const intensiveLessons = parsedExtras.intensiveLessons;
                         const extraCourses = parsedExtras.extraCourses;
-                        const othersFromExtras = parsedExtras.others;
+                        // const othersFromExtras = parsedExtras.others;
+
+                        const others = parsedExtras.others || '';
                         
                         // Get additional fields from Kid Camp Details
-                        const othersFromField = detail.fields['Other (but no medication)'] || '';
+                        // const othersFromField = detail.fields['Other (but no medication)'] || '';
                         const passportCopy = detail.fields['Passport Copy'] || '';
                         const insuranceCopy = detail.fields['Insurance Copy'] || '';
                         
                         // Combine others from extras parsing and field
-                        const othersParts = [];
-                        if (othersFromExtras && othersFromExtras !== '-') othersParts.push(othersFromExtras);
-                        if (othersFromField) othersParts.push(othersFromField);
-                        const others = othersParts.length > 0 ? othersParts.join(', ') : '';
+                        // const othersParts = [];
+                        // if (othersFromExtras && othersFromExtras !== '-') othersParts.push(othersFromExtras);
+                        // if (othersFromField) othersParts.push(othersFromField);
+                        // const others = othersParts.length > 0 ? othersParts.join(', ') : '';
+
+                        const othersInfo = parsedExtras.others || '-';
                         
                         // Try to get Kid ID from Kid Camp Details
                         let kidPhoneFromDetails = '';
