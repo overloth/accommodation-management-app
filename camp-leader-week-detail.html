@@ -802,7 +802,7 @@
                 // Airport transfer departure
                 'y': 'Airport Zurich',
                 'w': 'Airport Zurich private',
-                'ttg': 'Airport Geneva',
+                'j': 'Airport Geneva',
                 'pttg': 'Airport Geneva private',
                 'ttz': 'Airport Zurich (outside timeframe)'
             };
@@ -813,7 +813,7 @@
             
             // Define code categories
             const arrivalCodes = ['a', 'c', 'g', 'e', 'z', 'x', 'i', 'ptfg', 'tfg', 'tfz'];
-            const departureCodes = ['b', 'd', 'h', 'f', 'y', 'w', 'pttg', 'ttg', 'ttz'];
+            const departureCodes = ['b', 'd', 'h', 'f', 'y', 'w', 'j', 'pttg', 'ttg', 'ttz'];
             const bothCodes = ['ab', 'cdb', 'gh', 'ef'];
             
             const arrivalItems = [];
@@ -1174,8 +1174,8 @@
                     console.log('  🔍 Looking up Kid Camp Details for booking:', bookingNumber);
                     
                     if (kidCampDetailsMap[bookingNumber]) {
-                        language = kidCampDetailsMap[bookingNumber].language;
-                        level = kidCampDetailsMap[bookingNumber].level;
+                        // language = kidCampDetailsMap[bookingNumber].language;
+                        // level = kidCampDetailsMap[bookingNumber].level;
                         others = kidCampDetailsMap[bookingNumber].others;
                         passportCopy = kidCampDetailsMap[bookingNumber].passportCopy;
                         insuranceCopy = kidCampDetailsMap[bookingNumber].insuranceCopy;
@@ -1188,6 +1188,29 @@
                         console.log(`  ✅ Found Kid Camp Details: Language: ${language}, Level: ${level}`);
                     } else {
                         console.log('  ⚠️ Kid Camp Details not found for booking:', bookingNumber);
+                    }
+
+                    // Get Language from Bookings table - Language Learning field (linked to Languages table)
+                    const languageLearningField = fields['Language Learning'];
+                    console.log('  📚 Language Learning field from Bookings:', languageLearningField);
+
+                    if (languageLearningField && Array.isArray(languageLearningField) && languageLearningField.length > 0) {
+                        const languageId = languageLearningField[0];
+                        language = languagesMap[languageId] || languageId;
+                        console.log(`  ✅ Language from Bookings: ${language}`);
+                    } else if (languageLearningField) {
+                        language = languagesMap[languageLearningField] || languageLearningField;
+                        console.log(`  ✅ Language from Bookings: ${language}`);
+                    }
+
+                    // Get Level from Bookings table - Level field (single select)
+                    const levelField = fields['Level'];
+                    console.log('  📊 Level field from Bookings:', levelField);
+
+                    if (levelField) {
+                        // Level is a single select field, extract the name
+                        level = typeof levelField === 'object' ? levelField.name : levelField;
+                        console.log(`  ✅ Level from Bookings: ${level}`);
                     }
                     
                     const specialFoodReq = fields['Special Food Requirements (from Kids on Trip)'] || '-';
