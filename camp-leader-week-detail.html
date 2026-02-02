@@ -337,6 +337,31 @@
             background: #27ae60;
         }
 
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 20px !important;
+        }
+
+        .sortable:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .sort-indicator {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            opacity: 0.5;
+        }
+
+        .sort-indicator.active {
+            opacity: 1;
+        }
+
         @media print {
             body {
                 background: white;
@@ -427,12 +452,24 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Kid First Name</th>
-                                <th>Kid Surname</th>
-                                <th>Arrival Date</th>
+                                <th class="sortable" data-sort="firstName" onclick="handleSort('firstName')">
+                                    Kid First Name
+                                    <span class="sort-indicator">↕</span>
+                                </th>
+                                <th class="sortable" data-sort="surname" onclick="handleSort('surname')">
+                                    Kid Surname
+                                    <span class="sort-indicator">↕</span>
+                                </th>
+                                <th class="sortable" data-sort="arrivalDate" onclick="handleSort('arrivalDate')">
+                                    Arrival Date
+                                    <span class="sort-indicator">↕</span>
+                                </th>
                                 <th>Date of Birth</th>
                                 <th>Duration</th>
-                                <th>Language</th>
+                                <th class="sortable" data-sort="language" onclick="handleSort('language')">
+                                    Language
+                                    <span class="sort-indicator">↕</span>
+                                </th>
                                 <th>Level</th>
                                 <th>Accommodation</th>
                                 <th>Intensive Lessons</th>
@@ -508,6 +545,14 @@
             startDate: null,
             endDate: null
         };
+
+        // Add this new variable
+        let sortState = {
+            column: null,
+            direction: 'asc' // 'asc' or 'desc'
+        };
+
+        let currentBookings = []; // Store bookings for re-sorting
 
         // Load configuration from Firebase
         async function loadConfigFromFirebase() {
@@ -891,6 +936,76 @@
             
             console.log('   → FINAL RESULT:', result);
             return result;
+        }
+
+
+        function sortBookings(bookings, column, direction) {
+            console.log(`Sorting by ${column} in ${direction} order`);
+            
+            const sorted = [...bookings].sort((a, b) => {
+                let aVal, bVal;
+                
+                switch(column) {
+                    case 'firstName':
+                        aVal = (a.firstName || '').toLowerCase();
+                        bVal = (b.firstName || '').toLowerCase();
+                        break;
+                    case 'surname':
+                        aVal = (a.surname || '').toLowerCase();
+                        bVal = (b.surname || '').toLowerCase();
+                        break;
+                    case 'arrivalDate':
+                        aVal = new Date(a.arrivalDate || '1900-01-01');
+                        bVal = new Date(b.arrivalDate || '1900-01-01');
+                        break;
+                    case 'language':
+                        aVal = (a.language || '').toLowerCase();
+                        bVal = (b.language || '').toLowerCase();
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            return sorted;
+        }
+
+        function handleSort(column) {
+            console.log(`Sort clicked on column: ${column}`);
+            
+            // Toggle direction if same column, otherwise default to ascending
+            if (sortState.column === column) {
+                sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState.column = column;
+                sortState.direction = 'asc';
+            }
+            
+            // Sort and display
+            const sorted = sortBookings(currentBookings, sortState.column, sortState.direction);
+            displayWeekData(sorted);
+            updateSortIndicators();
+        }
+
+        function updateSortIndicators() {
+            // Remove all existing indicators
+            document.querySelectorAll('.sort-indicator').forEach(el => {
+                el.classList.remove('active');
+                el.textContent = '↕';
+            });
+            
+            // Add active indicator to current sorted column
+            if (sortState.column) {
+                const indicator = document.querySelector(`[data-sort="${sortState.column}"] .sort-indicator`);
+                if (indicator) {
+                    indicator.classList.add('active');
+                    indicator.textContent = sortState.direction === 'asc' ? '↑' : '↓';
+                }
+            }
         }
 
         async function loadWeekData() {
@@ -1360,6 +1475,10 @@
                 console.log('Bookings matching this week:', weekBookings.length);
                 console.log('═══════════════════════════════════════════════════');
 
+                
+                // Store bookings for sorting
+                currentBookings = weekBookings;
+                
                 displayWeekData(weekBookings);
                 updateSummaryCards(weekBookings);
                 
