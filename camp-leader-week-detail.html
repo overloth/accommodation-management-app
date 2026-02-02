@@ -149,11 +149,21 @@
             font-size: 1.2rem;
         }
 
-        .table-container {
+       /* .table-container {
             overflow-x: auto;
             margin-top: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }*/
+
+        .table-container {
+            overflow-x: auto;
+            overflow-y: auto;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            max-height: calc(100vh - 450px);
+            min-height: 400px;
         }
 
         .data-table {
