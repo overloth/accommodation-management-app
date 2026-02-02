@@ -690,6 +690,7 @@
             // Define code categories
             const intensiveCodes = ['x2', 'x3', 'x2e', 'x3e', 'x2f', 'x3f', 'x2d', 'x3d'];
             const extraCoursesCodes = ['sl', 'sb', 'code', 'cod', 'cd', 'pho', 'wk', 's', 't', 'u', 'v', 'ea', 'fa', 'da', 'sa', 'ev', 'ud', 'afe', 'afg', 'aff', 'bfe', 'bfg', 'bff', 'ass', 'ttw', 'fbt'];
+            const excludedCodes = ['se', 'ug', 'o', 'r', 'q'];
             
             const intensiveLessons = [];
             const extraCourses = [];
@@ -713,6 +714,13 @@
                     const codeNormalized = code.trim().toLowerCase();
                     
                     console.log(`      ✓ Parsed: Name="${name.trim()}", Code="${codeNormalized}", Price=${price}`);
+
+
+                    // Skip excluded codes
+                    if (excludedCodes.includes(codeNormalized)) {
+                        console.log(`      → EXCLUDED (code: ${codeNormalized})`);
+                        continue;
+                    }
                     
                     // const fullItem = `${name.trim()} (${code.trim()}) ${priceStr || ''}`.trim();
                     const displayItem = name.trim();
