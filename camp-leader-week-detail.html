@@ -450,11 +450,12 @@
 
             .back-button,
             .action-button,
-            .share-link-container {
+            .share-link-container,
+            .column-selector {
                 display: none !important;
             }
 
-            table-container {
+            .table-container {
                 max-height: none !important;
                 min-height: 0 !important;
                 overflow: visible !important;
@@ -663,6 +664,28 @@
 
         let currentBookings = []; // Store bookings for re-sorting
 
+        const columns = [
+            { key: 'firstName', label: 'Kid First Name' },
+            { key: 'surname', label: 'Kid Surname' },
+            { key: 'arrivalDate', label: 'Arrival Date' },
+            { key: 'dateOfBirth', label: 'Date of Birth' },
+            { key: 'duration', label: 'Duration' },
+            { key: 'language', label: 'Language' },
+            { key: 'level', label: 'Level' },
+            { key: 'accommodation', label: 'Accommodation' },
+            { key: 'intensiveLessons', label: 'Intensive Lessons' },
+            { key: 'extraCourses', label: 'Extra Courses' },
+            { key: 'arrival', label: 'Arrival' },
+            { key: 'departure', label: 'Departure' },
+            { key: 'specialFoodReq', label: 'Special Food Requirements' },
+            { key: 'others', label: 'Others' },
+            { key: 'phonePrefix', label: 'Prefix' },
+            { key: 'parentsPhone', label: 'Phone Parents' },
+            { key: 'kidsPhone', label: 'Phone Kids' },
+            { key: 'passportCopy', label: 'Passport Copy' },
+            { key: 'insuranceCopy', label: 'Insurance Copy' }
+        ];
+
         // Load configuration from Firebase
         async function loadConfigFromFirebase() {
             try {
@@ -752,6 +775,7 @@
             if (configLoaded) {
                 parseURLParameters();
                 updatePageHeader();
+                initializeColumnSelector();
                 loadWeekData();
             } else {
                 showError('Airtable configuration not found. Please set up the configuration in the main app.');
@@ -1640,6 +1664,8 @@
                     <td>${booking.insuranceCopy}</td>
                 </tr>
             `).join('');
+
+            updateColumnVisibility();
         }
 
         function getStatusBadge(status) {
@@ -1705,6 +1731,55 @@
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
+        }
+
+        function initializeColumnSelector() {
+            const container = document.getElementById('columnCheckboxes');
+            container.innerHTML = columns.map((col, index) => `
+                <div class="column-checkbox-item">
+                    <input type="checkbox" 
+                           id="col-${col.key}" 
+                           data-col-index="${index}"
+                           checked
+                           onchange="updateColumnVisibility()">
+                    <label for="col-${col.key}">${col.label}</label>
+                </div>
+            `).join('');
+        }
+
+        // Update column visibility for printing
+        function updateColumnVisibility() {
+            columns.forEach((col, index) => {
+                const checkbox = document.getElementById(`col-${col.key}`);
+                const headers = document.querySelectorAll(`th.col-${col.key}`);
+                const cells = document.querySelectorAll(`td[data-col-index="${index}"]`);
+                
+                if (checkbox && !checkbox.checked) {
+                    headers.forEach(h => h.classList.add('print-hide'));
+                    cells.forEach(c => c.classList.add('print-hide'));
+                } else {
+                    headers.forEach(h => h.classList.remove('print-hide'));
+                    cells.forEach(c => c.classList.remove('print-hide'));
+                }
+            });
+        }
+
+        // Select all columns
+        function selectAllColumns() {
+            columns.forEach(col => {
+                const checkbox = document.getElementById(`col-${col.key}`);
+                if (checkbox) checkbox.checked = true;
+            });
+            updateColumnVisibility();
+        }
+
+        // Deselect all columns
+        function deselectAllColumns() {
+            columns.forEach(col => {
+                const checkbox = document.getElementById(`col-${col.key}`);
+                if (checkbox) checkbox.checked = false;
+            });
+            updateColumnVisibility();
         }
     </script>
 </body>
