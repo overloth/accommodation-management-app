@@ -436,7 +436,6 @@
         }
 
         @media print {
-
             body {
                 background: white;
                 padding: 0;
@@ -446,7 +445,7 @@
                 background: white;
                 color: #2c3e50;
                 border-bottom: 2px solid #3498db;
-                padding: 10px 20px !important; 
+                padding: 10px 20px !important;
             }
 
             .header-content {
@@ -462,11 +461,11 @@
                 border: 1px solid #3498db;
                 margin-top: 0 !important;
                 margin-bottom: 0 !important;
-                padding: 8px 15px !important; 
+                padding: 8px 15px !important;
             }
 
             .content {
-                padding: 15px 20px !important; /* Reduced from 40px */
+                padding: 15px 20px !important;
             }
 
             .back-button,
@@ -482,10 +481,32 @@
                 overflow: visible !important;
                 box-shadow: none;
                 margin-top: 10px !important;
+                width: 100% !important;
+            }
+
+            .data-table {
+                width: 100% !important;
+                font-size: 0.65rem !important; /* ✅ REDUCED from 0.75rem */
+                table-layout: auto !important;
+                border-collapse: collapse !important;
             }
 
             .data-table thead {
                 position: static !important;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 4px 3px !important; /* ✅ REDUCED from 8px 6px */
+                font-size: 0.65rem !important; /* ✅ Ensure consistent small font */
+                white-space: nowrap; /* ✅ Prevent text wrapping */
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .data-table th {
+                font-size: 0.7rem !important; /* ✅ Headers slightly larger for readability */
+                font-weight: 600;
             }
 
             /* Hide columns based on checkboxes */
@@ -499,21 +520,29 @@
                 page-break-inside: avoid;
             }
 
-            .data-table {
-                font-size: 0.75rem;
+            /* Make accommodation column slightly wider if visible */
+            .data-table th.col-accommodation,
+            .data-table td[data-col-index="7"] {
+                min-width: 80px;
             }
 
-            .data-table th,
-            .data-table td {
-                padding: 8px 6px;
+            /* ✅ ADD THIS: Force page to use full width */
+            @page {
+                size: landscape;
+                margin: 0.5cm;
             }
 
-            .summary-cards {
-                page-break-after: avoid;
+            html, body {
+                width: 100%;
+                margin: 0;
+                padding: 0;
             }
 
-            .table-container {
-                box-shadow: none;
+            .container {
+                width: 100% !important;
+                max-width: none !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
             }
         }
 
