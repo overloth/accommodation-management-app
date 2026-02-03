@@ -362,7 +362,81 @@
             opacity: 1;
         }
 
+        .column-selector {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .column-selector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .column-selector-header h3 {
+            color: #2c3e50;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .column-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .column-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .column-checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .column-checkbox-item label {
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.9rem;
+        }
+
+        .column-select-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .column-select-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .column-select-button:hover {
+            background: #2980b9;
+        }
+
+        .column-select-button.secondary {
+            background: #95a5a6;
+        }
+
+        .column-select-button.secondary:hover {
+            background: #7f8c8d;
+        }
+
         @media print {
+
             body {
                 background: white;
                 padding: 0;
@@ -378,6 +452,28 @@
             .action-button,
             .share-link-container {
                 display: none !important;
+            }
+
+            table-container {
+                max-height: none !important;
+                min-height: 0 !important;
+                overflow: visible !important;
+                box-shadow: none;
+            }
+
+            .data-table thead {
+                position: static !important;
+            }
+
+            /* Hide columns based on checkboxes */
+            .data-table th.print-hide,
+            .data-table td.print-hide {
+                display: none !important;
+            }
+
+            /* Ensure table doesn't break across pages */
+            .data-table tr {
+                page-break-inside: avoid;
             }
 
             .data-table {
@@ -447,44 +543,57 @@
 
             <div id="mainContent" style="display: none;">
                 <div class="summary-cards" id="summaryCards"></div>
+
+                <div class="column-selector">
+                    <div class="column-selector-header">
+                        <h3>🖨️ Select Columns to Print</h3>
+                        <div class="column-select-actions">
+                            <button class="column-select-button" onclick="selectAllColumns()">Select All</button>
+                            <button class="column-select-button secondary" onclick="deselectAllColumns()">Deselect All</button>
+                        </div>
+                    </div>
+                    <div class="column-checkboxes" id="columnCheckboxes">
+                        <!-- Checkboxes will be populated by JavaScript -->
+                    </div>
+                </div>
                 
                 <div class="table-container">
                     <table class="data-table">
                         <thead>
-                            <tr>
-                                <th class="sortable" data-sort="firstName" onclick="handleSort('firstName')">
-                                    Kid First Name
-                                    <span class="sort-indicator">↕</span>
-                                </th>
-                                <th class="sortable" data-sort="surname" onclick="handleSort('surname')">
-                                    Kid Surname
-                                    <span class="sort-indicator">↕</span>
-                                </th>
-                                <th class="sortable" data-sort="arrivalDate" onclick="handleSort('arrivalDate')">
-                                    Arrival Date
-                                    <span class="sort-indicator">↕</span>
-                                </th>
-                                <th>Date of Birth</th>
-                                <th>Duration</th>
-                                <th class="sortable" data-sort="language" onclick="handleSort('language')">
-                                    Language
-                                    <span class="sort-indicator">↕</span>
-                                </th>
-                                <th>Level</th>
-                                <th>Accommodation</th>
-                                <th>Intensive Lessons</th>
-                                <th>Extra Courses</th>
-                                <th>Arrival</th>
-                                <th>Departure</th>
-                                <th>Special Food Requirements</th>
-                                <th>Others</th>
-                                <th>Prefix</th>
-                                <th>Phone Parents</th>
-                                <th>Phone Kids</th>
-                                <th>Passport Copy</th>
-                                <th>Insurance Copy</th>
-                            </tr>
-                        </thead>
+                    <tr>
+                        <th class="sortable col-firstName" data-sort="firstName" data-col-index="0" onclick="handleSort('firstName')">
+                            Kid First Name
+                            <span class="sort-indicator">↕</span>
+                        </th>
+                        <th class="sortable col-surname" data-sort="surname" data-col-index="1" onclick="handleSort('surname')">
+                            Kid Surname
+                            <span class="sort-indicator">↕</span>
+                        </th>
+                        <th class="sortable col-arrivalDate" data-sort="arrivalDate" data-col-index="2" onclick="handleSort('arrivalDate')">
+                            Arrival Date
+                            <span class="sort-indicator">↕</span>
+                        </th>
+                        <th class="col-dateOfBirth" data-col-index="3">Date of Birth</th>
+                        <th class="col-duration" data-col-index="4">Duration</th>
+                        <th class="sortable col-language" data-sort="language" data-col-index="5" onclick="handleSort('language')">
+                            Language
+                            <span class="sort-indicator">↕</span>
+                        </th>
+                        <th class="col-level" data-col-index="6">Level</th>
+                        <th class="col-accommodation" data-col-index="7">Accommodation</th>
+                        <th class="col-intensiveLessons" data-col-index="8">Intensive Lessons</th>
+                        <th class="col-extraCourses" data-col-index="9">Extra Courses</th>
+                        <th class="col-arrival" data-col-index="10">Arrival</th>
+                        <th class="col-departure" data-col-index="11">Departure</th>
+                        <th class="col-specialFoodReq" data-col-index="12">Special Food Requirements</th>
+                        <th class="col-others" data-col-index="13">Others</th>
+                        <th class="col-phonePrefix" data-col-index="14">Prefix</th>
+                        <th class="col-parentsPhone" data-col-index="15">Phone Parents</th>
+                        <th class="col-kidsPhone" data-col-index="16">Phone Kids</th>
+                        <th class="col-passportCopy" data-col-index="17">Passport Copy</th>
+                        <th class="col-insuranceCopy" data-col-index="18">Insurance Copy</th>
+                    </tr>
+                </thead>
                         <tbody id="dataTableBody">
                             <!-- Data will be populated here -->
                         </tbody>
