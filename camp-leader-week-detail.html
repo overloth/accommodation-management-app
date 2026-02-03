@@ -1643,28 +1643,29 @@
 
             tbody.innerHTML = bookings.map(booking => `
                 <tr>
-                    <td>${booking.firstName}</td>
-                    <td>${booking.surname}</td>
-                    <td>${formatDateShort(booking.arrivalDate)}</td>
-                    <td>${booking.dateOfBirth ? formatDateShort(booking.dateOfBirth) : '-'}</td>
-                    <td>${booking.duration}</td>
-                    <td>${booking.language || '-'}</td>
-                    <td>${booking.level || '-'}</td>
-                    <td>${booking.accommodation || 'undefined'}</td>
-                    <td>${booking.intensiveLessons}</td>
-                    <td>${booking.extraCourses}</td>
-                    <td>${booking.arrival}</td>
-                    <td>${booking.departure}</td>
-                    <td>${booking.specialFoodReq}</td>
-                    <td>${booking.others}</td>
-                    <td>${booking.phonePrefix}</td>
-                    <td>${booking.parentsPhone}</td>
-                    <td>${booking.kidsPhone}</td>
-                    <td>${booking.passportCopy}</td>
-                    <td>${booking.insuranceCopy}</td>
+                    <td data-col-index="0">${booking.firstName}</td>
+                    <td data-col-index="1">${booking.surname}</td>
+                    <td data-col-index="2">${formatDateShort(booking.arrivalDate)}</td>
+                    <td data-col-index="3">${booking.dateOfBirth ? formatDateShort(booking.dateOfBirth) : '-'}</td>
+                    <td data-col-index="4">${booking.duration}</td>
+                    <td data-col-index="5">${booking.language || '-'}</td>
+                    <td data-col-index="6">${booking.level || '-'}</td>
+                    <td data-col-index="7">${booking.accommodation || 'undefined'}</td>
+                    <td data-col-index="8">${booking.intensiveLessons}</td>
+                    <td data-col-index="9">${booking.extraCourses}</td>
+                    <td data-col-index="10">${booking.arrival}</td>
+                    <td data-col-index="11">${booking.departure}</td>
+                    <td data-col-index="12">${booking.specialFoodReq}</td>
+                    <td data-col-index="13">${booking.others}</td>
+                    <td data-col-index="14">${booking.phonePrefix}</td>
+                    <td data-col-index="15">${booking.parentsPhone}</td>
+                    <td data-col-index="16">${booking.kidsPhone}</td>
+                    <td data-col-index="17">${booking.passportCopy}</td>
+                    <td data-col-index="18">${booking.insuranceCopy}</td>
                 </tr>
             `).join('');
-
+            
+            // Update column visibility after rendering
             updateColumnVisibility();
         }
 
