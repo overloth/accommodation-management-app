@@ -968,6 +968,11 @@
                         displayItem = 'Bed linen';
                         console.log(`      → Display name overridden to "${displayItem}" for code (m)`);
                     }
+
+                    if (codeNormalized === 'n') {
+                        displayItem = 'Laundry Service';
+                        console.log(`      → Display name overridden to "${displayItem}" for code (n)`);
+                    }
                     
                     // Categorize based on code
                     if (intensiveCodes.includes(codeNormalized)) {
