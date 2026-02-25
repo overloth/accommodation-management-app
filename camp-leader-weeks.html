@@ -849,8 +849,10 @@
                     const sunday = new Date(arrival);
                     sunday.setDate(arrival.getDate() - arrival.getDay());
                     sunday.setHours(0, 0, 0, 0);
-                    
-                    bookedWeekDates.add(sunday.toISOString().split('T')[0]);
+                    const y = sunday.getFullYear();
+                    const m = String(sunday.getMonth() + 1).padStart(2, '0');
+                    const d = String(sunday.getDate()).padStart(2, '0');
+                    bookedWeekDates.add(`${y}-${m}-${d}`);
                 });
                 
                 console.log('✅ Booked weeks found:', bookedWeekDates.size);
@@ -923,7 +925,8 @@
             allWeeks.forEach(week => {
                 if (week.season && seasonalWeeks[week.season]) {
                     // Only include weeks that have at least one booking
-                    const weekKey = week.startDate.toISOString().split('T')[0];
+                    const sd = week.startDate;
+                    const weekKey = `${sd.getFullYear()}-${String(sd.getMonth()+1).padStart(2,'0')}-${String(sd.getDate()).padStart(2,'0')}`;
                     if (bookedWeekDates.size === 0 || bookedWeekDates.has(weekKey)) {
                         seasonalWeeks[week.season].push(week);
                     }
