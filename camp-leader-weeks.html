@@ -697,7 +697,13 @@
         });
 
         function goBack() {
-            window.location.href = 'index.html';
+            // If weeks section is visible, go back to property selection
+            if (document.getElementById('weeksSection').classList.contains('active')) {
+                document.getElementById('weeksSection').classList.remove('active');
+                document.getElementById('propertiesSection').classList.add('active');
+            } else {
+                window.location.href = 'index.html';
+            }
         }
 
         async function loadProperties() {
