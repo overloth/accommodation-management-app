@@ -409,7 +409,7 @@
             <!-- Loading Indicator -->
             <div id="loadingIndicator" class="loading">
                 <div class="spinner"></div>
-                <div class="loading-text">Loading properties...</div>
+                <div class="loading-text" id="loadingText">Loading properties...</div>
             </div>
 
             <!-- Error Message -->
@@ -747,6 +747,7 @@
                 console.error('Error stack:', error.stack);
                 showError('Failed to load properties: ' + error.message + '. Make sure your Airtable configuration is set up in the main app.');
             } finally {
+                document.getElementById('loadingText').textContent = 'Loading properties...';
                 loadingIndicator.style.display = 'none';
                 propertiesSection.classList.add('active');
             }
@@ -790,6 +791,7 @@
 
             // Hide properties section, show weeks section
             document.getElementById('propertiesSection').classList.remove('active');
+            document.getElementById('loadingText').textContent = 'Loading weeks for ' + selectedProperty.name + '...';
             document.getElementById('loadingIndicator').style.display = 'flex';
             // Generate weeks organized by seasons
             // generateSeasonalWeeks();
