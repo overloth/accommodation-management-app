@@ -699,6 +699,7 @@
         function goBack() {
             // If weeks section is visible, go back to property selection
             if (document.getElementById('weeksSection').classList.contains('active')) {
+                document.getElementById('seasonsContainer').innerHTML = '';
                 document.getElementById('weeksSection').classList.remove('active');
                 document.getElementById('propertiesSection').classList.add('active');
             } else {
@@ -807,9 +808,26 @@
                     const fields = record.fields;
                     
                     // Check property match
+                    let propertyId = null;
                     const bookingProperty = fields['Property'];
-                    const propertyId = Array.isArray(bookingProperty) ? bookingProperty[0] : bookingProperty;
-                    if (propertyId !== selectedProperty.id) return;
+                    if (bookingProperty) {
+                        propertyId = Array.isArray(bookingProperty) ? bookingProperty[0] : bookingProperty;
+                    }
+                    
+                    if (!propertyId) {
+                        const propertyFromCamp = fields['Property (from Camp)'];
+                        if (propertyFromCamp) {
+                            propertyId = Array.isArray(propertyFromCamp) ? propertyFromCamp[0] : propertyFromCamp;
+                        }
+                    }
+                    
+                    const propertyNameField = fields['Property (from Property)'] || fields['Property Name'];
+                    const propertyNameStr = Array.isArray(propertyNameField) ? propertyNameField[0] : propertyNameField;
+                    
+                    const propertyMatches = propertyId === selectedProperty.id || 
+                        (propertyNameStr && propertyNameStr.includes(selectedProperty.name));
+                    
+                    if (!propertyMatches) return;
                     
                     // Get arrival date and find which week it belongs to
                     const arrivalDate = fields['Arrival Date'];
