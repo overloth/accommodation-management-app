@@ -676,6 +676,7 @@
                 
                 if (showWeeks === 'true' && propertyId && propertyName) {
                     console.log('Showing weeks directly for property:', propertyId);
+                    document.getElementById('loadingText').textContent = 'Loading weeks for ' + decodeURIComponent(propertyName) + '...';
                     // Directly show weeks for this property
                     await loadProperties();
                     const property = properties.find(p => p.id === propertyId);
