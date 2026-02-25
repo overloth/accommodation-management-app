@@ -887,7 +887,11 @@
             
             allWeeks.forEach(week => {
                 if (week.season && seasonalWeeks[week.season]) {
-                    seasonalWeeks[week.season].push(week);
+                    // Only include weeks that have at least one booking
+                    const weekKey = week.startDate.toISOString().split('T')[0];
+                    if (bookedWeekDates.size === 0 || bookedWeekDates.has(weekKey)) {
+                        seasonalWeeks[week.season].push(week);
+                    }
                 }
             });
             
