@@ -584,7 +584,6 @@
                 <h1 id="pageTitle">Week Overview</h1>
                 <p id="pageSubtitle">Loading...</p>
             </div>
-            <div class="week-info-banner" id="weekInfoBanner"></div>
         </div>
 
         <div class="content">
@@ -848,16 +847,7 @@
             const endStr = formatDate(weekData.endDate);
             
             document.getElementById('pageTitle').textContent = `${startStr} to ${endStr} - ${weekData.propertyName}`;
-            document.getElementById('pageSubtitle').textContent = `${startStr} to ${endStr}`;
             
-            document.getElementById('weekInfoBanner').innerHTML = `
-                <div class="week-info-item">
-                    <span>${startStr} - ${endStr}</span>
-                </div>
-                <div class="week-info-item">
-                    <span>${weekData.propertyName}</span>
-                </div>
-            `;
         }
 
         function formatDate(date) {
