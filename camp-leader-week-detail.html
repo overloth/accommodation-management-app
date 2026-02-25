@@ -847,20 +847,14 @@
             const startStr = formatDate(weekData.startDate);
             const endStr = formatDate(weekData.endDate);
             
-            document.getElementById('pageTitle').textContent = `Week ${weekData.weekNumber} - ${weekData.propertyName}`;
+            document.getElementById('pageTitle').textContent = `${startStr} to ${endStr} - ${weekData.propertyName}`;
             document.getElementById('pageSubtitle').textContent = `${startStr} to ${endStr}`;
             
             document.getElementById('weekInfoBanner').innerHTML = `
                 <div class="week-info-item">
-                    <span>📅</span>
-                    <span><strong>Week ${weekData.weekNumber}</strong></span>
-                </div>
-                <div class="week-info-item">
-                    <span>🗓️</span>
                     <span>${startStr} - ${endStr}</span>
                 </div>
                 <div class="week-info-item">
-                    <span>🏠</span>
                     <span>${weekData.propertyName}</span>
                 </div>
             `;
