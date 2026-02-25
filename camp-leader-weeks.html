@@ -790,12 +790,14 @@
 
             // Hide properties section, show weeks section
             document.getElementById('propertiesSection').classList.remove('active');
-            document.getElementById('weeksSection').classList.add('active');
-
+            document.getElementById('loadingIndicator').style.display = 'flex';
             // Generate weeks organized by seasons
             // generateSeasonalWeeks();
 
             await loadBookingsAndGenerateWeeks()
+
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('weeksSection').classList.add('active');
         }
 
         async function loadBookingsAndGenerateWeeks() {
@@ -818,27 +820,12 @@
                         console.log('Selected property:', selectedProperty);
                     }
                     
-                    // Check property match
-                    let propertyId = null;
-                    const bookingProperty = fields['Property'];
-                    if (bookingProperty) {
-                        propertyId = Array.isArray(bookingProperty) ? bookingProperty[0] : bookingProperty;
-                    }
-                    
-                    if (!propertyId) {
-                        const propertyFromCamp = fields['Property (from Camp)'];
-                        if (propertyFromCamp) {
-                            propertyId = Array.isArray(propertyFromCamp) ? propertyFromCamp[0] : propertyFromCamp;
-                        }
-                    }
-                    
-                    const propertyNameField = fields['Property (from Property)'] || fields['Property Name'];
-                    const propertyNameStr = Array.isArray(propertyNameField) ? propertyNameField[0] : propertyNameField;
-                    
-                    const propertyMatches = propertyId === selectedProperty.id || 
-                        (propertyNameStr && propertyNameStr.includes(selectedProperty.name));
-                    
-                    if (!propertyMatches) return;
+                    // Match using camp name
+                    const campName = fields['Camp Name (from Camp)'];
+                    const campNameStr = Array.isArray(campName) ? campName[0] : (campName || '');
+                    const propertyFirstWord = selectedProperty.name.split(' ')[0];
+
+                    if (!campNameStr.includes(propertyFirstWord)) return;
                     
                     // Get arrival date and find which week it belongs to
                     const arrivalDate = fields['Arrival Date'];
