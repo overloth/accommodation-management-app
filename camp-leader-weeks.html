@@ -301,13 +301,6 @@
             background: linear-gradient(135deg, #e3f2fd, #bbdefb);
         }
 
-        .week-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #3498db;
-            margin-bottom: 10px;
-        }
-
         .week-dates {
             font-size: 1.1rem;
             color: #2c3e50;
@@ -887,6 +880,7 @@
                                     <div class="season-icon">${season.icon}</div>
                                     <div>
                                         <h2 class="season-title">${season.name}</h2>
+                                        <p class="season-subtitle">${weeks.length} weeks</p>
                                     </div>
                                 </div>
                                 <div class="accordion-arrow">▼</div>
@@ -903,7 +897,6 @@
                                         
                                         return `
                                             <div class="week-card" onclick="viewWeek(${weekNumber}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}', '${seasonKey}')">
-                                                <div class="week-number">Week ${weekNumber}</div>
                                                 <div class="week-dates">${startStr} - ${endStr}</div>
                                                 <div class="week-info" style="font-size: 0.75rem; color: #666; margin-top: 5px;">Sunday - Saturday</div>
                                                 <button class="view-week-btn" onclick="event.stopPropagation(); viewWeek(${weekNumber}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}', '${seasonKey}')">
