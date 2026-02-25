@@ -1379,11 +1379,19 @@
                     console.log('     Selected Property Name:', weekData.propertyName);
                     console.log('     Names Match?', propertyNameStr && propertyNameStr.includes(weekData.propertyName));
                     
+                    // Also check by camp name
+                    const campNameField = fields['Camp Name (from Camp)'];
+                    const campNameStr = Array.isArray(campNameField) ? campNameField[0] : (campNameField || '');
+                    const propertyFirstWord = weekData.propertyName.split(' ')[0];
+                    const campNameMatches = campNameStr.includes(propertyFirstWord);
+
                     const propertyMatches = propertyId === weekData.property || 
-                                          (propertyNameStr && propertyNameStr.includes(weekData.propertyName));
-                    
+                                          (propertyNameStr && propertyNameStr.includes(weekData.propertyName)) ||
+                                          campNameMatches;
+
+                    console.log('  → Camp Name:', campNameStr);
                     console.log('  → Property Matches?', propertyMatches ? '✅ YES' : '❌ NO');
-                    
+
                     if (!propertyMatches) {
                         console.log('  ⚠️ SKIPPING: Property does not match');
                         return false;
