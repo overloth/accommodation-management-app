@@ -449,6 +449,7 @@
         let properties = [];
         let selectedProperty = null;
         let campData = [];
+        let bookedWeekDates = new Set();
 
         // Property icons for visual variety
         const propertyIcons = ['🏔️', '🏡', '🏰', '🏕️', '🌲', '⛰️', '🏞️', '🏘️'];
@@ -461,7 +462,7 @@
                 class: 'winter',
                 // Beginning of December -> including first week of April
                 startMonth: 12,
-                endMonth: 4,
+                endMonth: 3,
                 endDay: 7 // First week of April
             },
             spring: {
@@ -626,13 +627,12 @@
             const day = date.getDate();
             
             // Winter: Beginning of December -> including first week of April
-            if (month === 12 || month === 1 || month === 2 || month === 3 || 
-                (month === 4 && day <= 7)) {
+            if (month === 12 || month === 1 || month === 2 || month === 3) {
                 return 'winter';
             }
             
             // Spring: Second week of April -> end of May
-            if ((month === 4 && day >= 8) || month === 5) {
+            if (month === 4  || month === 5) {
                 return 'spring';
             }
             
@@ -759,7 +759,7 @@
             `).join('');
         }
 
-        function selectProperty(propertyIdOrObj, propertyNameParam = null) {
+       async function selectProperty(propertyIdOrObj, propertyNameParam = null) {
             // Handle both object and ID+name parameters
             if (typeof propertyIdOrObj === 'object') {
                 selectedProperty = propertyIdOrObj;
@@ -786,14 +786,53 @@
             document.getElementById('weeksSection').classList.add('active');
 
             // Generate weeks organized by seasons
-            generateSeasonalWeeks();
+            // generateSeasonalWeeks();
+
+            await loadBookingsAndGenerateWeeks()
+        }
+
+        async function loadBookingsAndGenerateWeeks() {
+            try {
+                const response = await makeAirtableRequest(config.tables.bookings);
+                
+                bookedWeekDates = new Set();
+                
+                response.records.forEach(record => {
+                    const fields = record.fields;
+                    
+                    // Check property match
+                    const bookingProperty = fields['Property'];
+                    const propertyId = Array.isArray(bookingProperty) ? bookingProperty[0] : bookingProperty;
+                    if (propertyId !== selectedProperty.id) return;
+                    
+                    // Get arrival date and find which week it belongs to
+                    const arrivalDate = fields['Arrival Date'];
+                    if (!arrivalDate) return;
+                    
+                    const arrival = new Date(arrivalDate);
+                    // Find the Sunday of this week
+                    const sunday = new Date(arrival);
+                    sunday.setDate(arrival.getDate() - arrival.getDay());
+                    sunday.setHours(0, 0, 0, 0);
+                    
+                    bookedWeekDates.add(sunday.toISOString().split('T')[0]);
+                });
+                
+                console.log('✅ Booked weeks found:', bookedWeekDates.size);
+                generateSeasonalWeeks();
+                
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                // Fall back to showing all weeks if bookings fail to load
+                generateSeasonalWeeks();
+            }
         }
 
         function generateSeasonalWeeks() {
             // Start from December 2025 (upcoming season)
             const today = new Date();
             let earliestDate = new Date('2025-12-01'); // Start from December 2025
-            let latestDate = new Date('2027-11-30'); // Go through end of 2027
+            let latestDate = new Date('2026-11-30'); // Go through end of 2027
             
             // If camp data exists, use it to refine the date range
             if (campData.length > 0) {
