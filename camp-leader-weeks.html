@@ -176,10 +176,6 @@
             gap: 5px;
         }
 
-        .property-location::before {
-            content: "📍";
-        }
-
         .weeks-section {
             display: none;
         }
@@ -969,7 +965,7 @@
                                                 </button>
                                                 ${isWinter ? `
                                                 <button class="view-equipment-btn" onclick="event.stopPropagation(); viewEquipment(${weekNumber}, '${week.startDate.toISOString()}', '${week.endDate.toISOString()}', '${seasonKey}')" style="margin-top: 10px; background: linear-gradient(135deg, #667eea, #764ba2);">
-                                                    ⛷️ Winter Equipment
+                                                    Winter Equipment
                                                 </button>
                                                 ` : ''}
                                             </div>
