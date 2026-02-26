@@ -856,6 +856,8 @@
                 loadSeasonLinks(selectedProperty.id)
             ]);
 
+            generateSeasonalWeeks();
+
             document.getElementById('loadingIndicator').style.display = 'none';
             document.getElementById('weeksSection').classList.add('active');
         }
@@ -908,12 +910,12 @@
                 });
                 
                 console.log('✅ Booked weeks found:', bookedWeekDates.size);
-                generateSeasonalWeeks();
+                // generateSeasonalWeeks();
                 
             } catch (error) {
                 console.error('Error loading bookings:', error);
                 // Fall back to showing all weeks if bookings fail to load
-                generateSeasonalWeeks();
+                // generateSeasonalWeeks();
             }
         }
 
