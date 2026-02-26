@@ -650,6 +650,9 @@
                 const response = await makeAirtableRequest(config.tables.seasonLinks);
                 seasonLinksData = {};
 
+                console.log('🔗 Total Season Links records:', response.records.length);
+                console.log('🔗 Looking for propertyId:', propertyId);
+
                 response.records.forEach(record => {
                     const fields = record.fields;
                     const linkedProperties = fields['Property'];
