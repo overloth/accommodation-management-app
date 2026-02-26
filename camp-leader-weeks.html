@@ -390,6 +390,35 @@
             color: #666;
             font-size: 1.2rem;
         }
+
+        .season-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.03);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .season-link-btn {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(52,152,219,0.25);
+        }
+
+        .season-link-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52,152,219,0.4);
+            opacity: 0.95;
+        }
+        
     </style>
 </head>
 <body>
@@ -437,7 +466,8 @@
                 properties: 'Properties',
                 bookings: 'Bookings',
                 camps: 'Camps'
-            }
+            },
+            seasonLinks: 'Season Links'
         };
 
         // State
@@ -445,6 +475,7 @@
         let selectedProperty = null;
         let campData = [];
         let bookedWeekDates = new Set();
+        let seasonLinksData = {};
 
         // Season configurations
         const seasonConfig = {
@@ -610,6 +641,38 @@
                 console.error('Error details:', error.message);
                 // Don't fail completely - we can still generate weeks without camp data
                 return [];
+            }
+        }
+
+        async function loadSeasonLinks(propertyId) {
+            try {
+                const response = await makeAirtableRequest(config.tables.seasonLinks);
+                seasonLinksData = {};
+
+                response.records.forEach(record => {
+                    const fields = record.fields;
+                    const linkedProperties = fields['Property'];
+                    const season = (fields['Season'] || '').toLowerCase();
+
+                    if (!linkedProperties || !season) return;
+
+                    const propIds = Array.isArray(linkedProperties) ? linkedProperties : [linkedProperties];
+                    if (!propIds.includes(propertyId)) return;
+
+                    const key = `${propertyId}-${season}`;
+                    seasonLinksData[key] = {
+                        finance:          fields['Finance'] || '',
+                        bz:               fields['BZ'] || '',
+                        airportTransfer:  fields['Airport Transfer'] || '',
+                        staff:            fields['Staff'] || '',
+                        volunteer:        fields['Volunteer'] || '',
+                        excursion:        fields['Excursion'] || ''
+                    };
+                });
+
+                console.log('✅ Season links loaded:', seasonLinksData);
+            } catch (error) {
+                console.error('❌ Error loading season links:', error);
             }
         }
 
@@ -787,7 +850,10 @@
             // Generate weeks organized by seasons
             // generateSeasonalWeeks();
 
-            await loadBookingsAndGenerateWeeks()
+            await Promise.all([
+                loadBookingsAndGenerateWeeks(),
+                loadSeasonLinks(selectedProperty.id)
+            ]);
 
             document.getElementById('loadingIndicator').style.display = 'none';
             document.getElementById('weeksSection').classList.add('active');
@@ -939,6 +1005,26 @@
                     const season = seasonConfig[seasonKey];
                     const isFirstSeason = index === 0;
                     
+                    const links = seasonLinksData[`${selectedProperty.id}-${seasonKey}`] || {};
+                    const linkButtons = [
+                        { label: 'Finance',           key: 'finance' },
+                        { label: 'BZ',               key: 'bz' },
+                        { label: 'Airport Transfer',  key: 'airportTransfer' },
+                        { label: 'Staff',             key: 'staff' },
+                        { label: 'Volunteer',         key: 'volunteer' },
+                        { label: 'Excursion',         key: 'excursion' }
+                    ].filter(btn => links[btn.key]); // only show buttons that have a URL
+
+                    const buttonsHtml = linkButtons.length > 0 ? `
+                        <div class="season-links" onclick="event.stopPropagation()">
+                            ${linkButtons.map(btn => `
+                                <a href="${links[btn.key]}" target="_blank" rel="noopener" class="season-link-btn">
+                                    ${btn.label}
+                                </a>
+                            `).join('')}
+                        </div>
+                    ` : '';
+
                     html += `
                         <div class="season-container">
                             <div class="season-header ${season.class} ${isFirstSeason ? 'active' : ''}" onclick="toggleSeason('${seasonKey}')">
@@ -951,6 +1037,7 @@
                                 </div>
                                 <div class="accordion-arrow">▼</div>
                             </div>
+                            ${buttonsHtml}
                             <div class="weeks-container ${isFirstSeason ? 'active' : ''}" id="weeks-${seasonKey}">
                                 <div class="weeks-grid">
                                     ${weeks.map((week, index) => {
