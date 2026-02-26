@@ -655,8 +655,13 @@
 
                 response.records.forEach(record => {
                     const fields = record.fields;
+
+                    console.log('RAW FIELDS:', JSON.stringify(fields));  // ← ADD THIS
+
                     const linkedProperties = fields['Properties'];
                     const season = (fields['Season'] || '').toLowerCase();
+
+                    console.log('🔗 Record:', fields['Name'] || record.id);
 
                     if (!linkedProperties || !season) return;
 
