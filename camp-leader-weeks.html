@@ -655,7 +655,7 @@
 
                 response.records.forEach(record => {
                     const fields = record.fields;
-                    const linkedProperties = fields['Property'];
+                    const linkedProperties = fields['Properties'];
                     const season = (fields['Season'] || '').toLowerCase();
 
                     if (!linkedProperties || !season) return;
