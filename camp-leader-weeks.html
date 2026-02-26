@@ -1048,8 +1048,9 @@
                                 </div>
                                 <div class="accordion-arrow">▼</div>
                             </div>
-                            ${buttonsHtml}
                             <div class="weeks-container ${isFirstSeason ? 'active' : ''}" id="weeks-${seasonKey}">
+                                ${buttonsHtml}
+
                                 <div class="weeks-grid">
                                     ${weeks.map((week, index) => {
                                         const weekNumber = index + 1; // Reset week numbering for each season
