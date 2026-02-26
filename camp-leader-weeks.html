@@ -400,7 +400,6 @@
     <div class="container">
         <div class="header">
             <button class="back-button" onclick="goBack()">← Back</button>
-            <div class="header-icon">📅</div>
             <h1>Weekly Camp Overview</h1>
             <p>Select a property and week to view camp details</p>
         </div>
@@ -450,9 +449,6 @@
         let selectedProperty = null;
         let campData = [];
         let bookedWeekDates = new Set();
-
-        // Property icons for visual variety
-        const propertyIcons = ['🏔️', '🏡', '🏰', '🏕️', '🌲', '⛰️', '🏞️', '🏘️'];
 
         // Season configurations
         const seasonConfig = {
@@ -731,8 +727,7 @@
                     .map((record, index) => ({
                         id: record.id,
                         name: record.fields['Property Name'] || 'Unknown',
-                        location: record.fields['Property Street Address'] || 'Switzerland',
-                        icon: propertyIcons[index % propertyIcons.length]
+                        location: record.fields['Property Street Address'] || 'Switzerland'
                     }));
 
                 console.log('✅ Found', properties.length, 'properties in Switzerland');
@@ -758,7 +753,6 @@
             const grid = document.getElementById('propertiesGrid');
             grid.innerHTML = properties.map(property => `
                 <div class="property-card" onclick="selectProperty('${property.id}')">
-                    <div class="property-icon">${property.icon}</div>
                     <div class="property-name">${property.name}</div>
                     <div class="property-location">${property.location}</div>
                     <button class="view-week-btn" onclick="event.stopPropagation(); selectProperty('${property.id}')">
