@@ -401,8 +401,9 @@
         }
 
         .season-link-btn {
-            display: inline-block;
-            padding: 8px 18px;
+            display: block;
+            flex: 1 1 0;
+            padding: 10px 8px;
             border-radius: 8px;
             background: linear-gradient(135deg, #2c3e50, #3498db);
             color: white;
@@ -411,6 +412,7 @@
             font-weight: 600;
             transition: all 0.2s ease;
             box-shadow: 0 2px 8px rgba(52,152,219,0.25);
+            text-align: center;
         }
 
         .season-link-btn:hover {
@@ -848,7 +850,7 @@
 
             // Show selected property info
             document.getElementById('selectedPropertyInfo').innerHTML = `
-                <h3>${selectedProperty.icon} ${selectedProperty.name}</h3>
+                <h3>${selectedProperty.name}</h3>
                 <p>${selectedProperty.location}</p>
             `;
 
