@@ -801,24 +801,29 @@
                 
                 response.records.forEach(record => {
                     const fields = record.fields;
-
-                    // TEMPORARY DEBUG - remove after fixing
-                    if (record === response.records[0]) {
-                        console.log('=== FIRST BOOKING FIELDS ===');
-                        console.log('All field keys:', Object.keys(fields));
-                        console.log('Property:', fields['Property']);
-                        console.log('Property (from Camp):', fields['Property (from Camp)']);
-                        console.log('Property (from Property):', fields['Property (from Property)']);
-                        console.log('Property Name:', fields['Property Name']);
-                        console.log('Selected property:', selectedProperty);
-                    }
                     
-                    // Match using camp name
+                    // Match using same logic as detail page (property ID → name → camp name)
+                    const bookingProperty = fields['Property'];
+                    const propertyFromCamp = fields['Property (from Camp)'];
+                    let bookingPropertyId = null;
+                    if (bookingProperty) {
+                        bookingPropertyId = Array.isArray(bookingProperty) ? bookingProperty[0] : bookingProperty;
+                    } else if (propertyFromCamp) {
+                        bookingPropertyId = Array.isArray(propertyFromCamp) ? propertyFromCamp[0] : propertyFromCamp;
+                    }
+
+                    const propertyNameField = fields['Property (from Property)'] || fields['Property Name'];
+                    const propertyNameStr = Array.isArray(propertyNameField) ? propertyNameField[0] : propertyNameField;
+
                     const campName = fields['Camp Name (from Camp)'];
                     const campNameStr = Array.isArray(campName) ? campName[0] : (campName || '');
                     const propertyFirstWord = selectedProperty.name.split(' ')[0];
 
-                    if (!campNameStr.includes(propertyFirstWord)) return;
+                    const propertyMatches = bookingPropertyId === selectedProperty.id ||
+                                            (propertyNameStr && propertyNameStr.includes(selectedProperty.name)) ||
+                                            campNameStr.includes(propertyFirstWord);
+
+                    if (!propertyMatches) return;
                     
                     // Get arrival date and find which week it belongs to
                     const arrivalDate = fields['Arrival Date'];
