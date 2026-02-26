@@ -405,20 +405,27 @@
             flex: 1 1 0;
             padding: 10px 8px;
             border-radius: 8px;
-            background: linear-gradient(135deg, #2c3e50, #3498db);
+            background: #3498db;
             color: white;
             text-decoration: none;
             font-size: 0.9rem;
             font-weight: 600;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(52,152,219,0.25);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             text-align: center;
         }
 
+        .season-link-btn[data-type="finance"]          { background: #ED4646; box-shadow: 0 2px 8px rgba(237,70,70,0.3); }
+        .season-link-btn[data-type="staff"]            { background: #ED992C; box-shadow: 0 2px 8px rgba(237,153,44,0.3); }
+        .season-link-btn[data-type="volunteer"]        { background: #4885B8; box-shadow: 0 2px 8px rgba(72,133,184,0.3); }
+        .season-link-btn[data-type="excursion"]        { background: #AB5FCB; box-shadow: 0 2px 8px rgba(171,95,203,0.3); }
+        .season-link-btn[data-type="bz"]               { background: #51517D; box-shadow: 0 2px 8px rgba(81,81,125,0.3); }
+        .season-link-btn[data-type="airportTransfer"]  { background: #1E897E; box-shadow: 0 2px 8px rgba(30,137,126,0.3); }
+
         .season-link-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(52,152,219,0.4);
-            opacity: 0.95;
+            opacity: 0.9;
+            filter: brightness(1.1);
         }
 
     </style>
@@ -1016,7 +1023,7 @@
                 if (weeks && weeks.length > 0) {
                     hasWeeks = true;
                     const season = seasonConfig[seasonKey];
-                    const isFirstSeason = index === 0;
+                    const isFirstSeason = false;
                     
                     const links = seasonLinksData[`${selectedProperty.id}-${seasonKey}`] || {};
                     const linkButtons = [
@@ -1031,7 +1038,7 @@
                     const buttonsHtml = linkButtons.length > 0 ? `
                         <div class="season-links" onclick="event.stopPropagation()">
                             ${linkButtons.map(btn => `
-                                <a href="${links[btn.key]}" target="_blank" rel="noopener" class="season-link-btn">
+                                <a href="${links[btn.key]}" target="_blank" rel="noopener" class="season-link-btn" data-type="${btn.key}">
                                     ${btn.label}
                                 </a>
                             `).join('')}
